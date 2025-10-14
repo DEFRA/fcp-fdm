@@ -38,7 +38,7 @@ export const mongoDb = {
   }
 }
 
-async function createIndexes(db) {
+async function createIndexes (db) {
   await db.collection('mongo-locks').createIndex({ id: 1 })
 
   // Add additional collections and indexes here

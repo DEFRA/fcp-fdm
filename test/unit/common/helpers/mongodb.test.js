@@ -1,4 +1,4 @@
-import { describe, test, expect, vi } from 'vitest'
+import { describe, test, expect, vi, beforeAll } from 'vitest'
 import { Db, MongoClient } from 'mongodb'
 import { LockManager } from 'mongo-locks'
 
