@@ -20,8 +20,8 @@ const metricsCounter = async (metricName, value = 1) => {
       StorageResolution.Standard
     )
     await metricsLogger.flush()
-  } catch (error) {
-    createLogger().error(error, error.message)
+  } catch (err) {
+    createLogger().error(err, err.message)
   }
 }
 

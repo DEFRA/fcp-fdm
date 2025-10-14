@@ -1,0 +1,22 @@
+services:
+  fcp-fdm:
+    ports:
+      - '3000:3000'
+    networks:
+      - fcp-fdm
+
+  mongodb:
+    ports:
+      - '27017:27017'
+    networks:
+      - fcp-fdm
+    volumes:
+      - mongodb-data:/data
+
+networks:
+  fcp-fdm:
+    driver: bridge
+    name: fcp-fdm
+
+volumes:
+  mongodb-data:

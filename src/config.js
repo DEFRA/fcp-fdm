@@ -1,6 +1,5 @@
 import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
-
 import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
 
 convict.addFormat(convictValidateMongoUri)
@@ -26,7 +25,7 @@ const config = convict({
   port: {
     doc: 'The port to bind',
     format: 'port',
-    default: 3001,
+    default: 3000,
     env: 'PORT'
   },
   serviceName: {
@@ -119,6 +118,12 @@ const config = convict({
     default: null,
     env: 'HTTP_PROXY'
   },
+  isSecureContextEnabled: {
+    doc: 'Enable Secure Context',
+    format: Boolean,
+    default: isProduction,
+    env: 'ENABLE_SECURE_CONTEXT'
+  },
   isMetricsEnabled: {
     doc: 'Enable metrics reporting',
     format: Boolean,
@@ -132,6 +137,68 @@ const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
+  },
+  postgres: {
+    host: {
+      doc: 'Postgres host',
+      format: String,
+      default: null,
+      env: 'POSTGRES_HOST'
+    },
+    hostReadOnly: {
+      doc: 'Postgres read-only host',
+      format: String,
+      default: 'postgres',
+      env: 'POSTGRES_HOST_READ'
+    },
+    port: {
+      doc: 'Postgres port',
+      format: 'port',
+      default: 5432,
+      env: 'POSTGRES_PORT'
+    },
+    database: {
+      doc: 'Postgres database name',
+      format: String,
+      default: 'fcp_mpdp_backend',
+      env: 'POSTGRES_DB'
+    },
+    user: {
+      doc: 'Postgres user',
+      format: String,
+      default: 'fcp_mpdp_backend',
+      env: 'POSTGRES_USER'
+    },
+    getTokenFromRDS: {
+      doc: 'Get token from RDS',
+      format: Boolean,
+      default: true,
+      env: 'POSTGRES_GET_TOKEN_FROM_RDS'
+    },
+    passwordForLocalDev: {
+      doc: 'Postgres password for local development',
+      format: String,
+      default: 'postgres',
+      env: 'POSTGRES_PASSWORD'
+    },
+    region: {
+      doc: 'AWS region for RDS',
+      format: String,
+      default: 'eu-west-2',
+      env: 'POSTGRES_REGION'
+    },
+    dialect: {
+      doc: 'Sequelize dialect',
+      format: String,
+      default: 'postgres'
+    },
+    logging: {
+      doc: 'Enable Sequelize logging',
+      format: Boolean,
+      default: false,
+      env: 'POSTGRES_LOGGING'
+    },
+
   }
 })
 
