@@ -29,7 +29,10 @@ export const mongoDb = {
       let isClosing = false
 
       server.events.on('stop', () => {
-        if (isClosing) return
+        if (isClosing) {
+          return
+        }
+
         isClosing = true
 
         server.logger.info('Closing Mongo client')
