@@ -75,11 +75,11 @@ describe('startServer', () => {
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         2,
-        'Setting up Postgres'
+        'Setting up MongoDb'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         3,
-        'Postgres connected to fcp_mpdp_backend'
+        'MongoDb connected to fcp-fdm'
       )
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
         4,

@@ -26,13 +26,20 @@ export const mongoDb = {
       server.decorate('request', 'db', () => db, { apply: true })
       server.decorate('request', 'locker', () => locker, { apply: true })
 
-      server.events.on('stop', async () => {
+      server.events.on('stop', () => {
         server.logger.info('Closing Mongo client')
-        try {
-          await client.close(true)
-        } catch (e) {
-          server.logger.error(e, 'failed to close mongo client')
+
+        const closeClient = async () => {
+          try {
+            await client.close(true)
+          } catch (e) {
+            server.logger.error(e, 'failed to close mongo client')
+          }
         }
+
+        closeClient().catch((error) => {
+          server.logger.error(error, 'Unhandled error during mongo client close')
+        })
       })
     }
   }
