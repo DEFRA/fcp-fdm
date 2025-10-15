@@ -75,6 +75,27 @@ const config = convict({
         : ['req', 'res', 'responseTime']
     }
   },
+  aws: {
+    region: {
+      doc: 'AWS region to connect to',
+      format: String,
+      default: 'eu-west-2',
+      env: 'AWS_REGION'
+    }
+  },
+  sqs: {
+    queue: {
+      doc: 'AWS SQS queue URL',
+      format: String,
+      env: 'AWS_SQS_QUEUE_URL',
+      default: null
+    },
+    pollingInterval: {
+      doc: 'Interval in milliseconds to poll for messages.',
+      format: 'int',
+      default: 1000
+    }
+  },
   mongo: {
     mongoUrl: {
       doc: 'URI for mongodb',

@@ -6,11 +6,31 @@ services:
     depends_on:
       mongodb:
         condition: service_started
+      localstack:
+        condition: service_healthy
     environment:
       MONGO_URI: mongodb://mongodb:27017
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_SQS_QUEUE_URL: http://localstack:4566/000000000000/fcp_fdm_events
+      AWS_ENDPOINT_URL: http://localstack:4566
     volumes:
       - ./src:/home/node/src
       - ./package.json:/home/node/package.json
 
   mongodb:
     image: mongo:6.0.13
+
+  localstack:
+    image: localstack/localstack
+    environment:
+      LS_LOG: warn
+      SERVICES: sqs,sns
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    healthcheck:
+      test: ['CMD', 'curl', 'localhost:4566']
+      interval: 5s
+      start_period: 5s
+      retries: 3
