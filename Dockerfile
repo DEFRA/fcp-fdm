@@ -1,4 +1,4 @@
-ARG PARENT_VERSION=2.8.5-node22.16.0
+ARG PARENT_VERSION=2.8.15-node24.10.0
 ARG PORT=3000
 ARG PORT_DEBUG=9229
 
@@ -11,11 +11,11 @@ ARG PORT_DEBUG
 ENV PORT=${PORT}
 EXPOSE ${PORT} ${PORT_DEBUG}
 
-COPY --chown=node:node package*.json ./
+COPY --chown=node:node package*.json .
 RUN npm install
-COPY --chown=node:node ./src ./src
+COPY --chown=node:node . .
 
-CMD [ "npm", "run", "docker:dev" ]
+CMD [ "npm", "run", "dev" ]
 
 FROM defradigital/node:${PARENT_VERSION} AS production
 ARG PARENT_VERSION
@@ -27,7 +27,7 @@ USER root
 RUN apk add --no-cache curl
 USER node
 
-COPY --from=development /home/node/package*.json ./
+COPY --from=development /home/node/package*.json .
 COPY --from=development /home/node/src ./src/
 
 RUN npm ci --omit=dev

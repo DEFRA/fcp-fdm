@@ -1,4 +1,5 @@
-import { convictValidateMongoUri } from './validate-mongo-uri.js'
+import { describe, expect, test } from 'vitest'
+import { convictValidateMongoUri } from '../../../../../src/common/helpers/convict/validate-mongo-uri.js'
 
 describe('#convictValidateMongoUri', () => {
   test('With correct mongo-uri, Should not throw', () => {

@@ -1,0 +1,3 @@
+services:
+  fcp-fdm:
+    command: npm run test:watch

@@ -1,6 +1,5 @@
 import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
-
 import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
 
 convict.addFormat(convictValidateMongoUri)
@@ -26,7 +25,7 @@ const config = convict({
   port: {
     doc: 'The port to bind',
     format: 'port',
-    default: 3001,
+    default: 3000,
     env: 'PORT'
   },
   serviceName: {
@@ -118,6 +117,12 @@ const config = convict({
     nullable: true,
     default: null,
     env: 'HTTP_PROXY'
+  },
+  isSecureContextEnabled: {
+    doc: 'Enable Secure Context',
+    format: Boolean,
+    default: isProduction,
+    env: 'ENABLE_SECURE_CONTEXT'
   },
   isMetricsEnabled: {
     doc: 'Enable metrics reporting',

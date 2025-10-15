@@ -1,3 +1,4 @@
+import { describe, test, expect, vi, beforeAll } from 'vitest'
 import { Db, MongoClient } from 'mongodb'
 import { LockManager } from 'mongo-locks'
 
@@ -7,7 +8,7 @@ describe('#mongoDb', () => {
   describe('Set up', () => {
     beforeAll(async () => {
       // Dynamic import needed due to config being updated by vitest-mongodb
-      const { createServer } = await import('../../server.js')
+      const { createServer } = await import('../../../../src/server.js')
 
       server = await createServer()
       await server.initialize()
@@ -31,7 +32,7 @@ describe('#mongoDb', () => {
   describe('Shut down', () => {
     beforeAll(async () => {
       // Dynamic import needed due to config being updated by vitest-mongodb
-      const { createServer } = await import('../../server.js')
+      const { createServer } = await import('../../../../src/server.js')
 
       server = await createServer()
       await server.initialize()
