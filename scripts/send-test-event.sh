@@ -48,5 +48,4 @@ for i in $(seq 1 $COUNT); do
 done
 
 echo "----------------------------------------"
-echo "Done! Check the application logs to see received messages:"
-echo "docker-compose logs fcp-fdm --tail=10"
+echo "Test messages sent"
