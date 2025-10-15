@@ -2,36 +2,36 @@ import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk
 import { config } from '../config.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
+const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
 const logger = createLogger()
 
+const sqsClient = new SQSClient({
+  region,
+  ...(endpoint && {
+    endpoint,
+    credentials: { accessKeyId, secretAccessKey }
+  })
+})
+
 const receiveParams = {
-  QueueUrl: config.get('sqs.queue'),
+  QueueUrl: sqs.queueUrl,
   MaxNumberOfMessages: 10,
   MessageAttributeNames: ['All'],
   AttributeNames: ['SentTimestamp'],
   WaitTimeSeconds: 10,
 }
 
-const messageClient = new SQSClient({
-  region: process.env.AWS_REGION || 'eu-west-2',
-  endpoint: process.env.AWS_ENDPOINT_URL,
-  credentials: {
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID || 'test',
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || 'test'
-  }
-})
-
 export async function consumeEventMessages () {
-  const { Messages } = await messageClient.send(
+  const { Messages } = await sqsClient.send(
     new ReceiveMessageCommand(receiveParams)
   )
   if (Messages) {
     for (const message of Messages) {
       logger.info('Message received')
       logger.info(message)
-      await messageClient.send(
+      await sqsClient.send(
         new DeleteMessageCommand({
-          QueueUrl: config.get('sqs.queue'),
+          QueueUrl: sqs.queueUrl,
           ReceiptHandle: message.ReceiptHandle
         })
       )

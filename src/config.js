@@ -77,23 +77,44 @@ const config = convict({
   },
   aws: {
     region: {
-      doc: 'AWS region to connect to',
+      doc: 'AWS region',
       format: String,
       default: 'eu-west-2',
       env: 'AWS_REGION'
-    }
-  },
-  sqs: {
-    queue: {
-      doc: 'AWS SQS queue URL',
-      format: String,
-      env: 'AWS_SQS_QUEUE_URL',
-      default: null
     },
-    pollingInterval: {
-      doc: 'Interval in milliseconds to poll for messages.',
-      format: 'int',
-      default: 1000
+    endpoint: {
+      doc: 'AWS endpoint URL, for example to use with LocalStack',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_ENDPOINT_URL'
+    },
+    accessKeyId: {
+      doc: 'AWS access key ID',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_ACCESS_KEY_ID'
+    },
+    secretAccessKey: {
+      doc: 'AWS secret access key',
+      format: String,
+      nullable: true,
+      default: null,
+      env: 'AWS_SECRET_ACCESS_KEY'
+    },
+    sqs: {
+      queueUrl: {
+        doc: 'AWS SQS queue URL',
+        format: String,
+        env: 'AWS_SQS_QUEUE_URL',
+        default: null
+      },
+      pollingInterval: {
+        doc: 'Interval in milliseconds to poll for messages.',
+        format: 'int',
+        default: 1000
+      }
     }
   },
   mongo: {
