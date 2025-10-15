@@ -26,12 +26,33 @@ vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
   })
 }))
 
-vi.mock('../../../../src/data/database.js', () => {
-  return {
-    createModels: vi.fn(),
-    healthCheck: vi.fn()
+vi.mock('../../../../src/events/polling.js', () => ({
+  pollForEventMessages: vi.fn()
+}))
+
+vi.mock('mongodb', () => ({
+  MongoClient: {
+    connect: vi.fn().mockResolvedValue({
+      db: vi.fn().mockReturnValue({
+        collection: vi.fn().mockReturnValue({
+          createIndex: vi.fn().mockResolvedValue(true)
+        })
+      }),
+      close: vi.fn().mockResolvedValue(true),
+      topology: {
+        isDestroyed: vi.fn().mockReturnValue(false),
+        s: { state: 'connected' }
+      }
+    })
   }
-})
+}))
+
+vi.mock('mongo-locks', () => ({
+  LockManager: vi.fn().mockImplementation(() => ({
+    lock: vi.fn().mockResolvedValue(true),
+    unlock: vi.fn().mockResolvedValue(true)
+  }))
+}))
 
 describe('startServer', () => {
   const PROCESS_ENV = process.env

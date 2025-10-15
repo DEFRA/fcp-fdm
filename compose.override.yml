@@ -13,6 +13,16 @@ services:
     volumes:
       - mongodb-data:/data
 
+  localstack:
+    ports:
+      - '4566:4566'
+      - '4510-4559:4510-4559'
+    volumes:
+      - ./localstack/localstack.sh:/etc/localstack/init/ready.d/localstack.sh
+      - localstack-data:/var/lib/localstack
+    networks:
+      - fcp-fdm
+
 networks:
   fcp-fdm:
     driver: bridge
@@ -20,3 +30,4 @@ networks:
 
 volumes:
   mongodb-data:
+  localstack-data:
