@@ -1,11 +1,8 @@
 import { describe, test, beforeEach, afterEach, vi, expect } from 'vitest'
 
-vi.mock('../../../../src/data/database.js', () => {
-  return {
-    createModels: vi.fn(),
-    healthCheck: vi.fn()
-  }
-})
+vi.mock('../../../../src/events/polling.js', () => ({
+  pollForEventMessages: vi.fn()
+}))
 
 const { createServer } = await import('../../../../src/server.js')
 

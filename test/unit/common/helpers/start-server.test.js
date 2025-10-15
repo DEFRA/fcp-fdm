@@ -26,12 +26,9 @@ vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
   })
 }))
 
-vi.mock('../../../../src/data/database.js', () => {
-  return {
-    createModels: vi.fn(),
-    healthCheck: vi.fn()
-  }
-})
+vi.mock('../../../../src/events/polling.js', () => ({
+  pollForEventMessages: vi.fn()
+}))
 
 describe('startServer', () => {
   const PROCESS_ENV = process.env
