@@ -26,30 +26,13 @@ export const mongoDb = {
       server.decorate('request', 'db', () => db, { apply: true })
       server.decorate('request', 'locker', () => locker, { apply: true })
 
-      let isClosing = false
-
-      server.events.on('stop', () => {
-        if (isClosing) {
-          return
-        }
-
-        isClosing = true
-
+      server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
-
-        const closeClient = async () => {
-          try {
-            if (client.topology && !client.topology.isDestroyed()) {
-              await client.close(false)
-            }
-          } catch (e) {
-            if (!e.message?.includes('client was closed')) {
-              server.logger.error(e, 'failed to close mongo client')
-            }
-          }
+        try {
+          await client.close(true)
+        } catch (e) {
+          server.logger.error(e, 'failed to close mongo client')
         }
-
-        closeClient().catch(() => {})
       })
     }
   }
@@ -57,6 +40,5 @@ export const mongoDb = {
 
 async function createIndexes (db) {
   await db.collection('mongo-locks').createIndex({ id: 1 })
-
-  // Add additional collections and indexes here
+  await db.collection('events-temp').createIndex({ id: 1 }, { unique: true })
 }
