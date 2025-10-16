@@ -1,13 +1,36 @@
 #!/bin/bash
 
-# Send test event to SQS queue via LocalStack
+# Send CloudEvents-compliant test event to SQS queue via LocalStack
 # Usage: ./scripts/send-test-event.sh [message] [count]
+# 
+# The message should be in CloudEvents format wrapped in SNS format:
+# Example: '{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.test\", \"source\": \"test\", \"id\": \"$(uuidgen)\", \"time\": \"$(date -u +%Y-%m-%dT%H:%M:%SZ)\", \"data\": {}}"}'
 
 QUEUE_URL="http://localhost:4566/000000000000/fcp_fdm_events"
 AWS_REGION="eu-west-2"
 
-# Default message if none provided
-DEFAULT_MESSAGE='{"event": "test_event", "userId": 123, "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'", "data": {"action": "test", "source": "script"}}'
+# Function to generate UUID (fallback if uuidgen not available)
+generate_uuid() {
+    if command -v uuidgen >/dev/null 2>&1; then
+        uuidgen
+    else
+        # Fallback UUID generation using /proc/sys/kernel/random/uuid or random numbers
+        if [ -f /proc/sys/kernel/random/uuid ]; then
+            cat /proc/sys/kernel/random/uuid
+        else
+            # Simple fallback using random numbers and timestamp
+            echo "$(date +%s)-$(($RANDOM * $RANDOM))-$(($RANDOM * $RANDOM))-$(($RANDOM * $RANDOM))-$(date +%N)"
+        fi
+    fi
+}
+
+# Default CloudEvents message wrapped in SNS format if none provided
+# Generate a UUID for the event ID
+EVENT_ID=$(generate_uuid)
+TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+
+# CloudEvents-compliant message wrapped in SNS format
+DEFAULT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.test-event\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$EVENT_ID'\", \"time\": \"'$TIMESTAMP'\", \"subject\": \"test-event\", \"datacontenttype\": \"application/json\", \"data\": {\"action\": \"test\", \"source\": \"script\", \"userId\": 123}}"}'
 
 # Get message from argument or use default
 MESSAGE=${1:-$DEFAULT_MESSAGE}
@@ -20,9 +43,17 @@ echo "Message: $MESSAGE"
 echo "----------------------------------------"
 
 for i in $(seq 1 $COUNT); do
-    # Add sequence number to message if sending multiple
+    # Generate unique message for each iteration
     if [ $COUNT -gt 1 ]; then
-        CURRENT_MESSAGE=$(echo "$MESSAGE" | sed "s/}$/, \"sequence\": $i}/")
+        # Generate new UUID and timestamp for each message
+        UNIQUE_EVENT_ID=$(generate_uuid)
+        UNIQUE_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        # If custom message provided, use it; otherwise create a unique default message
+        if [ $# -ge 1 ]; then
+            CURRENT_MESSAGE="$MESSAGE"
+        else
+            CURRENT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.test-event\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$UNIQUE_EVENT_ID'\", \"time\": \"'$UNIQUE_TIMESTAMP'\", \"subject\": \"test-event-'$i'\", \"datacontenttype\": \"application/json\", \"data\": {\"action\": \"test\", \"source\": \"script\", \"userId\": 123, \"sequence\": '$i'}}"}'
+        fi
     else
         CURRENT_MESSAGE="$MESSAGE"
     fi
@@ -31,7 +62,7 @@ for i in $(seq 1 $COUNT); do
         --queue-url "$QUEUE_URL" \
         --message-body "$CURRENT_MESSAGE" \
         --region "$AWS_REGION" \
-        --message-attributes '{"eventType":{"StringValue":"test_event","DataType":"String"}}' \
+        --message-attributes '{"eventType":{"StringValue":"uk.gov.defra.fcp.test-event","DataType":"String"}}' \
         2>/dev/null)
     
     if [ $? -eq 0 ]; then
