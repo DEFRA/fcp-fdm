@@ -1,6 +1,8 @@
 import { MongoClient } from 'mongodb'
 import { LockManager } from 'mongo-locks'
 
+let mongoDbClient
+
 export const mongoDb = {
   plugin: {
     name: 'mongodb',
@@ -14,6 +16,7 @@ export const mongoDb = {
 
       const databaseName = options.databaseName
       const db = client.db(databaseName)
+      mongoDbClient = db
       const locker = new LockManager(db.collection('mongo-locks'))
 
       await createIndexes(db)
@@ -30,15 +33,24 @@ export const mongoDb = {
         server.logger.info('Closing Mongo client')
         try {
           await client.close(true)
-        } catch (e) {
-          server.logger.error(e, 'failed to close mongo client')
+        } catch (err) {
+          server.logger.error(err, 'failed to close mongo client')
         }
       })
     }
   }
 }
 
+export function getMongoDbClient () {
+  return mongoDbClient
+}
+
 async function createIndexes (db) {
   await db.collection('mongo-locks').createIndex({ id: 1 })
-  await db.collection('events-temp').createIndex({ id: 1 }, { unique: true })
+
+  const eventsTempCollection = db.collection('events-temp')
+  await eventsTempCollection.createIndex({ id: 1 }, { unique: true })
+  await eventsTempCollection.createIndex({ receivedUtc: -1 })
+  // TTL index to automatically delete documents older than 30 minutes
+  await eventsTempCollection.createIndex({ receivedUtc: 1 }, { expireAfterSeconds: 1800 })
 }

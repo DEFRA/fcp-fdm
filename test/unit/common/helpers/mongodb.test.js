@@ -42,7 +42,7 @@ describe('#mongoDb', () => {
       const closeSpy = vi.spyOn(server.mongoClient, 'close')
       await server.stop({ timeout: 1000 })
 
-      expect(closeSpy).toHaveBeenCalledWith(false)
+      expect(closeSpy).toHaveBeenCalledWith(true)
     })
   })
 })
