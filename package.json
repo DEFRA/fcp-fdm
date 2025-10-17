@@ -4,9 +4,6 @@
   "description": "fcp-fdm",
   "main": "src/index.js",
   "type": "module",
-  "engines": {
-    "node": ">=24.10.0"
-  },
   "scripts": {
     "dev": "NODE_ENV=development npm run server:watch",
     "dev:debug": "NODE_ENV=development npm run server:debug",
@@ -46,7 +43,6 @@
     "hapi-pulse": "3.0.1",
     "hapi-swagger": "17.3.2",
     "joi": "17.13.3",
-    "mongo-locks": "3.0.2",
     "mongodb": "6.17.0",
     "pino": "10.0.0",
     "pino-pretty": "13.0.0",

@@ -29,8 +29,10 @@ generate_uuid() {
 EVENT_ID=$(generate_uuid)
 TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 
+CORRELATION_ID=$(generate_uuid)
+
 # CloudEvents-compliant message wrapped in SNS format
-DEFAULT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.sfd.notification.request\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$EVENT_ID'\", \"time\": \"'$TIMESTAMP'\", \"subject\": \"sfd.notification.request\", \"datacontenttype\": \"application/json\", \"data\": {\"action\": \"test\", \"source\": \"script\", \"userId\": 123}}"}'
+DEFAULT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.fcp.sfd.notification.request\", \"source\": \"fcp-sfd-comms\", \"id\": \"'$EVENT_ID'\", \"time\": \"'$TIMESTAMP'\", \"subject\": \"sfd.notification.request\", \"datacontenttype\": \"application/json\", \"data\": {\"correlationId\": \"'$CORRELATION_ID'\", \"recipient\": \"farmer@test.com\"}}"}'
 
 # Get message from argument or use default
 MESSAGE=${1:-$DEFAULT_MESSAGE}
@@ -48,12 +50,12 @@ for i in $(seq 1 $COUNT); do
         # Generate new UUID and timestamp for each message
         UNIQUE_EVENT_ID=$(generate_uuid)
         UNIQUE_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-        CORRELATION_ID=$(generate_uuid)
+        UNIQUE_CORRELATION_ID=$(generate_uuid)
         # If custom message provided, use it; otherwise create a unique default message
         if [ $# -ge 1 ]; then
             CURRENT_MESSAGE="$MESSAGE"
         else
-            CURRENT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.sfd.notification.request\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$UNIQUE_EVENT_ID'\", \"time\": \"'$UNIQUE_TIMESTAMP'\", \"subject\": \"sfd.notification.request-'$i'\", \"datacontenttype\": \"application/json\", \"data\": {\"correlationId\": \"'$CORRELATION_ID'\", \"recipient\": \"farmer@test.com\"}}"}'
+            CURRENT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.fcp.sfd.notification.request\", \"source\": \"fcp-sfd-comms\", \"id\": \"'$UNIQUE_EVENT_ID'\", \"time\": \"'$UNIQUE_TIMESTAMP'\", \"subject\": \"sfd.notification.request-'$i'\", \"datacontenttype\": \"application/json\", \"data\": {\"correlationId\": \"'$UNIQUE_CORRELATION_ID'\", \"recipient\": \"farmer@test.com\"}}"}'
         fi
     else
         CURRENT_MESSAGE="$MESSAGE"
@@ -63,7 +65,7 @@ for i in $(seq 1 $COUNT); do
         --queue-url "$QUEUE_URL" \
         --message-body "$CURRENT_MESSAGE" \
         --region "$AWS_REGION" \
-        --message-attributes '{"eventType":{"StringValue":"uk.gov.defra.fcp.sfd.notification.request","DataType":"String"}}' \
+        --message-attributes '{"eventType":{"StringValue":"uk.gov.fcp.sfd.notification.request","DataType":"String"}}' \
         2>/dev/null)
     
     if [ $? -eq 0 ]; then

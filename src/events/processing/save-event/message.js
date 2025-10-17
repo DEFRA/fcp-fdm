@@ -5,13 +5,13 @@ const logger = createLogger()
 
 export async function saveMessageEvent (event) {
   const db = getMongoDbClient()
-  const collection = db.collection('events-message')
+  const collection = db.collection('events')
 
   try {
-    await collection.insertOne({ ...event, received: new Date() })
+    await collection.insertOne({ ...event, _id: `${event.source}:${event.id}`, received: new Date() })
   } catch (err) {
     if (err.message.includes('E11000 duplicate key error')) {
-      logger.error(err, 'Failed to insert event into messages collection')
+      logger.console.warn(`Skipping duplicate event. ID: ${event.id}`)
     } else {
       throw err
     }

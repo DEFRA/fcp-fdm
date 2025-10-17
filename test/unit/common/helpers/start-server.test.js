@@ -47,13 +47,6 @@ vi.mock('mongodb', () => ({
   }
 }))
 
-vi.mock('mongo-locks', () => ({
-  LockManager: vi.fn().mockImplementation(() => ({
-    lock: vi.fn().mockResolvedValue(true),
-    unlock: vi.fn().mockResolvedValue(true)
-  }))
-}))
-
 describe('startServer', () => {
   const PROCESS_ENV = process.env
   let createServerSpy

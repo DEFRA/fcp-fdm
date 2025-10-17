@@ -8,8 +8,8 @@ export function validateEvent (event) {
 }
 
 export async function validateEventData (eventData, eventType) {
-  const dataSchema = await import(`./schemas/${eventType}`)
-  const validationResult = dataSchema.validate(eventData, { abortEarly: false, allowUnknown: true })
+  const dataSchema = await import(`./schemas/${eventType}.js`)
+  const validationResult = dataSchema.default.validate(eventData, { abortEarly: false, allowUnknown: true })
   if (validationResult.error) {
     throw new Error(`Event data is invalid, ${validationResult.error.message}`)
   }

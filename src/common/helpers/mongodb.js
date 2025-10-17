@@ -1,5 +1,4 @@
 import { MongoClient } from 'mongodb'
-import { LockManager } from 'mongo-locks'
 
 let mongoDbClient
 
@@ -17,7 +16,6 @@ export const mongoDb = {
       const databaseName = options.databaseName
       const db = client.db(databaseName)
       mongoDbClient = db
-      const locker = new LockManager(db.collection('mongo-locks'))
 
       await createIndexes(db)
 
@@ -25,9 +23,7 @@ export const mongoDb = {
 
       server.decorate('server', 'mongoClient', client)
       server.decorate('server', 'db', db)
-      server.decorate('server', 'locker', locker)
       server.decorate('request', 'db', () => db, { apply: true })
-      server.decorate('request', 'locker', () => locker, { apply: true })
 
       server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
@@ -46,9 +42,15 @@ export function getMongoDbClient () {
 }
 
 async function createIndexes (db) {
-  try {
-    await db.collection('events-temp').drop()
-  } catch {}
-  await db.collection('mongo-locks').createIndex({ id: 1 })
-  await db.collection('events-message').createIndex({ id: 1 }, { unique: true })
+  const defunctCollections = ['mongo-locks', 'events-temp']
+  const collections = await db.listCollections().toArray()
+
+  for (const defunctCollection of defunctCollections) {
+    if (collections.some(c => c.name === defunctCollection)) {
+      await db.collection(defunctCollection).drop()
+    }
+  }
+
+  await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
+  await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
 }
