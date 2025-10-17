@@ -46,11 +46,9 @@ export function getMongoDbClient () {
 }
 
 async function createIndexes (db) {
+  try {
+    await db.collection('events-temp').drop()
+  } catch {}
   await db.collection('mongo-locks').createIndex({ id: 1 })
-
-  const eventsTempCollection = db.collection('events-temp')
-  await eventsTempCollection.createIndex({ id: 1 }, { unique: true })
-  await eventsTempCollection.createIndex({ receivedUtc: -1 })
-  // TTL index to automatically delete documents older than 30 minutes
-  await eventsTempCollection.createIndex({ receivedUtc: 1 }, { expireAfterSeconds: 1800 })
+  await db.collection('events-message').createIndex({ id: 1 }, { unique: true })
 }

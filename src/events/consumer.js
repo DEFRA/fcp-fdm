@@ -38,13 +38,7 @@ export async function consumeEventMessages () {
           })
         )
       } catch (err) {
-        if (err.category === 'validation') {
-          logger.warn('Dead lettering invalid event')
-          // dead letter
-        } else {
-          // requeue for processing
-          logger.warn('Requeuing event')
-        }
+        logger.error(err, 'Unable to process event')
       }
     }
   }
