@@ -1,8 +1,11 @@
 import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { config } from '../config.js'
-import { processEventMessage } from './process.js'
+import { processEvent } from './processing/process-event.js'
+import { createLogger } from '../common/helpers/logging/logger.js'
 
 const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
+
+const logger = createLogger()
 
 const sqsClient = new SQSClient({
   region,
@@ -26,13 +29,23 @@ export async function consumeEventMessages () {
   )
   if (Messages) {
     for (const message of Messages) {
-      await processEventMessage(message)
-      await sqsClient.send(
-        new DeleteMessageCommand({
-          QueueUrl: sqs.queueUrl,
-          ReceiptHandle: message.ReceiptHandle
-        })
-      )
+      try {
+        await processEvent(message)
+        await sqsClient.send(
+          new DeleteMessageCommand({
+            QueueUrl: sqs.queueUrl,
+            ReceiptHandle: message.ReceiptHandle
+          })
+        )
+      } catch (err) {
+        if (err.category === 'validation') {
+          logger.warn('Dead lettering invalid event')
+          // dead letter
+        } else {
+          // requeue for processing
+          logger.warn('Requeuing event')
+        }
+      }
     }
   }
 }

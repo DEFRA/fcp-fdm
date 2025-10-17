@@ -227,11 +227,11 @@ components:
           type:
             type: string
             enum:
-              - uk.gov.fcp.sfd.notfication.sending
-              - uk.gov.fcp.sfd.notfication.delivered
-              - uk.gov.fcp.sfd.notfication.failure.validation
-              - uk.gov.fcp.sfd.notfication.failure.internal
-              - uk.gov.fcp.sfd.notfication.failure.provider
+              - uk.gov.fcp.sfd.notification.sending
+              - uk.gov.fcp.sfd.notification.delivered
+              - uk.gov.fcp.sfd.notification.failure.validation
+              - uk.gov.fcp.sfd.notification.failure.internal
+              - uk.gov.fcp.sfd.notification.failure.provider
           datacontenttype:
             $ref: '#/components/schemas/datacontenttype'
           time:

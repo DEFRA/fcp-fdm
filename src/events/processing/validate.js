@@ -1,4 +1,4 @@
-import schema from './schema.js'
+import schema from './schemas/event.js'
 
 function isEventValid (event) {
   const validationResult = schema.validate(event, { abortEarly: false, allowUnknown: true })
