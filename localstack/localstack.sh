@@ -7,7 +7,7 @@ AWS_REGION=eu-west-2
 
 create_queue() {
   local QUEUE_NAME_TO_CREATE=$1
-  awslocal --endpoint-url=http://${LOCALSTACK_HOST}:4566 sqs create-queue --queue-name ${QUEUE_NAME_TO_CREATE} --region ${AWS_REGION} --attributes VisibilityTimeout=60
+  awslocal --endpoint-url=http://${LOCALSTACK_HOST}:4566 sqs create-queue --queue-name ${QUEUE_NAME_TO_CREATE} --region ${AWS_REGION} --attributes VisibilityTimeout=60,MaxReceiveCount=3
 }
 
 create_topic() {
