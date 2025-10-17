@@ -48,11 +48,12 @@ for i in $(seq 1 $COUNT); do
         # Generate new UUID and timestamp for each message
         UNIQUE_EVENT_ID=$(generate_uuid)
         UNIQUE_TIMESTAMP=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+        CORRELATION_ID=$(generate_uuid)
         # If custom message provided, use it; otherwise create a unique default message
         if [ $# -ge 1 ]; then
             CURRENT_MESSAGE="$MESSAGE"
         else
-            CURRENT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.sfd.notification.request\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$UNIQUE_EVENT_ID'\", \"time\": \"'$UNIQUE_TIMESTAMP'\", \"subject\": \"sfd.notification.request-'$i'\", \"datacontenttype\": \"application/json\", \"data\": {\"action\": \"test\", \"source\": \"script\", \"userId\": 123, \"sequence\": '$i'}}"}'
+            CURRENT_MESSAGE='{"Message": "{\"specversion\": \"1.0\", \"type\": \"uk.gov.defra.fcp.sfd.notification.request\", \"source\": \"uk.gov.defra.fcp.test-script\", \"id\": \"'$UNIQUE_EVENT_ID'\", \"time\": \"'$UNIQUE_TIMESTAMP'\", \"subject\": \"sfd.notification.request-'$i'\", \"datacontenttype\": \"application/json\", \"data\": {\"correlationId\": \"'$CORRELATION_ID'\", \"recipient\": \"farmer@test.com\"}}"}'
         fi
     else
         CURRENT_MESSAGE="$MESSAGE"
