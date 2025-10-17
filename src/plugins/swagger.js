@@ -4,7 +4,7 @@ import HapiSwagger from 'hapi-swagger'
 
 const swaggerOptions = {
   info: {
-    title: 'FCP MPDP Backend API'
+    title: 'FCP Farming Data Model'
   }
 }
 

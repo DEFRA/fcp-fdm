@@ -1,4 +1,5 @@
 import { health } from '../routes/health.js'
+import { events } from '../routes/events.js'
 
 const router = {
   plugin: {
@@ -6,7 +7,8 @@ const router = {
     register: (server, _options) => {
       server.route(
         [].concat(
-          health
+          health,
+          events
         )
       )
     }
