@@ -1,6 +1,8 @@
 import { MongoClient } from 'mongodb'
 import { LockManager } from 'mongo-locks'
 
+let mongoDbClient
+
 export const mongoDb = {
   plugin: {
     name: 'mongodb',
@@ -14,6 +16,7 @@ export const mongoDb = {
 
       const databaseName = options.databaseName
       const db = client.db(databaseName)
+      mongoDbClient = db
       const locker = new LockManager(db.collection('mongo-locks'))
 
       await createIndexes(db)
@@ -26,37 +29,28 @@ export const mongoDb = {
       server.decorate('request', 'db', () => db, { apply: true })
       server.decorate('request', 'locker', () => locker, { apply: true })
 
-      let isClosing = false
-
-      server.events.on('stop', () => {
-        if (isClosing) {
-          return
-        }
-
-        isClosing = true
-
+      server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
-
-        const closeClient = async () => {
-          try {
-            if (client.topology && !client.topology.isDestroyed()) {
-              await client.close(false)
-            }
-          } catch (e) {
-            if (!e.message?.includes('client was closed')) {
-              server.logger.error(e, 'failed to close mongo client')
-            }
-          }
+        try {
+          await client.close(true)
+        } catch (err) {
+          server.logger.error(err, 'failed to close mongo client')
         }
-
-        closeClient().catch(() => {})
       })
     }
   }
 }
 
+export function getMongoDbClient () {
+  return mongoDbClient
+}
+
 async function createIndexes (db) {
   await db.collection('mongo-locks').createIndex({ id: 1 })
 
-  // Add additional collections and indexes here
+  const eventsTempCollection = db.collection('events-temp')
+  await eventsTempCollection.createIndex({ id: 1 }, { unique: true })
+  await eventsTempCollection.createIndex({ receivedUtc: -1 })
+  // TTL index to automatically delete documents older than 30 minutes
+  await eventsTempCollection.createIndex({ receivedUtc: 1 }, { expireAfterSeconds: 1800 })
 }
