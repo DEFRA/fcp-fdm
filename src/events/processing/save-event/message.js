@@ -5,7 +5,6 @@ const logger = createLogger()
 
 export async function saveMessageEvent (event) {
   const db = getMongoDbClient()
-  const collection = db.collection('events')
 
   try {
     const { correlationId, recipient } = event.data
@@ -17,7 +16,7 @@ export async function saveMessageEvent (event) {
       { upsert: true }
     )
 
-    await collection.insertOne(eventEntity)
+    await db.collection('events').insertOne(eventEntity)
 
     logger.info(`Saved message event. ID: ${event.id}, Correlation ID: ${correlationId}`)
   } catch (err) {
