@@ -19,14 +19,14 @@ async function main () {
   const scenarioPath = process.argv[2]
 
   if (!scenarioPath) {
-    console.log('📋 Available Event Scenarios:')
+    console.log('Available Event Scenarios:')
     console.log('==============================\n')
 
     const availableScenarios = listScenarios()
     for (const { path, count, description } of availableScenarios) {
-      console.log(`🎯 ${path}`)
+      console.log(`${path}`)
       console.log(`   ${description}`)
-      console.log(`   📊 Events: ${count}\n`)
+      console.log(`   Events: ${count}\n`)
     }
 
     console.log('Usage:')
@@ -42,8 +42,8 @@ async function main () {
     const events = getScenario(scenarioPath)
     const sender = createSqsSender()
 
-    console.log(`🎯 Scenario: ${scenarioPath}`)
-    console.log(`📊 Events to send: ${events.length}`)
+    console.log(`Scenario: ${scenarioPath}`)
+    console.log(`Events to send: ${events.length}`)
     console.log('='.repeat(50))
 
     await sender.sendScenario(events, {
@@ -55,7 +55,7 @@ async function main () {
   } catch (error) {
     if (error.message.includes('Scenario not found')) {
       console.error(`❌ ${error.message}`)
-      console.log('\n📋 Available scenarios:')
+      console.log('\nAvailable scenarios:')
       for (const { path } of listScenarios()) {
         console.log(`   ${path}`)
       }
