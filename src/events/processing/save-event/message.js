@@ -11,7 +11,7 @@ export async function saveMessageEvent (event) {
     await collection.insertOne({ ...event, _id: `${event.source}:${event.id}`, received: new Date() })
   } catch (err) {
     if (err.message.includes('E11000 duplicate key error')) {
-      logger.console.warn(`Skipping duplicate event. ID: ${event.id}`)
+      logger.warn(`Skipping duplicate event. ID: ${event.id}`)
     } else {
       throw err
     }
