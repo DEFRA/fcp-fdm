@@ -7,16 +7,27 @@ export async function saveMessageEvent (event) {
   const db = getMongoDbClient()
 
   try {
-    const { correlationId, recipient } = event.data
-    const eventEntity = { ...event, _id: `${event.source}:${event.id}`, received: new Date() }
+    const { correlationId, recipient, body, subject } = event.data
+
+    const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: new Date() }
+
+    await db.collection('events').insertOne(eventEntity)
+
+    const messageEntity = { _id: correlationId, recipient }
+
+    if (subject) {
+      messageEntity.subject = subject
+    }
+
+    if (body) {
+      messageEntity.body = body
+    }
 
     await db.collection('messages').updateOne(
-      { _id: correlationId, recipient },
+      messageEntity,
       { $push: { events: eventEntity } },
       { upsert: true }
     )
-
-    await db.collection('events').insertOne(eventEntity)
 
     logger.info(`Saved message event. ID: ${event.id}, Correlation ID: ${correlationId}`)
   } catch (err) {
