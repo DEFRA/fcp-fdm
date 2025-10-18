@@ -7,7 +7,7 @@ const events = {
     tags: ['api', 'events']
   },
   handler: async (request, h) => {
-    const allEvents = await request.db.collection('events-temp').find({}).toArray()
+    const allEvents = await request.db.collection('events').find({}).toArray()
     return h.response({ data: { events: allEvents } })
   }
 }

@@ -1,7 +1,7 @@
 import { MongoClient } from 'mongodb'
-import { LockManager } from 'mongo-locks'
 
 let mongoDbClient
+let mongoDbDatabase
 
 export const mongoDb = {
   plugin: {
@@ -16,8 +16,9 @@ export const mongoDb = {
 
       const databaseName = options.databaseName
       const db = client.db(databaseName)
-      mongoDbClient = db
-      const locker = new LockManager(db.collection('mongo-locks'))
+
+      mongoDbClient = client
+      mongoDbDatabase = db
 
       await createIndexes(db)
 
@@ -25,9 +26,7 @@ export const mongoDb = {
 
       server.decorate('server', 'mongoClient', client)
       server.decorate('server', 'db', db)
-      server.decorate('server', 'locker', locker)
       server.decorate('request', 'db', () => db, { apply: true })
-      server.decorate('request', 'locker', () => locker, { apply: true })
 
       server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
@@ -41,16 +40,20 @@ export const mongoDb = {
   }
 }
 
-export function getMongoDbClient () {
-  return mongoDbClient
+export function getMongoDb () {
+  return { client: mongoDbClient, db: mongoDbDatabase }
 }
 
 async function createIndexes (db) {
-  await db.collection('mongo-locks').createIndex({ id: 1 })
+  const defunctCollections = ['mongo-locks', 'events-temp']
+  const collections = await db.listCollections().toArray()
 
-  const eventsTempCollection = db.collection('events-temp')
-  await eventsTempCollection.createIndex({ id: 1 }, { unique: true })
-  await eventsTempCollection.createIndex({ receivedUtc: -1 })
-  // TTL index to automatically delete documents older than 30 minutes
-  await eventsTempCollection.createIndex({ receivedUtc: 1 }, { expireAfterSeconds: 1800 })
+  for (const defunctCollection of defunctCollections) {
+    if (collections.some(c => c.name === defunctCollection)) {
+      await db.collection(defunctCollection).drop()
+    }
+  }
+
+  await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
+  await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
 }
