@@ -1,5 +1,5 @@
 import { getEventType } from './get-event-type.js'
-import { saveEvent } from './save-event/save.js'
+import { saveEvent } from './save/save.js'
 import { createLogger } from '../../common/helpers/logging/logger.js'
 import { validateEvent, validateEventData } from './validate-event.js'
 

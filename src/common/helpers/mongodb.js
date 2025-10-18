@@ -1,6 +1,7 @@
 import { MongoClient } from 'mongodb'
 
 let mongoDbClient
+let mongoDbDatabase
 
 export const mongoDb = {
   plugin: {
@@ -15,7 +16,9 @@ export const mongoDb = {
 
       const databaseName = options.databaseName
       const db = client.db(databaseName)
-      mongoDbClient = db
+
+      mongoDbClient = client
+      mongoDbDatabase = db
 
       await createIndexes(db)
 
@@ -37,8 +40,8 @@ export const mongoDb = {
   }
 }
 
-export function getMongoDbClient () {
-  return mongoDbClient
+export function getMongoDb () {
+  return { client: mongoDbClient, db: mongoDbDatabase }
 }
 
 async function createIndexes (db) {
