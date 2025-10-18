@@ -56,7 +56,9 @@ async function main () {
     if (error.message.includes('Scenario not found')) {
       console.error(`❌ ${error.message}`)
       console.log('\n📋 Available scenarios:')
-      listScenarios().forEach(({ path }) => console.log(`   ${path}`))
+      for (const { path } of listScenarios()) {
+        console.log(`   ${path}`)
+      }
     } else {
       console.error('❌ Error sending events:', error.message)
     }
