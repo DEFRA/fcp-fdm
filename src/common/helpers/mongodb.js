@@ -1,4 +1,5 @@
 import { MongoClient } from 'mongodb'
+import { config } from '../../config.js'
 
 let mongoDbClient
 let mongoDbDatabase
@@ -56,4 +57,20 @@ async function createIndexes (db) {
 
   await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
   await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
+
+  const globalTtl = config.get('data.globalTtl')
+
+  if (globalTtl) {
+    await db.collection('events').createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
+    await db.collection('messages').createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
+  } else {
+    const indexes = await db.collection('events').indexes()
+    if (indexes.some(index => index.name === 'events_ttl')) {
+      await db.collection('events').dropIndex('events_ttl')
+    }
+    const messageIndexes = await db.collection('messages').indexes()
+    if (messageIndexes.some(index => index.name === 'messages_ttl')) {
+      await db.collection('messages').dropIndex('messages_ttl')
+    }
+  }
 }

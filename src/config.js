@@ -179,6 +179,15 @@ const config = convict({
       default: 'x-cdp-request-id',
       env: 'TRACING_HEADER'
     }
+  },
+  data: {
+    globalTtl: {
+      doc: 'Globally override TTL for all data in seconds',
+      format: Number,
+      nullable: true,
+      default: null,
+      env: 'DATA_GLOBAL_TTL'
+    }
   }
 })
 
