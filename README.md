@@ -441,6 +441,108 @@ The FDM service can be configured using the following environment variables:
 | `TRACING_HEADER` | CDP tracing header name | `x-cdp-request-id` | No |
 | `DATA_GLOBAL_TTL` | Global TTL for data in seconds | `null` | No |
 
+## Using FDM in Your Docker Compose
+
+To integrate the FCP-FDM service into your own project's Docker Compose setup, you need to include the service along with its required dependencies: MongoDB and LocalStack.
+
+### Dependencies
+
+The FCP-FDM service requires:
+
+1. **MongoDB with replica set** - Required for MongoDB sessions to work properly
+2. **LocalStack** - Provides SQS and SNS services for local development
+3. **LocalStack initialization script** - Sets up the required SQS queues and SNS topics
+
+### Minimum Setup
+
+Add this to your `docker-compose.yml`:
+
+```yaml
+services:
+  # Your existing services...
+  
+  fcp-fdm:
+    image: defradigital/fcp-fdm:latest  # Or specific version tag
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      localstack:
+        condition: service_healthy
+    environment:
+      MONGO_URI: mongodb://mongodb:27017
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+      AWS_SQS_QUEUE_URL: http://localstack:4566/000000000000/fcp_fdm_events
+      AWS_ENDPOINT_URL: http://localstack:4566
+    ports:
+      - '3000:3000'
+    networks:
+      - fcp-network
+
+  mongodb:
+    image: mongo:6.0.13
+    command: --replSet rs0 --bind_ip_all --port 27017
+    healthcheck:
+      test: test $$(mongosh --port 27017 --quiet --eval "try {rs.initiate({_id:'rs0',members:[{_id:0,host:\"mongodb:27017\"}]})} catch(e) {rs.status().ok}") -eq 1
+      interval: 10s
+      start_period: 10s
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongodb-data:/data
+    networks:
+      - fcp-network
+
+  localstack:
+    image: localstack/localstack
+    environment:
+      LS_LOG: warn
+      SERVICES: sqs,sns
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    healthcheck:
+      test: ['CMD', 'curl', 'localhost:4566']
+      interval: 5s
+      start_period: 5s
+      retries: 3
+    ports:
+      - '4566:4566'
+    volumes:
+      - ./path/to/fcp-fdm/localstack/localstack.sh:/etc/localstack/init/ready.d/localstack.sh
+      - localstack-data:/var/lib/localstack
+    networks:
+      - fcp-network
+
+networks:
+  fcp-network:
+    driver: bridge
+
+volumes:
+  mongodb-data:
+  localstack-data:
+```
+
+### LocalStack Initialization Script
+
+Copy or reference the LocalStack setup script from the FCP-FDM repository at [`localstack/localstack.sh`](localstack/localstack.sh). This script creates the required SQS queues, dead letter queues, SNS topics, and subscriptions needed for the service to function properly.
+
+### Important Notes
+
+1. **Startup Order**: The `depends_on` conditions ensure MongoDB and LocalStack are healthy before FCP-FDM starts
+2. **MongoDB Replica Set**: The `--replSet rs0` command flag is essential for MongoDB sessions to work
+5. **LocalStack Script**: Use the provided [`localstack/localstack.sh`](localstack/localstack.sh) script from the FCP-FDM repository - it sets up all required SQS queues and SNS topics
+4. **Network**: All services must be on the same Docker network to communicate
+5. **Health Checks**: MongoDB and LocalStack include health checks to ensure proper startup sequencing
+
+### Accessing the Service
+
+Once running, the FCP-FDM service will be available at:
+- **API**: `http://localhost:3000`
+- **Health Check**: `http://localhost:3000/health`
+
+The service will automatically start consuming events from the SQS queue and storing them in MongoDB.
+
 ## Requirements
 
 ### Docker
