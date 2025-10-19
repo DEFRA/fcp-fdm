@@ -1,8 +1,11 @@
 import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { config } from '../config.js'
-import { processEventMessage } from './process.js'
+import { processEvent } from './process.js'
+import { createLogger } from '../common/helpers/logging/logger.js'
 
 const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
+
+const logger = createLogger()
 
 const sqsClient = new SQSClient({
   region,
@@ -20,19 +23,20 @@ const receiveParams = {
   WaitTimeSeconds: 10,
 }
 
-export async function consumeEventMessages () {
-  const { Messages } = await sqsClient.send(
-    new ReceiveMessageCommand(receiveParams)
-  )
+export async function consumeEvents () {
+  const { Messages } = await sqsClient.send(new ReceiveMessageCommand(receiveParams))
+
   if (Messages) {
-    for (const message of Messages) {
-      await processEventMessage(message)
-      await sqsClient.send(
-        new DeleteMessageCommand({
+    for (const event of Messages) {
+      try {
+        await processEvent(event)
+        await sqsClient.send(new DeleteMessageCommand({
           QueueUrl: sqs.queueUrl,
-          ReceiptHandle: message.ReceiptHandle
-        })
-      )
+          ReceiptHandle: event.ReceiptHandle
+        }))
+      } catch (err) {
+        logger.error(err, 'Unable to process event')
+      }
     }
   }
 }

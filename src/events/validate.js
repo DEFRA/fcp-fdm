@@ -1,8 +1,9 @@
-import schema from './schema.js'
+export async function validateEvent (event, eventType) {
+  const schema = await import(`./schemas/${eventType}.js`)
 
-function isEventValid (event) {
-  const validationResult = schema.validate(event, { abortEarly: false, allowUnknown: true })
-  return !validationResult.error
+  const validationResult = schema.default.validate(event, { abortEarly: false, allowUnknown: true })
+
+  if (validationResult.error) {
+    throw new Error(`Event is invalid, ${validationResult.error.message}`)
+  }
 }
-
-export { isEventValid }

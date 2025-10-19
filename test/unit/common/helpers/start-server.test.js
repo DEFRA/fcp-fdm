@@ -27,31 +27,25 @@ vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
 }))
 
 vi.mock('../../../../src/events/polling.js', () => ({
-  pollForEventMessages: vi.fn()
+  pollForEvents: vi.fn()
 }))
 
 vi.mock('mongodb', () => ({
   MongoClient: {
     connect: vi.fn().mockResolvedValue({
       db: vi.fn().mockReturnValue({
+        listCollections: vi.fn().mockReturnValue({
+          toArray: vi.fn().mockResolvedValue([])
+        }),
         collection: vi.fn().mockReturnValue({
-          createIndex: vi.fn().mockResolvedValue(true)
+          createIndex: vi.fn().mockResolvedValue(true),
+          drop: vi.fn().mockResolvedValue(true),
+          indexes: vi.fn().mockResolvedValue([])
         })
       }),
-      close: vi.fn().mockResolvedValue(true),
-      topology: {
-        isDestroyed: vi.fn().mockReturnValue(false),
-        s: { state: 'connected' }
-      }
+      close: vi.fn().mockResolvedValue(true)
     })
   }
-}))
-
-vi.mock('mongo-locks', () => ({
-  LockManager: vi.fn().mockImplementation(() => ({
-    lock: vi.fn().mockResolvedValue(true),
-    unlock: vi.fn().mockResolvedValue(true)
-  }))
 }))
 
 describe('startServer', () => {
@@ -123,7 +117,7 @@ describe('startServer', () => {
 
       expect(mockLoggerInfo).toHaveBeenCalledWith('Server failed to start')
       expect(mockLoggerError).toHaveBeenCalledWith(
-        Error('Server failed to start')
+        new Error('Server failed to start')
       )
     })
   })

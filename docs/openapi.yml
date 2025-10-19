@@ -1,0 +1,113 @@
+openapi: 3.1.0
+info:
+  title: FCP Farming Data Model (FDM) - REST API
+  version: 1.0.0
+  description: |
+    The Farming Data Model (FDM) REST API provides access to aggregated farming and 
+    countryside programme data collected from various FCP services.
+  license:
+    name: Open Government Licence v3.0
+    url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://fcp-fdm-dev.example.com
+    description: Development environment
+  - url: https://fcp-fdm-test.example.com
+    description: Test environment
+  - url: https://fcp-fdm.example.com
+    description: Production environment
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health
+      summary: Service health check
+      description: |
+        Returns the health status of the FDM service. This endpoint can be used
+        for monitoring, load balancer health checks, and service discovery.
+      operationId: getHealth
+      responses:
+        '200':
+          description: Service is healthy and operational
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              examples:
+                success:
+                  summary: Healthy service response
+                  value:
+                    message: "success"
+        '500':
+          description: Service is unhealthy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                error:
+                  summary: Service error response
+                  value:
+                    statusCode: 500
+                    error: "Internal Server Error"
+                    message: "Service temporarily unavailable"
+
+  /documentation:
+    get:
+      tags:
+        - Documentation
+      summary: API documentation
+      description: |
+        Interactive API documentation powered by Swagger UI. Available only in
+        development mode for exploring the API endpoints and schemas.
+      operationId: getDocumentation
+      responses:
+        '200':
+          description: Swagger UI documentation page
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Documentation not available (production mode)
+
+tags:
+  - name: Health
+    description: Service health and monitoring endpoints
+  - name: Documentation
+    description: API documentation and exploration
+
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Health status message
+          example: "success"
+      required:
+        - message
+    
+    ErrorResponse:
+      type: object
+      properties:
+        statusCode:
+          type: integer
+          description: HTTP status code
+          example: 500
+        error:
+          type: string
+          description: Error type
+          example: "Internal Server Error"
+        message:
+          type: string
+          description: Error message
+          example: "Service temporarily unavailable"
+      required:
+        - statusCode
+        - error
+        - message

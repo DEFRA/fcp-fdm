@@ -42,23 +42,12 @@ async function createServer () {
 
   server.validator(Joi)
 
-  // Hapi Plugins:
-  // requestLogger  - automatically logs incoming requests
-  // requestTracing - trace header logging and propagation
-  // secureContext  - loads CA certificates from environment config
-  // pulse          - provides shutdown handlers
-  // postgres       - database connection
-  // swagger        - API documentation
-  // router         - routes used in the app
   await server.register([
     requestLogger,
     requestTracing,
     secureContext,
     pulse,
-    {
-      plugin: mongoDb,
-      options: config.get('mongo')
-    },
+    mongoDb,
     ...swagger,
     router
   ])
