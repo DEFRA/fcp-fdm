@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../../src/config.js'
-import * as messageEvents from '../../../../events/messages/events.js'
+import * as messageEvents from '../../../../events/message/events.js'
 import { save } from '../../../../../src/events/save/message.js'
 import { clearAllCollections } from '../../../../helpers/mongo.js'
 
@@ -17,12 +17,12 @@ describe('save', () => {
     collections = mongoDb.collections
   })
 
-  afterAll(async () => {
-    await closeMongoDbConnection()
-  })
-
   beforeEach(async () => {
     await clearAllCollections(db, collections)
+  })
+
+  afterAll(async () => {
+    await closeMongoDbConnection()
   })
 
   test.each(Object.keys(messageEvents))('should save event to event collection for %s with composite _id', async (eventName) => {

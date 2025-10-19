@@ -1,11 +1,5 @@
 import { SQSClient, SendMessageCommand } from '@aws-sdk/client-sqs'
 
-/**
- * SQS Event Sender Utility
- *
- * Sends CloudEvents-compliant messages to SQS via LocalStack
- * Wraps events in SNS message format as expected by the consumer
- */
 class SqsSender {
   constructor (options = {}) {
     const {
@@ -109,25 +103,12 @@ export function createSqsSender (options = {}) {
   return new SqsSender(options)
 }
 
-/**
- * Quick send function for single events
- * @param {Object} event - CloudEvents-compliant event
- * @returns {Promise<Object>} SQS response
- */
-export async function sendEvent (event) {
-  const sender = createSqsSender()
-  return sender.sendEvent(event)
-}
-
-/**
- * Quick send function for multiple events
- * @param {Array<Object>} events - Array of CloudEvents-compliant events
- * @param {Object} options - Optional configuration
- * @returns {Promise<Array<Object>>} Array of SQS responses
- */
-export async function sendEvents (events, options = {}) {
-  const sender = createSqsSender()
-  return sender.sendEvents(events, options)
+export function createSqsFormatEventMessage (event) {
+  return {
+    Body: JSON.stringify({
+      Message: JSON.stringify(event)
+    })
+  }
 }
 
 export { SqsSender }

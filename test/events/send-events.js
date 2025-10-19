@@ -12,8 +12,8 @@
  *   node send-events.js stress.highVolume         # Send high volume stress test
  */
 
-import { createSqsSender } from '../helpers/sqs-sender.js'
-import { getScenario, listScenarios } from './messages/scenarios.js'
+import { createSqsSender } from '../helpers/sqs.js'
+import { getScenario, listScenarios } from './message/scenarios.js'
 
 async function main () {
   const scenarioPath = process.argv[2]
