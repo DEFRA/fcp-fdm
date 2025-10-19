@@ -2,7 +2,7 @@ import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../src/common/helpers/mongodb.js'
 import { config } from '../../../src/config.js'
 import { clearAllCollections } from '../../helpers/mongo.js'
-import { getScenario } from '../../events/message/scenarios.js'
+import { getScenario } from '../scenarios.js'
 import { processScenarioEvents } from '../../helpers/scenarios.js'
 
 let db

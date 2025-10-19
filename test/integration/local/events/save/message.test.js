@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../../src/config.js'
-import * as messageEvents from '../../../../events/message/events.js'
+import * as messageEvents from '../../../../mocks/events.js'
 import { save } from '../../../../../src/events/save/message.js'
 import { clearAllCollections } from '../../../../helpers/mongo.js'
 

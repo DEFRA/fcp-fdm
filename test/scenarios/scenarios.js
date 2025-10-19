@@ -1,4 +1,4 @@
-import * as events from './events.js'
+import * as events from '../mocks/events.js'
 
 export const singleEvents = {
   messageRequest: [events.messageRequest],
@@ -98,38 +98,19 @@ export function listScenarios () {
       if (Array.isArray(value)) {
         list.push({
           path: currentPath,
-          count: value.length,
-          description: getScenarioDescription(currentPath)
+          count: value.length
         })
-      }
-
-      if (typeof value === 'object') {
+      } else if (typeof value === 'object') {
         traverse(value, currentPath)
+      } else {
+        list.push({
+          path: currentPath,
+          count: 1
+        })
       }
     }
   }
 
   traverse(scenarios)
   return list
-}
-
-function getScenarioDescription (path) {
-  const descriptions = {
-    'single.messageRequest': 'Single message request event',
-    'single.validationFailure': 'Single validation failure event',
-    'single.statusSending': 'Single sending status event',
-    'single.statusDelivered': 'Single delivered status event',
-    'single.statusProviderFailure': 'Single provider failure event',
-    'single.statusInternalFailure': 'Single internal failure event',
-    'single.messageRetryRequest': 'Single retry request event',
-    'single.statusRetryExpired': 'Single retry expired event',
-    'streams.successful': 'Complete successful message stream',
-    'streams.validationFailure': 'Stream ending in validation failure',
-    'streams.providerFailure': 'Stream ending in provider failure',
-    'streams.internalFailure': 'Stream ending in internal failure',
-    'streams.retrySuccess': 'Stream with successful retry',
-    'streams.retryFailure': 'Stream with failed retry'
-  }
-
-  return descriptions[path] || 'Custom scenario'
 }

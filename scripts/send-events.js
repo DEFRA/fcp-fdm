@@ -5,15 +5,14 @@
  *
  * Send different event scenarios to SQS for local development and testing
  *
- * Usage:
+ * Usage examples:
  *   node send-events.js                           # List all scenarios
  *   node send-events.js streams.successful        # Send successful stream
  *   node send-events.js single.messageRequest     # Send single message request
- *   node send-events.js stress.highVolume         # Send high volume stress test
  */
 
-import { createSqsSender } from '../helpers/sqs.js'
-import { getScenario, listScenarios } from './message/scenarios.js'
+import { SqsSender } from './sqs-sender.js'
+import { getScenario, listScenarios } from '../test/scenarios/scenarios.js'
 
 async function main () {
   const scenarioPath = process.argv[2]
@@ -23,10 +22,9 @@ async function main () {
     console.log('==============================\n')
 
     const availableScenarios = listScenarios()
-    for (const { path, count, description } of availableScenarios) {
+    for (const { path, count } of availableScenarios) {
       console.log(`${path}`)
-      console.log(`   ${description}`)
-      console.log(`   Events: ${count}`)
+      console.log(`   Events: ${count}\n`)
     }
 
     console.log('Usage:')
@@ -40,7 +38,7 @@ async function main () {
 
   try {
     const events = getScenario(scenarioPath)
-    const sender = createSqsSender()
+    const sender = new SqsSender()
 
     console.log(`Scenario: ${scenarioPath}`)
     console.log(`Events to send: ${events.length}`)
