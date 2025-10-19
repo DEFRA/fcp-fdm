@@ -35,12 +35,12 @@ vi.mock('mongodb', () => ({
     connect: vi.fn().mockResolvedValue({
       db: vi.fn().mockReturnValue({
         listCollections: vi.fn().mockReturnValue({
-          toArray: vi.fn().mockResolvedValue([]) // Empty collections list for fresh DB
+          toArray: vi.fn().mockResolvedValue([])
         }),
         collection: vi.fn().mockReturnValue({
           createIndex: vi.fn().mockResolvedValue(true),
           drop: vi.fn().mockResolvedValue(true),
-          indexes: vi.fn().mockResolvedValue([]) // No existing indexes
+          indexes: vi.fn().mockResolvedValue([])
         })
       }),
       close: vi.fn().mockResolvedValue(true)
