@@ -310,6 +310,47 @@ node ./scripts/send-events.js single.messageRequest
 # - streams.*: Complete event flow scenarios
 ```
 
+#### Sending Test Events in CDP Environments
+
+Use the CDP terminal for your target environment. The AWS CLI is already installed and configured.
+
+1. Create a test message file (CloudEvent format):
+   ```bash
+   cat > test-message.json << 'EOF'
+   {
+     "specversion": "1.0",
+     "type": "uk.gov.fcp.sfd.notification.message.request",
+     "source": "sfd-comms-service",
+     "id": "test-001",
+     "time": "2025-10-19T10:30:00Z",
+     "datacontenttype": "application/json",
+     "data": {
+       "correlationId": "test-correlation-001",
+       "personalisation": {
+         "firstName": "Test",
+         "lastName": "User"
+       },
+       "recipient": {
+         "contactId": "test-contact-001",
+         "email": "test@example.com"
+       },
+       "reference": "TEST-REF-001",
+       "templateId": "test-template"
+     }
+   }
+   EOF
+   ```
+
+2. Send the message to the SQS queue:
+   ```bash
+   aws sqs send-message \
+     --queue-url "https://sqs.eu-west-2.amazonaws.com/<account-id>/fcp-fdm-events" \
+     --message-body file://test-message.json \
+     --region eu-west-2
+   ```
+
+Replace `<account-id>` with CDP environment account ID.
+
 ## Test Structure
 
 The test suite is organized into distinct categories.
@@ -339,38 +380,11 @@ npm run docker:test
 
 # Run tests in watch mode for development
 npm run docker:test:watch
-
-# Run specific test categories
-npm test -- test/unit/
-npm test -- test/integration/
-npm test -- test/scenarios/
 ```
 
 ## API Endpoints
 
-Data collected by the Farming Data Model service can be accessed via the following API endpoints:
-
-> **📋 REST API Specification**  
-> Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
-
-### Current Endpoints
-
-| Endpoint                                               | Method | Description                                      |
-| :----------------------------------------------------- | :----- | :----------------------------------------------- |
-| `GET: /health`                                         | GET    | Health check endpoint                            |
-| `GET: /documentation`                                  | GET    | Interactive API documentation (development only) |
-
-### Future Endpoints
-
-The following endpoints are planned for future releases to provide query access to the aggregated data:
-
-| Planned Endpoint | Method | Description |
-|------------------|--------|-------------|
-| `GET: /messages` | GET | Query message flows with filtering |
-| `GET: /messages/{correlationId}` | GET | Get specific message flow details |
-| `GET: /events` | GET | Query individual events with filtering |
-
-All endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
+Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
 
 Interactive API documentation can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 

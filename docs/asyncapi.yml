@@ -14,19 +14,7 @@ info:
 
 defaultContentType: application/json
 
-servers:
-  production:
-    host: sqs.eu-west-2.amazonaws.com
-    protocol: sqs
-    description: Production AWS SQS
-    bindings:
-      sqs:
-        region: eu-west-2
-        queueName: fcp_fdm_events
-        deadLetterQueue:
-          name: fcp_fdm_events-deadletter
-          maxReceiveCount: 3
-  
+servers:  
   development:
     host: localhost:4566
     protocol: sqs
