@@ -7,8 +7,45 @@
 
 # Farming Data Model (FDM)
 
-The Farming Data Model service is a common component to support data exchange between the various
-Farming and Countryside Programme (FCP) services.
+The Farming Data Model (FDM) service is a common component to support data exchange between Farming and Countryside Programme (FCP) services.
+
+FDM subscribes to events across the FCP ecosystem via an AWS SQS queue.  These events are persisted and precompiled into a data model which can be queried via a REST API endpoints.
+
+## SQS events
+
+The Farming Data Model service consumes events from an AWS SQS queue named `fcp_fdm_events`.
+
+| Event sources                                      | Description                                                    |
+| :------------------------------------------------- | :------------------------------------------------------------- |
+| `Single Front Door (SFD) Comms message`            | Events relating to customer emails sent via SFD Comms service. |
+
+### Sending test events
+
+To support local development, a Node.js script has been provided to send test events to the SQS queue based on predefined scenarios.
+
+To send a single event, run the following command, replacing `single.messageRequest` with the desired scenario name:
+
+```bash
+node ./scripts/send-event.js single.messageRequest
+```
+
+To list the available event scenarios, run:
+
+```bash
+node ./scripts/send-event.js
+```
+
+## API endpoints
+
+Data collected by the Farming Data Model service can be accessed via the following API endpoints:
+
+| Endpoint                                               | Method | Description                                      |
+| :----------------------------------------------------- | :----- | :----------------------------------------------- |
+| `GET: /health`                                         | GET    | Health check endpoint                            |
+
+All these endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
+
+Documentation for the API can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 
 ## Requirements
 
@@ -51,38 +88,6 @@ Tests can also be run in watch mode to support Test Driven Development (TDD):
 ```bash
 npm run docker:test:watch
 ```
-
-## SQS events
-
-The Farming Data Model service consumes events from an AWS SQS queue.
-
-### Sending test events
-
-To support local development, a Node.js script has been provided to send test events to the SQS queue based on predefined scenarios.
-
-To send a single event, run the following command, replacing `single.messageRequest` with the desired scenario name:
-
-```bash
-node ./scripts/send-event.js single.messageRequest
-```
-
-To list the available event scenarios, run:
-
-```bash
-node ./scripts/send-event.js
-```
-
-## API endpoints
-
-Data collected by the Farming Data Model service can be accessed via the following API endpoints:
-
-| Endpoint                                               | Method | Description                                      |
-| :----------------------------------------------------- | :----- | :----------------------------------------------- |
-| `GET: /health`                                         | GET    | Health check endpoint                            |
-
-All these endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
-
-Documentation for the API can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 
 ## Licence
 
