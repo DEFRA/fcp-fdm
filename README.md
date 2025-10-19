@@ -68,6 +68,10 @@ graph TB
 
 The FDM service implements a robust event processing pipeline that handles CloudEvents from various sources:
 
+> **📋 Event API Specification**  
+> Complete AsyncAPI specification available at: [`docs/asyncapi.yml`](./docs/asyncapi.yml)  
+> Defines all supported inbound events, schemas, and examples.
+
 ### Processing Flow
 
 ```mermaid
@@ -149,6 +153,9 @@ The event processing follows this logical flow through the codebase:
 ### Message Events
 
 The service currently processes message events from the SFD Comms service:
+
+> **📋 Detailed Event Schemas**  
+> Complete event schemas, examples, and validation rules are available in the AsyncAPI specification: [`docs/asyncapi.yml`](./docs/asyncapi.yml)
 
 | Event Type | Description | Schema |
 |------------|-------------|---------|
@@ -305,51 +312,7 @@ node ./scripts/send-events.js single.messageRequest
 
 ## Test Structure
 
-The test suite is organized into distinct categories for comprehensive coverage:
-
-```
-test/
-├── unit/                          # Unit tests with mocking
-│   ├── events/                    # Event processing tests
-│   │   ├── consumer.test.js       # SQS consumer logic
-│   │   ├── process.test.js        # Event processing pipeline
-│   │   ├── parse.test.js          # Message parsing
-│   │   ├── validate.test.js       # Schema validation
-│   │   ├── save.test.js           # Dynamic save logic
-│   │   ├── types.test.js          # Event type mapping
-│   │   └── schemas/               # Schema validation tests
-│   │       ├── cloud-event.test.js
-│   │       └── message.test.js
-│   ├── common/                    # Common utilities tests
-│   │   └── helpers/               # Helper function tests
-│   ├── plugins/                   # Hapi plugin tests
-│   └── config.test.js            # Configuration tests
-│
-├── integration/                   # Integration tests with real services
-│   ├── local/                     # Local service integration
-│   │   └── events/
-│   │       └── save/              # Database integration tests
-│   │           └── message.test.js
-│   └── narrow/                    # API endpoint tests
-│       └── routes/
-│           └── health.test.js
-│
-├── scenarios/                     # End-to-end scenario tests
-│   └── events/
-│       └── message.test.js        # Complete message flow testing
-│
-├── helpers/                       # Test utilities and helpers
-│   ├── mongo.js                   # MongoDB test helpers
-│   └── scenarios.js               # Scenario processing helpers
-│
-├── mocks/                         # Mock data and fixtures
-│   └── events.js                  # Mock CloudEvent data
-│
-└── events/                        # Event test data and scenarios
-    └── message/
-        ├── events.js              # Individual event definitions
-        └── scenarios.js           # Event flow scenarios
-```
+The test suite is organized into distinct categories.
 
 ### Test Categories
 
@@ -387,13 +350,29 @@ npm test -- test/scenarios/
 
 Data collected by the Farming Data Model service can be accessed via the following API endpoints:
 
+> **📋 REST API Specification**  
+> Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
+
+### Current Endpoints
+
 | Endpoint                                               | Method | Description                                      |
 | :----------------------------------------------------- | :----- | :----------------------------------------------- |
 | `GET: /health`                                         | GET    | Health check endpoint                            |
+| `GET: /documentation`                                  | GET    | Interactive API documentation (development only) |
 
-All these endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
+### Future Endpoints
 
-Documentation for the API can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
+The following endpoints are planned for future releases to provide query access to the aggregated data:
+
+| Planned Endpoint | Method | Description |
+|------------------|--------|-------------|
+| `GET: /messages` | GET | Query message flows with filtering |
+| `GET: /messages/{correlationId}` | GET | Get specific message flow details |
+| `GET: /events` | GET | Query individual events with filtering |
+
+All endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
+
+Interactive API documentation can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 
 ## Environment Variables
 
