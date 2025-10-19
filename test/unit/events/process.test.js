@@ -65,6 +65,7 @@ describe('processEvent', () => {
 
   test('should abandon processing if parsing fails', async () => {
     const parseError = new Error('Test parsing error')
+
     mockParseEvent.mockImplementationOnce(() => {
       throw parseError
     })
@@ -78,6 +79,7 @@ describe('processEvent', () => {
 
   test('should abandon processing if getting event type fails', async () => {
     const typeError = new Error('Test event type error')
+
     mockGetEventType.mockImplementationOnce(() => {
       throw typeError
     })
@@ -90,6 +92,7 @@ describe('processEvent', () => {
 
   test('should abandon processing if validation fails', async () => {
     const validationError = new Error('Test validation error')
+
     mockValidateEvent.mockImplementationOnce(() => {
       throw validationError
     })
