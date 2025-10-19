@@ -21,7 +21,9 @@ export const mongoDb = {
       mongoDbClient = client
       mongoDbDatabase = db
 
+      await removeDefunctCollections(db)
       await createIndexes(db)
+      await configureGlobalTtlIndexes(db)
 
       server.logger.info(`MongoDb connected to ${databaseName}`)
 
@@ -46,6 +48,11 @@ export function getMongoDb () {
 }
 
 async function createIndexes (db) {
+  await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
+  await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
+}
+
+async function removeDefunctCollections (db) {
   const defunctCollections = ['mongo-locks', 'events-temp']
   const collections = await db.listCollections().toArray()
 
@@ -54,27 +61,31 @@ async function createIndexes (db) {
       await db.collection(defunctCollection).drop()
     }
   }
+}
 
-  await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
-  await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
-
+async function configureGlobalTtlIndexes (db) {
   const globalTtl = config.get('data.globalTtl')
 
   if (globalTtl) {
     await db.collection('events').createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
     await db.collection('messages').createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
   } else {
-    if (collections.some(c => c.name === 'events')) {
-      const indexes = await db.collection('events').indexes()
-      if (indexes.some(index => index.name === 'events_ttl')) {
-        await db.collection('events').dropIndex('events_ttl')
-      }
-    }
+    await removeTtlIndexes(db)
+  }
+}
 
-    if (collections.some(c => c.name === 'messages')) {
-      const messageIndexes = await db.collection('messages').indexes()
-      if (messageIndexes.some(index => index.name === 'messages_ttl')) {
-        await db.collection('messages').dropIndex('messages_ttl')
+async function removeTtlIndexes (db) {
+  const collections = await db.listCollections().toArray()
+  const ttlIndexesToRemove = [
+    { collection: 'events', indexName: 'events_ttl' },
+    { collection: 'messages', indexName: 'messages_ttl' }
+  ]
+
+  for (const { collection, indexName } of ttlIndexesToRemove) {
+    if (collections.some(c => c.name === collection)) {
+      const indexes = await db.collection(collection).indexes()
+      if (indexes.some(index => index.name === indexName)) {
+        await db.collection(collection).dropIndex(indexName)
       }
     }
   }
