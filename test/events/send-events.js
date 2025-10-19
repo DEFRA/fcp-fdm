@@ -26,7 +26,7 @@ async function main () {
     for (const { path, count, description } of availableScenarios) {
       console.log(`${path}`)
       console.log(`   ${description}`)
-      console.log(`   Events: ${count}\n`)
+      console.log(`   Events: ${count}`)
     }
 
     console.log('Usage:')
@@ -44,7 +44,7 @@ async function main () {
 
     console.log(`Scenario: ${scenarioPath}`)
     console.log(`Events to send: ${events.length}`)
-    console.log('='.repeat(50))
+    console.log('==============================')
 
     await sender.sendScenario(events, {
       name: scenarioPath,
@@ -54,13 +54,13 @@ async function main () {
     console.log('\n✅ Scenario completed successfully!')
   } catch (error) {
     if (error.message.includes('Scenario not found')) {
-      console.error(`❌ ${error.message}`)
+      console.error(error.message)
       console.log('\nAvailable scenarios:')
       for (const { path } of listScenarios()) {
         console.log(`   ${path}`)
       }
     } else {
-      console.error('❌ Error sending events:', error.message)
+      console.error('Error sending events:', error.message)
     }
     process.exit(1)
   }
