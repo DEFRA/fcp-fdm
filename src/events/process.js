@@ -1,5 +1,5 @@
-import { getEventType } from './get-event-type.js'
-import { saveEvent } from './save/save.js'
+import { getEventType } from './types.js'
+import { saveEvent } from './save.js'
 import { validateEvent } from './validate.js'
 
 export async function processEvent (message) {
