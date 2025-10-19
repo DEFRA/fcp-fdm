@@ -11,6 +11,6 @@ export async function pollForEventMessages () {
   try {
     await consumeEventMessages()
   } catch (err) {
-    logger.error(err)
+    logger.error(err, 'Error polling for event messages')
   }
 }

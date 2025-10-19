@@ -24,19 +24,16 @@ const receiveParams = {
 }
 
 export async function consumeEventMessages () {
-  const { Messages } = await sqsClient.send(
-    new ReceiveMessageCommand(receiveParams)
-  )
+  const { Messages } = await sqsClient.send(new ReceiveMessageCommand(receiveParams))
+
   if (Messages) {
     for (const message of Messages) {
       try {
         await processEvent(message)
-        await sqsClient.send(
-          new DeleteMessageCommand({
-            QueueUrl: sqs.queueUrl,
-            ReceiptHandle: message.ReceiptHandle
-          })
-        )
+        await sqsClient.send(new DeleteMessageCommand({
+          QueueUrl: sqs.queueUrl,
+          ReceiptHandle: message.ReceiptHandle
+        }))
       } catch (err) {
         logger.error(err, 'Unable to process event')
       }

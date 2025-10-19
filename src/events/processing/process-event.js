@@ -1,17 +1,10 @@
 import { getEventType } from './get-event-type.js'
 import { saveEvent } from './save/save.js'
-import { createLogger } from '../../common/helpers/logging/logger.js'
-import { validateEvent, validateEventData } from './validate-event.js'
-
-const logger = createLogger()
+import { validateEvent } from './validate-event.js'
 
 export async function processEvent (message) {
   const event = JSON.parse(JSON.parse(message.Body).Message)
-
-  logger.debug('Event received')
-  logger.debug(event)
-  validateEvent(event)
   const eventType = getEventType(event.type)
-  await validateEventData(event.data, eventType)
+  await validateEvent(event, eventType)
   await saveEvent(event, eventType)
 }
