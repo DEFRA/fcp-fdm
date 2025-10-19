@@ -3,6 +3,7 @@ import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../
 import { config } from '../../../../../src/config.js'
 import * as messageEvents from '../../../../events/messages/events.js'
 import { save } from '../../../../../src/events/save/message.js'
+import { clearAllCollections } from '../../../../helpers/mongo.js'
 
 let db
 let collections
@@ -21,7 +22,7 @@ describe('save', () => {
   })
 
   beforeEach(async () => {
-    await clearAllCollections()
+    await clearAllCollections(db, collections)
   })
 
   test.each(Object.keys(messageEvents))('should save event to event collection for %s with composite _id', async (eventName) => {
@@ -101,9 +102,3 @@ describe('save', () => {
     expect(savedMessage.body).toBe(updateEvent.data.body)
   })
 })
-
-async function clearAllCollections () {
-  for (const collection of Object.keys(collections)) {
-    await db.collection(collection).deleteMany({})
-  }
-}
