@@ -1,6 +1,14 @@
 import { MongoClient } from 'mongodb'
 import { config } from '../../config.js'
 
+const EVENT_COLLECTION = 'events'
+const MESSAGE_COLLECTION = 'messages'
+
+const mongoDbCollections = {
+  events: EVENT_COLLECTION,
+  messages: MESSAGE_COLLECTION
+}
+
 let mongoDbClient
 let mongoDbDatabase
 
@@ -44,12 +52,12 @@ export const mongoDb = {
 }
 
 export function getMongoDb () {
-  return { client: mongoDbClient, db: mongoDbDatabase }
+  return { client: mongoDbClient, db: mongoDbDatabase, collections: mongoDbCollections }
 }
 
 async function createIndexes (db) {
-  await db.collection('events').createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
-  await db.collection('events').createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
+  await db.collection(EVENT_COLLECTION).createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
+  await db.collection(EVENT_COLLECTION).createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
 }
 
 async function removeDefunctCollections (db) {
@@ -67,8 +75,8 @@ async function configureGlobalTtlIndexes (db) {
   const globalTtl = config.get('data.globalTtl')
 
   if (globalTtl) {
-    await db.collection('events').createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
-    await db.collection('messages').createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(EVENT_COLLECTION).createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(MESSAGE_COLLECTION).createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
   } else {
     await removeTtlIndexes(db)
   }
@@ -77,8 +85,8 @@ async function configureGlobalTtlIndexes (db) {
 async function removeTtlIndexes (db) {
   const collections = await db.listCollections().toArray()
   const ttlIndexesToRemove = [
-    { collection: 'events', indexName: 'events_ttl' },
-    { collection: 'messages', indexName: 'messages_ttl' }
+    { collection: EVENT_COLLECTION, indexName: 'events_ttl' },
+    { collection: MESSAGE_COLLECTION, indexName: 'messages_ttl' }
   ]
 
   for (const { collection, indexName } of ttlIndexesToRemove) {

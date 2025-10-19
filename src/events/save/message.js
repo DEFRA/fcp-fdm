@@ -6,7 +6,8 @@ const logger = createLogger()
 export async function save (event) {
   const { correlationId, recipient, body, subject } = event.data
 
-  const { db, client } = getMongoDb()
+  const { db, client, collections } = getMongoDb()
+  const { events: eventCollection, messages: messageCollection } = collections
   const session = client.startSession()
 
   try {
@@ -15,9 +16,9 @@ export async function save (event) {
 
       const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: now }
 
-      await db.collection('events').insertOne(eventEntity, { session })
+      await db.collection(eventCollection).insertOne(eventEntity, { session })
 
-      await db.collection('messages').updateOne(
+      await db.collection(messageCollection).updateOne(
         { _id: correlationId },
         {
           $setOnInsert: { _id: correlationId, recipient, created: now },
