@@ -19,6 +19,12 @@ describe('message event scenarios', () => {
 
   beforeEach(async () => {
     await clearAllCollections(db, collections)
+
+    const events = await db.collection(collections.events).find({}).toArray()
+    expect(events).toHaveLength(0)
+
+    const messages = await db.collection(collections.messages).find({}).toArray()
+    expect(messages).toHaveLength(0)
   })
 
   afterAll(async () => {
@@ -56,5 +62,40 @@ describe('message event scenarios', () => {
     const savedMessages = await db.collection(collections.messages).find({}).toArray()
     expect(savedMessages).toHaveLength(1)
     expect(savedMessages[0].events.length).toBe(3)
+  })
+
+  test('should process an internal failure scenario', async () => {
+    await processScenarioEvents(getScenario('streams.internalFailure'))
+
+    const savedEvents = await db.collection(collections.events).find({}).toArray()
+    expect(savedEvents.length).toBe(2)
+
+    const savedMessages = await db.collection(collections.messages).find({}).toArray()
+    expect(savedMessages).toHaveLength(1)
+    expect(savedMessages[0].events.length).toBe(2)
+  })
+
+  test('should process a retry success scenario', async () => {
+    await processScenarioEvents(getScenario('streams.retrySuccess'))
+
+    const savedEvents = await db.collection(collections.events).find({}).toArray()
+    expect(savedEvents.length).toBe(5)
+
+    const savedMessages = await db.collection(collections.messages).find({}).toArray()
+    expect(savedMessages).toHaveLength(1)
+    expect(savedMessages[0].events.length).toBe(5)
+  })
+
+  test('should process a retry failure scenario', async () => {
+    await processScenarioEvents(getScenario('streams.retryFailure'))
+
+    const savedEvents = await db.collection(collections.events).find({}).toArray()
+
+    console.log('Saved Events:', savedEvents)
+    expect(savedEvents.length).toBe(5)
+
+    const savedMessages = await db.collection(collections.messages).find({}).toArray()
+    expect(savedMessages).toHaveLength(1)
+    expect(savedMessages[0].events.length).toBe(5)
   })
 })

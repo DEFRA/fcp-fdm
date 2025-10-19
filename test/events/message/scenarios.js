@@ -64,7 +64,7 @@ export const completeStreams = {
     events.messageRequest,
     events.statusInternalFailure,
     events.messageRetryRequest,
-    events.statusInternalFailure,
+    { ...events.statusInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
     events.statusRetryExpired
   ]
 }

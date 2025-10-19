@@ -12,6 +12,11 @@ export default defineConfig({
       include: ['src/**'],
       exclude: [...configDefaults.exclude, 'coverage', '**/test/**'],
       clean: false
+    },
+    poolOptions: {
+      forks: {
+        singleFork: true
+      }
     }
   }
 })
