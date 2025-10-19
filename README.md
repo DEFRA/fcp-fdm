@@ -10,20 +10,6 @@
 The Farming Data Model service is a common component to support data exchange between the various
 Farming and Countryside Programme (FCP) services.
 
-- [Requirements](#requirements)
-  - [Docker](#docker)
-- [Local development](#local-development)
-  - [Setup](#setup)
-  - [Development](#development)
-  - [Testing](#testing)
-  - [npm scripts](#npm-scripts)
-  - [Update dependencies](#update-dependencies)
-- [API endpoints](#api-endpoints)
-- [Dependabot](#dependabot)
-- [SonarQube Cloud](#sonarqube-cloud)
-- [Licence](#licence)
-  - [About the licence](#about-the-licence)
-
 ## Requirements
 
 ### Docker
@@ -66,27 +52,29 @@ Tests can also be run in watch mode to support Test Driven Development (TDD):
 npm run docker:test:watch
 ```
 
-### npm scripts
+## SQS events
 
-All available npm scripts can be seen in [package.json](./package.json).
-To view them in your command line run:
+The Farming Data Model service consumes events from an AWS SQS queue.
+
+### Sending test events
+
+To support local development, a Node.js script has been provided to send test events to the SQS queue based on predefined scenarios.
+
+To send a single event, run the following command, replacing `single.messageRequest` with the desired scenario name:
 
 ```bash
-npm run
+node ./scripts/send-event.js single.messageRequest
 ```
 
-### Update dependencies
-
-To update dependencies use [npm-check-updates](https://github.com/raineorshine/npm-check-updates):
-
-> The following script is a good start. Check out all the options on
-> the [npm-check-updates](https://github.com/raineorshine/npm-check-updates)
+To list the available event scenarios, run:
 
 ```bash
-ncu --interactive --format group
+node ./scripts/send-event.js
 ```
 
 ## API endpoints
+
+Data collected by the Farming Data Model service can be accessed via the following API endpoints:
 
 | Endpoint                                               | Method | Description                                      |
 | :----------------------------------------------------- | :----- | :----------------------------------------------- |
@@ -95,15 +83,6 @@ ncu --interactive --format group
 All these endpoints are documented using [hapi-swagger](https://www.npmjs.com/package/hapi-swagger).
 
 Documentation for the API can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
-
-## Dependabot
-
-We have added an example dependabot configuration file to the repository. You can enable it by renaming
-the [.github/example.dependabot.yml](.github/example.dependabot.yml) to `.github/dependabot.yml`
-
-## SonarQube Cloud
-
-Instructions for setting up SonarQube Cloud can be found in [sonar-project.properties](./sonar-project.properties)
 
 ## Licence
 
