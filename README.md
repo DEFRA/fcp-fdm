@@ -9,33 +9,381 @@
 
 The Farming Data Model (FDM) service is a common component to support data exchange between Farming and Countryside Programme (FCP) services.
 
-FDM subscribes to events across the FCP ecosystem via an AWS SQS queue.  These events are persisted and precompiled into a data model which can be queried via a REST API endpoints.
+FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These events are persisted and precompiled into a data model which can be queried via REST API endpoints.
 
-## SQS events
+## Architecture Overview
 
-The Farming Data Model service consumes events from an AWS SQS queue named `fcp_fdm_events`.
+The FDM service follows an event-driven architecture pattern with the following key components:
 
-| Event sources                                      | Description                                                    |
-| :------------------------------------------------- | :------------------------------------------------------------- |
-| `Single Front Door (SFD) Comms message`            | Events relating to customer emails sent via SFD Comms service. |
-
-### Sending test events
-
-To support local development, a Node.js script has been provided to send test events to the SQS queue based on predefined scenarios.
-
-To send a single event, run the following command, replacing `single.messageRequest` with the desired scenario name:
-
-```bash
-node ./scripts/send-event.js single.messageRequest
+```mermaid
+graph TB
+    subgraph "External Systems"
+        SFD[SFD Comms Service]
+        FUTURE[Future Event Sources]
+    end
+    
+    subgraph "AWS Infrastructure"
+        SNS[SNS Topic]
+        SQS[SQS Queue: fcp_fdm_events]
+        DLQ[Dead Letter Queue: fcp_fdm_events-deadletter]
+    end
+    
+    subgraph "FDM Service"
+        POLLER[Event Poller]
+        CONSUMER[SQS Consumer]
+        PROCESSOR[Event Processor]
+        VALIDATOR[Schema Validator]
+        SAVER[Event Saver]
+        API[REST API]
+    end
+    
+    subgraph "Data Storage"
+        MONGO[(MongoDB)]
+        EVENTS[events collection]
+        MESSAGES[messages collection]
+    end
+    
+    SFD -->|Publish Events| SNS
+    FUTURE -->|Publish Events| SNS
+    SNS -->|Route to Queue| SQS
+    SQS -->|Failed Messages| DLQ
+    
+    POLLER -->|Poll Messages| SQS
+    SQS -->|Return Batch| CONSUMER
+    CONSUMER -->|Process Each| PROCESSOR
+    PROCESSOR -->|Parse & Validate| VALIDATOR
+    VALIDATOR -->|Save Valid Events| SAVER
+    SAVER -->|Store Events| EVENTS
+    SAVER -->|Aggregate Messages| MESSAGES
+    
+    API -->|Query Data| MONGO
+    
+    style SQS fill:#e1f5fe
+    style DLQ fill:#ffecb3
+    style MONGO fill:#e8f5e8
 ```
 
-To list the available event scenarios, run:
 
-```bash
-node ./scripts/send-event.js
+## Event Processing Pipeline
+
+The FDM service implements a robust event processing pipeline that handles CloudEvents from various sources:
+
+### Processing Flow
+
+```mermaid
+sequenceDiagram
+    participant SQS as SQS Queue
+    participant Poller as Event Poller
+    participant Consumer as SQS Consumer
+    participant Parser as Event Parser
+    participant Typer as Event Typer
+    participant Validator as Schema Validator
+    participant Saver as Event Saver
+    participant Mongo as MongoDB
+    participant DLQ as Dead Letter Queue
+    
+    loop Every polling interval
+        Poller->>SQS: Poll for messages (max 10)
+        SQS->>Consumer: Return message batch
+        
+        loop For each message
+            Consumer->>Parser: Parse SQS message body
+            Parser->>Typer: Extract event type
+            Typer->>Validator: Validate against schema
+            
+            alt Validation Success
+                Validator->>Saver: Save valid event
+                Saver->>Mongo: Store in events collection
+                Saver->>Mongo: Update messages aggregation
+                Consumer->>SQS: Delete processed message
+            else Validation Failure
+                Consumer->>Consumer: Log error & skip delete
+                Note over SQS,DLQ: Message returns to queue<br/>After 3 failures → DLQ
+            end
+        end
+    end
 ```
 
-## API endpoints
+### Code Layer Processing
+
+The event processing follows this logical flow through the codebase:
+
+1. **Polling Layer** (`src/events/polling.js`)
+   - Recursive setTimeout pattern for continuous polling
+   - Configurable polling interval via `config.aws.sqs.pollingInterval`
+   - Error handling with logging and retry mechanism
+
+2. **Consumer Layer** (`src/events/consumer.js`)
+   - SQS client configuration with LocalStack support
+   - Batch message processing (up to 10 messages per poll)
+   - Individual message processing with error isolation
+   - Automatic message deletion on successful processing
+
+3. **Processing Layer** (`src/events/process.js`)
+   - Orchestrates the complete event processing pipeline
+   - Calls parse → type → validate → save in sequence
+   - Any failure abandons processing for that event
+
+4. **Parser Layer** (`src/events/parse.js`)
+   - Extracts CloudEvent from SQS message wrapper
+   - Handles nested JSON parsing (SQS Body → SNS Message → CloudEvent)
+   - Throws errors for malformed JSON structures
+
+5. **Type Layer** (`src/events/types.js`)
+   - Maps CloudEvent type to internal event category
+   - Currently supports: `uk.gov.fcp.sfd.notification.*` → `message`
+   - Extensible for new event type prefixes
+
+6. **Validation Layer** (`src/events/validate.js`)
+   - Dynamic schema loading based on event type
+   - Uses Joi validation with CloudEvent compliance
+   - Allows unknown properties for forward compatibility
+
+7. **Save Layer** (`src/events/save.js`)
+   - Dynamic import pattern: `./save/${eventType}.js`
+   - Type-specific save logic for different event categories
+   - Currently implements `message` event saving
+
+## Event Types and Scenarios
+
+### Message Events
+
+The service currently processes message events from the SFD Comms service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.notification.received` | Initial message request | Requires `correlationId`, `recipient`, full personalisation data |
+| `uk.gov.fcp.sfd.notification.failure.validation` | Validation failed | Requires `correlationId`, `recipient`, error details |
+| `uk.gov.fcp.sfd.notification.sending` | Message being sent | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.delivered` | Message delivered | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.failure.provider` | Provider failure | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.failure.internal` | Internal failure | Requires `correlationId`, `recipient`, error details |
+| `uk.gov.fcp.sfd.notification.retry` | Retry request | Requires `correlationId`, `recipient`, full personalisation data |
+| `uk.gov.fcp.sfd.notification.retry.expired` | Retry expired | Requires `correlationId`, `recipient` |
+
+
+## Retry Logic and Dead Letter Queue
+
+### SQS Configuration
+
+The service implements robust retry logic through AWS SQS configuration:
+
+- **Visibility Timeout**: 60 seconds
+- **Max Receive Count**: 3 attempts
+- **Dead Letter Queue**: `fcp_fdm_events-deadletter`
+- **Redrive Policy**: Automatic after 3 failed processing attempts
+
+### LocalStack Setup
+
+LocalStack configuration mirrors production settings:
+
+```bash
+# Creates main queue with DLQ redrive policy
+create_queue "fcp_fdm_events"
+# Automatically creates: fcp_fdm_events-deadletter
+
+# Configuration:
+# - VisibilityTimeout: 60 seconds
+# - RedrivePolicy: maxReceiveCount=3, deadLetterTargetArn=DLQ_ARN
+```
+
+### MongoDB Event Storage
+
+Events are stored in two collections:
+
+1. **events collection**: Individual event records
+   - `_id`: Composite key `${source}:${id}`
+   - Prevents duplicate event processing
+   - Stores complete CloudEvent payload
+
+2. **messages collection**: Aggregated message flows
+   - `_id`: `correlationId` from event data
+   - Groups all events for a single message flow
+   - Tracks message metadata (recipient, subject, body)
+   - Contains array of event references
+
+## Adding New Event Types
+
+To add support for new inbound event types, follow these steps:
+
+### 1. Update Event Type Mapping
+
+Add the new event type prefix to `src/events/types.js`:
+
+```javascript
+// Add new event type constant
+const NEW_EVENT_TYPE = 'newevent'
+
+// Add prefix mapping
+export function getEventType (type) {
+  if (type.startsWith(MESSAGE_EVENT_PREFIX)) {
+    return MESSAGE_EVENT
+  } else if (type.startsWith(NEW_EVENT_PREFIX)) {
+    return NEW_EVENT_TYPE
+  } else {
+    throw new Error(`Unknown event type: ${type}`)
+  }
+}
+
+// Define the prefix pattern
+const NEW_EVENT_PREFIX = 'uk.gov.fcp.your.event.prefix'
+```
+
+### 2. Create Event Schema
+
+Create a new schema file at `src/events/schemas/newevent.js`:
+
+```javascript
+import Joi from 'joi'
+import { cloudEvent } from './cloud-event.js'
+
+export default cloudEvent.keys({
+  data: Joi.object({
+    // Define your event-specific data requirements
+    correlationId: Joi.string().required(),
+    yourField: Joi.string().required()
+    // Add other required/optional fields
+  }).required()
+})
+```
+
+### 3. Create Save Handler
+
+Create a save handler at `src/events/save/newevent.js`:
+
+```javascript
+import { getMongoDb } from '../../common/helpers/mongodb.js'
+import { createLogger } from '../../common/helpers/logging/logger.js'
+
+const logger = createLogger()
+
+export async function save (event) {
+  const { db, collections } = getMongoDb()
+  
+  // Implement your save logic
+  // Store in events collection
+  // Update any aggregation collections
+  
+  logger.info(`Saved ${event.type} event. ID: ${event.id}`)
+}
+```
+
+### 4. Naming Convention
+
+The dynamic import system requires strict naming conventions:
+
+- **Event Type**: Must be a valid JavaScript identifier (no hyphens, spaces)
+- **Schema File**: `src/events/schemas/${eventType}.js`
+- **Save Handler**: `src/events/save/${eventType}.js`
+- **Export Name**: `save` function in save handler, `default` export for schema
+
+### 5. Add Test Coverage
+
+Create comprehensive tests following the existing patterns:
+
+- **Unit Tests**: `test/unit/events/schemas/newevent.test.js`
+- **Integration Tests**: `test/integration/local/events/save/newevent.test.js`
+- **Mock Data**: `test/mocks/newevents.js`
+- **Scenarios**: `test/events/newevent/scenarios.js`
+
+### Sending Test Events
+
+To support local development, Node.js scripts are provided for sending test events:
+
+```bash
+# List all available event scenarios
+node ./scripts/send-events.js
+
+# Send a specific scenario
+node ./scripts/send-events.js streams.successful
+node ./scripts/send-events.js single.messageRequest
+
+# Available scenario types:
+# - single.*: Individual event types
+# - streams.*: Complete event flow scenarios
+```
+
+## Test Structure
+
+The test suite is organized into distinct categories for comprehensive coverage:
+
+```
+test/
+├── unit/                          # Unit tests with mocking
+│   ├── events/                    # Event processing tests
+│   │   ├── consumer.test.js       # SQS consumer logic
+│   │   ├── process.test.js        # Event processing pipeline
+│   │   ├── parse.test.js          # Message parsing
+│   │   ├── validate.test.js       # Schema validation
+│   │   ├── save.test.js           # Dynamic save logic
+│   │   ├── types.test.js          # Event type mapping
+│   │   └── schemas/               # Schema validation tests
+│   │       ├── cloud-event.test.js
+│   │       └── message.test.js
+│   ├── common/                    # Common utilities tests
+│   │   └── helpers/               # Helper function tests
+│   ├── plugins/                   # Hapi plugin tests
+│   └── config.test.js            # Configuration tests
+│
+├── integration/                   # Integration tests with real services
+│   ├── local/                     # Local service integration
+│   │   └── events/
+│   │       └── save/              # Database integration tests
+│   │           └── message.test.js
+│   └── narrow/                    # API endpoint tests
+│       └── routes/
+│           └── health.test.js
+│
+├── scenarios/                     # End-to-end scenario tests
+│   └── events/
+│       └── message.test.js        # Complete message flow testing
+│
+├── helpers/                       # Test utilities and helpers
+│   ├── mongo.js                   # MongoDB test helpers
+│   └── scenarios.js               # Scenario processing helpers
+│
+├── mocks/                         # Mock data and fixtures
+│   └── events.js                  # Mock CloudEvent data
+│
+└── events/                        # Event test data and scenarios
+    └── message/
+        ├── events.js              # Individual event definitions
+        └── scenarios.js           # Event flow scenarios
+```
+
+### Test Categories
+
+1. **Unit Tests**: Fast, isolated tests with comprehensive mocking
+   - Test individual functions and modules in isolation
+   - Mock external dependencies (MongoDB, SQS, etc.)
+   - High code coverage for business logic
+
+2. **Integration Tests**: Test service integration points
+   - Real MongoDB connections for database tests
+   - Test actual save operations and data persistence
+   - Verify schema compliance and data integrity
+
+3. **Scenario Tests**: End-to-end workflow validation
+   - Test complete event processing flows
+   - Verify message aggregation and correlation
+   - Validate business scenarios from start to finish
+
+### Running Tests
+
+```bash
+# Run all tests with coverage
+npm run docker:test
+
+# Run tests in watch mode for development
+npm run docker:test:watch
+
+# Run specific test categories
+npm test -- test/unit/
+npm test -- test/integration/
+npm test -- test/scenarios/
+```
+
+## API Endpoints
 
 Data collected by the Farming Data Model service can be accessed via the following API endpoints:
 
