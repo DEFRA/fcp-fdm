@@ -1,9 +1,9 @@
 ![Build](https://github.com/defra/fcp-fdm/actions/workflows/publish.yml/badge.svg)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdmlert_status)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)fcp-fdm
-[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdmugs)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)fcp-fdm
-[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdmode_smells)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)fcp-fdm
-[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdmuplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)fcp-fdm
-[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdmoverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)fcp-fdm
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=bugs)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
 
 # Farming Data Model (FDM)
 
