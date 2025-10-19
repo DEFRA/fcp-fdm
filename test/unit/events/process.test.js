@@ -62,4 +62,40 @@ describe('processEvent', () => {
     await processEvent(testRawEvent)
     expect(mockSaveEvent).toHaveBeenCalledWith(testEvent, 'test-event-type')
   })
+
+  test('should abandon processing if parsing fails', async () => {
+    const parseError = new Error('Test parsing error')
+    mockParseEvent.mockImplementationOnce(() => {
+      throw parseError
+    })
+
+    await expect(processEvent(testRawEvent)).rejects.toThrow(parseError)
+
+    expect(mockGetEventType).not.toHaveBeenCalled()
+    expect(mockValidateEvent).not.toHaveBeenCalled()
+    expect(mockSaveEvent).not.toHaveBeenCalled()
+  })
+
+  test('should abandon processing if getting event type fails', async () => {
+    const typeError = new Error('Test event type error')
+    mockGetEventType.mockImplementationOnce(() => {
+      throw typeError
+    })
+
+    await expect(processEvent(testRawEvent)).rejects.toThrow(typeError)
+
+    expect(mockValidateEvent).not.toHaveBeenCalled()
+    expect(mockSaveEvent).not.toHaveBeenCalled()
+  })
+
+  test('should abandon processing if validation fails', async () => {
+    const validationError = new Error('Test validation error')
+    mockValidateEvent.mockImplementationOnce(() => {
+      throw validationError
+    })
+
+    await expect(processEvent(testRawEvent)).rejects.toThrow(validationError)
+
+    expect(mockSaveEvent).not.toHaveBeenCalled()
+  })
 })
