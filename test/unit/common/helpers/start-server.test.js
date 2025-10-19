@@ -27,7 +27,7 @@ vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
 }))
 
 vi.mock('../../../../src/events/polling.js', () => ({
-  pollForEventMessages: vi.fn()
+  pollForEvents: vi.fn()
 }))
 
 vi.mock('mongodb', () => ({
