@@ -1,15 +1,9 @@
 import { vi, describe, beforeEach, test, expect } from 'vitest'
 
-const mockSaveMessageEvent = vi.fn()
+const mockSave = vi.fn()
 
 vi.mock('../../../src/events/save/message.js', () => ({
-  saveMessageEvent: mockSaveMessageEvent
-}))
-
-vi.mock('../../../src/events/types.js', () => ({
-  eventTypes: {
-    MESSAGE_EVENT: 'message'
-  }
+  save: mockSave
 }))
 
 const { saveEvent } = await import('../../../src/events/save.js')
@@ -23,13 +17,12 @@ describe('saveEvent', () => {
     vi.clearAllMocks()
   })
 
-  test('should call saveMessageEvent for Single Front Door Comms message type', async () => {
+  test('should dynamically import and call save function for message event type', async () => {
     await saveEvent(testEvent, 'message')
-    expect(mockSaveMessageEvent).toHaveBeenCalledWith(testEvent)
+    expect(mockSave).toHaveBeenCalledWith(testEvent)
   })
 
-  test('should throw error for unknown event type', async () => {
-    await expect(saveEvent(testEvent, 'unknown-type')).rejects.toThrow('Unknown event type: unknown-type')
-    expect(mockSaveMessageEvent).not.toHaveBeenCalled()
+  test('should throw error when trying to import non-existent event type module', async () => {
+    await expect(saveEvent(testEvent, 'unknown-type')).rejects.toThrow()
   })
 })

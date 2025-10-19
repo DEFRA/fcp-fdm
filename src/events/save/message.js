@@ -3,7 +3,7 @@ import { createLogger } from '../../common/helpers/logging/logger.js'
 
 const logger = createLogger()
 
-export async function saveMessageEvent (event) {
+export async function save (event) {
   const { correlationId, recipient, body, subject } = event.data
 
   const { db, client } = getMongoDb()
