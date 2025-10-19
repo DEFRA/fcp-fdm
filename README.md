@@ -395,6 +395,59 @@ All these endpoints are documented using [hapi-swagger](https://www.npmjs.com/pa
 
 Documentation for the API can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 
+## Environment Variables
+
+The FDM service can be configured using the following environment variables:
+
+> Note: Default valid values are already applied for local development and testing through Docker Compose.
+
+### Core Service Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `NODE_ENV` | Runtime environment (`development`, `test`, `production`) | - | No |
+| `HOST` | IP address to bind the service | `0.0.0.0` | No |
+| `PORT` | Port number to bind the service | `3000` | No |
+| `SERVICE_VERSION` | Service version (injected in CDP environments) | `null` | No |
+| `ENVIRONMENT` | CDP environment name | `local` | No |
+
+### AWS Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `AWS_REGION` | AWS region for services | `eu-west-2` | No |
+| `AWS_ENDPOINT_URL` | AWS endpoint URL (for LocalStack) | `null` | No |
+| `AWS_ACCESS_KEY_ID` | AWS access key ID | `null` | No |
+| `AWS_SECRET_ACCESS_KEY` | AWS secret access key | `null` | No |
+| `AWS_SQS_QUEUE_URL` | SQS queue URL for event consumption | `null` | Yes |
+
+### MongoDB Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `MONGO_URI` | MongoDB connection URI | `mongodb://127.0.0.1:27017/` | No |
+| `MONGO_DATABASE` | MongoDB database name | `fcp-fdm` | No |
+| `MONGO_RETRY_WRITES` | Enable MongoDB write retries | `null` | No |
+| `MONGO_READ_PREFERENCE` | MongoDB read preference | `null` | No |
+
+### Logging Configuration
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `LOG_ENABLED` | Enable/disable logging | `true` (false in test) | No |
+| `LOG_LEVEL` | Logging level | `info` | No |
+| `LOG_FORMAT` | Log output format (`ecs`, `pino-pretty`) | `ecs` (prod), `pino-pretty` (dev) | No |
+
+### Security and Performance
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `HTTP_PROXY` | HTTP proxy URL | `null` | No |
+| `ENABLE_SECURE_CONTEXT` | Enable secure context | `true` (prod), `false` (dev) | No |
+| `ENABLE_METRICS` | Enable metrics reporting | `true` (prod), `false` (dev) | No |
+| `TRACING_HEADER` | CDP tracing header name | `x-cdp-request-id` | No |
+| `DATA_GLOBAL_TTL` | Global TTL for data in seconds | `null` | No |
+
 ## Requirements
 
 ### Docker
