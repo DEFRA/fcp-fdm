@@ -1,6 +1,6 @@
 import { describe, beforeEach, test, expect } from 'vitest'
 
-import schema from '../../../../src/events/schemas/cloud-event.js'
+import schema from '../../../../src/events/schemas/message.js'
 
 const eventPayload = {
   specversion: '1.0',
@@ -11,13 +11,14 @@ const eventPayload = {
   subject: 'New Notification Event',
   datacontenttype: 'text/json',
   data: {
-    message: 'This is a test notification event'
+    correlationId: '123e4567-e89b-12d3-a456-426614174000',
+    recipient: 'user@example.com'
   }
 }
 
 let event
 
-describe('cloud event schema', () => {
+describe('message event schema', () => {
   beforeEach(() => {
     event = structuredClone(eventPayload)
   })
@@ -176,23 +177,106 @@ describe('cloud event schema', () => {
     expect(schema.validate(event).error).toBeDefined()
   })
 
-  test('should validate an event with undefined data', () => {
+  test('should not validate an event with undefined data', () => {
     event.data = undefined
-    expect(schema.validate(event).error).toBeUndefined()
+    expect(schema.validate(event).error).toBeDefined()
   })
 
-  test('should validate an event with null data', () => {
+  test('should not validate an event with null data', () => {
     event.data = null
-    expect(schema.validate(event).error).toBeUndefined()
+    expect(schema.validate(event).error).toBeDefined()
   })
 
-  test('should validate an event with missing data', () => {
+  test('should not validate an event with missing data', () => {
     delete event.data
-    expect(schema.validate(event).error).toBeUndefined()
+    expect(schema.validate(event).error).toBeDefined()
   })
 
-  test('should validate an event with empty data', () => {
+  test('should not validate an event with empty string data', () => {
     event.data = ''
-    expect(schema.validate(event).error).toBeUndefined()
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with empty object data', () => {
+    event.data = {}
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with data missing correlationId', () => {
+    event.data = {
+      recipient: 'user@example.com'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with data missing recipient', () => {
+    event.data = {
+      correlationId: '123e4567-e89b-12d3-a456-426614174000'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with empty correlationId', () => {
+    event.data = {
+      correlationId: '',
+      recipient: 'user@example.com'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with null correlationId', () => {
+    event.data = {
+      correlationId: null,
+      recipient: 'user@example.com'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with undefined correlationId', () => {
+    event.data = {
+      correlationId: undefined,
+      recipient: 'user@example.com'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with empty recipient', () => {
+    event.data = {
+      correlationId: '123e4567-e89b-12d3-a456-426614174000',
+      recipient: ''
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with null recipient', () => {
+    event.data = {
+      correlationId: '123e4567-e89b-12d3-a456-426614174000',
+      recipient: null
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with undefined recipient', () => {
+    event.data = {
+      correlationId: '123e4567-e89b-12d3-a456-426614174000',
+      recipient: undefined
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with non-string correlationId', () => {
+    event.data = {
+      correlationId: 12345,
+      recipient: 'user@example.com'
+    }
+    expect(schema.validate(event).error).toBeDefined()
+  })
+
+  test('should not validate an event with non-string recipient', () => {
+    event.data = {
+      correlationId: '123e4567-e89b-12d3-a456-426614174000',
+      recipient: 12345
+    }
+    expect(schema.validate(event).error).toBeDefined()
   })
 })
