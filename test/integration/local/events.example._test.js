@@ -1,6 +1,6 @@
 import { describe, test, beforeEach } from 'vitest'
-import { createSqsSender } from '../helpers/sqs-sender.js'
-import { getScenario } from '../events/messages/scenarios.js'
+import { createSqsSender } from '../../helpers/sqs-sender.js'
+import { getScenario } from '../../events/messages/scenarios.js'
 
 /**
  * Example test file showing how to use the SQS sender and scenarios

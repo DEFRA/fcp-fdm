@@ -47,10 +47,7 @@ async function createServer () {
     requestTracing,
     secureContext,
     pulse,
-    {
-      plugin: mongoDb,
-      options: config.get('mongo')
-    },
+    mongoDb,
     ...swagger,
     router
   ])

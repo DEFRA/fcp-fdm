@@ -1,0 +1,109 @@
+import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
+import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
+import { config } from '../../../../../src/config.js'
+import * as messageEvents from '../../../../events/messages/events.js'
+import { save } from '../../../../../src/events/save/message.js'
+
+let db
+let collections
+
+describe('save', () => {
+  beforeAll(async () => {
+    await createMongoDbConnection(config.get('mongo'))
+
+    const mongoDb = getMongoDb()
+    db = mongoDb.db
+    collections = mongoDb.collections
+  })
+
+  afterAll(async () => {
+    await closeMongoDbConnection()
+  })
+
+  beforeEach(async () => {
+    await clearAllCollections()
+  })
+
+  test.each(Object.keys(messageEvents))('should save event to event collection for %s with composite _id', async (eventName) => {
+    const event = messageEvents[eventName]
+    await save(event)
+    const savedEvent = await db.collection(collections.events).findOne({ _id: `${event.source}:${event.id}` })
+    expect(savedEvent).toBeDefined()
+    expect(savedEvent.id).toBe(event.id)
+  })
+
+  test.each(Object.keys(messageEvents))('should save new event aggregation document for %s if first event for correlationId', async (eventName) => {
+    const event = messageEvents[eventName]
+    await save(event)
+    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    expect(savedMessage).toBeDefined()
+    expect(savedMessage.recipient).toBe(event.data.recipient)
+    expect(savedMessage.events).toHaveLength(1)
+    expect(savedMessage.events[0]._id).toBe(`${event.source}:${event.id}`)
+  })
+
+  test.each(Object.keys(messageEvents))('should update existing event aggregation document for %s if subsequent event for correlationId', async (eventName) => {
+    const event = messageEvents[eventName]
+    // Save first event
+    await save(event)
+
+    // Create a second event with the same correlationId
+    const secondEvent = {
+      ...event,
+      id: `${event.id}-second`,
+      data: {
+        ...event.data,
+        subject: 'Updated Subject'
+      }
+    }
+    await save(secondEvent)
+
+    const updatedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    expect(updatedMessage).toBeDefined()
+    expect(updatedMessage.recipient).toBe(event.data.recipient)
+    expect(updatedMessage.events).toHaveLength(2)
+    expect(updatedMessage.events[1]._id).toBe(`${secondEvent.source}:${secondEvent.id}`)
+  })
+
+  test.each(Object.keys(messageEvents))('should not update event or message collections if duplicate %s event', async (eventName) => {
+    const event = messageEvents[eventName]
+    // Save first event
+    await save(event)
+
+    // Attempt to save duplicate event
+    await save(event)
+
+    const eventsCount = await db.collection(collections.events).countDocuments({ _id: `${event.source}:${event.id}` })
+    expect(eventsCount).toBe(1)
+
+    const messagesCount = await db.collection(collections.messages).countDocuments({ _id: event.data.correlationId })
+    expect(messagesCount).toBe(1)
+  })
+
+  test('should append subject and body if provided in subsequent events', async () => {
+    const event = messageEvents.messageRequest
+    await save(event)
+
+    const updateEvent = {
+      ...messageEvents.statusDelivered,
+      data: {
+        ...messageEvents.statusDelivered.data,
+        subject: 'Message Subject',
+        body: 'Message Body'
+      }
+    }
+
+    await save(updateEvent)
+
+    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    expect(savedMessage).toBeDefined()
+    expect(savedMessage.subject).toBe(updateEvent.data.subject)
+    expect(savedMessage.body).toBe(updateEvent.data.body)
+  })
+})
+
+async function clearAllCollections () {
+  for (const collection of Object.keys(collections)) {
+    await db.collection(collection).deleteMany({})
+  }
+}

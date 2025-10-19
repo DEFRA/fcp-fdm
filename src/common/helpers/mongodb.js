@@ -11,6 +11,7 @@ const mongoDbCollections = {
 
 let mongoDbClient
 let mongoDbDatabase
+let mongoDbName
 
 export const mongoDb = {
   plugin: {
@@ -19,36 +20,46 @@ export const mongoDb = {
     register: async function (server, options) {
       server.logger.info('Setting up MongoDb')
 
-      const client = await MongoClient.connect(options.mongoUrl, {
-        ...options.mongoOptions
-      })
+      await createMongoDbConnection(options)
 
-      const databaseName = options.databaseName
-      const db = client.db(databaseName)
+      server.logger.info(`MongoDb connected to ${mongoDbName}`)
 
-      mongoDbClient = client
-      mongoDbDatabase = db
-
-      await removeDefunctCollections(db)
-      await createIndexes(db)
-      await configureGlobalTtlIndexes(db)
-
-      server.logger.info(`MongoDb connected to ${databaseName}`)
-
-      server.decorate('server', 'mongoClient', client)
-      server.decorate('server', 'db', db)
-      server.decorate('request', 'db', () => db, { apply: true })
+      server.decorate('server', 'mongoClient', mongoDbClient)
+      server.decorate('server', 'db', mongoDbDatabase)
+      server.decorate('request', 'db', () => mongoDbDatabase, { apply: true })
 
       server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
         try {
-          await client.close(true)
+          await closeMongoDbConnection()
         } catch (err) {
           server.logger.error(err, 'failed to close mongo client')
         }
       })
     }
-  }
+  },
+  options: config.get('mongo')
+}
+
+export async function createMongoDbConnection (options) {
+  const client = await MongoClient.connect(options.mongoUrl, {
+    ...options.mongoOptions
+  })
+
+  const databaseName = options.databaseName
+  const db = client.db(databaseName)
+
+  mongoDbClient = client
+  mongoDbDatabase = db
+  mongoDbName = databaseName
+
+  await removeDefunctCollections(db)
+  await createIndexes(db)
+  await configureGlobalTtlIndexes(db)
+}
+
+export async function closeMongoDbConnection () {
+  await mongoDbClient?.close(true)
 }
 
 export function getMongoDb () {
