@@ -25,7 +25,7 @@ describe('save', () => {
     await closeMongoDbConnection()
   })
 
-  test.each(Object.keys(messageEvents))('should save event to event collection for %s with composite _id', async (eventName) => {
+  test.for(Object.keys(messageEvents))('should save event to event collection for %s with composite _id', async (eventName) => {
     const event = messageEvents[eventName]
     await save(event)
     const savedEvent = await db.collection(collections.events).findOne({ _id: `${event.source}:${event.id}` })
@@ -33,7 +33,7 @@ describe('save', () => {
     expect(savedEvent.id).toBe(event.id)
   })
 
-  test.each(Object.keys(messageEvents))('should save new event aggregation document for %s if first event for correlationId', async (eventName) => {
+  test.for(Object.keys(messageEvents))('should save new event aggregation document for %s if first event for correlationId', async (eventName) => {
     const event = messageEvents[eventName]
     await save(event)
     const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
@@ -43,7 +43,7 @@ describe('save', () => {
     expect(savedMessage.events[0]._id).toBe(`${event.source}:${event.id}`)
   })
 
-  test.each(Object.keys(messageEvents))('should update existing event aggregation document for %s if subsequent event for correlationId', async (eventName) => {
+  test.for(Object.keys(messageEvents))('should update existing event aggregation document for %s if subsequent event for correlationId', async (eventName) => {
     const event = messageEvents[eventName]
     // Save first event
     await save(event)
@@ -66,7 +66,7 @@ describe('save', () => {
     expect(updatedMessage.events[1]._id).toBe(`${secondEvent.source}:${secondEvent.id}`)
   })
 
-  test.each(Object.keys(messageEvents))('should not update event or message collections if duplicate %s event', async (eventName) => {
+  test.for(Object.keys(messageEvents))('should not update event or message collections if duplicate %s event', async (eventName) => {
     const event = messageEvents[eventName]
     // Save first event
     await save(event)
