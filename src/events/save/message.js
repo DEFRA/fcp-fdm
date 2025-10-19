@@ -1,5 +1,5 @@
-import { getMongoDb } from '../../../common/helpers/mongodb.js'
-import { createLogger } from '../../../common/helpers/logging/logger.js'
+import { getMongoDb } from '../../common/helpers/mongodb.js'
+import { createLogger } from '../../common/helpers/logging/logger.js'
 
 const logger = createLogger()
 

@@ -1,6 +1,6 @@
 import { getEventType } from './get-event-type.js'
 import { saveEvent } from './save/save.js'
-import { validateEvent } from './validate-event.js'
+import { validateEvent } from './validate.js'
 
 export async function processEvent (message) {
   const event = JSON.parse(JSON.parse(message.Body).Message)

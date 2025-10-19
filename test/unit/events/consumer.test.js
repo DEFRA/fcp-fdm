@@ -12,7 +12,7 @@ vi.mock('@aws-sdk/client-sqs', () => ({
   DeleteMessageCommand: vi.fn((params) => ({ params }))
 }))
 
-vi.mock('../../../src/events/processing/process-event.js', () => ({
+vi.mock('../../../src/events/process.js', () => ({
   processEvent: mockProcessEvent
 }))
 

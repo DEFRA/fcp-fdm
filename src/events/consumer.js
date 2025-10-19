@@ -1,6 +1,6 @@
 import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { config } from '../config.js'
-import { processEvent } from './processing/process-event.js'
+import { processEvent } from './process.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
 const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')

@@ -1,6 +1,6 @@
 import Joi from 'joi'
 
-const schema = Joi.object({
+const cloudEvent = Joi.object({
   specversion: Joi.string().required(),
   type: Joi.string().required(),
   source: Joi.string().required(),
@@ -11,4 +11,4 @@ const schema = Joi.object({
   data: Joi.any().default({})
 }).required()
 
-export default schema
+export default cloudEvent
