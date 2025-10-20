@@ -1,4 +1,7 @@
+import { constants as httpConstants } from 'node:http2'
 import { describe, test, beforeEach, afterEach, vi, expect } from 'vitest'
+
+const { HTTP_STATUS_OK } = httpConstants
 
 vi.mock('../../../../src/events/polling.js', () => ({
   pollForEvents: vi.fn()
@@ -25,7 +28,7 @@ describe('health routes', () => {
       url: '/health'
     }
     const response = await server.inject(options)
-    expect(response.statusCode).toBe(200)
+    expect(response.statusCode).toBe(HTTP_STATUS_OK)
   })
 
   test('GET /health should return "ok" response', async () => {
