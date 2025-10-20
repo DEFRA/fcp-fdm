@@ -17,7 +17,6 @@ services:
       AWS_ENDPOINT_URL: http://localstack:4566
     volumes:
       - ./src:/home/node/src
-      - ./test:/home/node/test
       - ./package.json:/home/node/package.json
 
   mongodb:

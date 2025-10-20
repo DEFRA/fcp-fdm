@@ -91,7 +91,6 @@ describe('message event scenarios', () => {
 
     const savedEvents = await db.collection(collections.events).find({}).toArray()
 
-    console.log('Saved Events:', savedEvents)
     expect(savedEvents.length).toBe(5)
 
     const savedMessages = await db.collection(collections.messages).find({}).toArray()
