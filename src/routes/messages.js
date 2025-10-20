@@ -1,6 +1,6 @@
-const events = {
+const messages = {
   method: 'GET',
-  path: '/v1/events',
+  path: '/v1/messages',
   options: {
     description: 'Events',
     notes: 'Returns all events',
@@ -12,4 +12,4 @@ const events = {
   }
 }
 
-export { events }
+export { messages }
