@@ -159,4 +159,26 @@ describe('save', () => {
     expect(savedMessage.subject).toBe(updateEvent.data.subject)
     expect(savedMessage.body).toBe(updateEvent.data.body)
   })
+
+  test('should append crn and sbi if provided in subsequent events', async () => {
+    const event = messageEvents.messageRequest
+    await save(event)
+
+    const updateEvent = {
+      ...messageEvents.statusDelivered,
+      data: {
+        ...messageEvents.statusDelivered.data,
+        crn: 1234567890,
+        sbi: 987654321,
+      }
+    }
+
+    await save(updateEvent)
+
+    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+
+    expect(savedMessage).toBeDefined()
+    expect(savedMessage.crn).toBe(updateEvent.data.crn)
+    expect(savedMessage.sbi).toBe(updateEvent.data.sbi)
+  })
 })

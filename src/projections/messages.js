@@ -1,0 +1,74 @@
+import { getMongoDb } from '../common/helpers/mongodb.js'
+
+export async function getMessageByCorrelationId (correlationId, options = {}) {
+  const { db, collections } = getMongoDb()
+  const { includeContent = false, includeEvents = false } = options
+
+  const projection = buildProjection(includeContent, includeEvents)
+  const message = await db.collection(collections.messages).findOne(
+    { _id: correlationId },
+    { projection }
+  )
+
+  if (!message) {
+    return null
+  }
+
+  return transformMessage(message, includeEvents)
+}
+
+export async function getMessages (filters = {}) {
+  const { db, collections } = getMongoDb()
+  const { crn, sbi, includeContent = false, includeEvents = false } = filters
+
+  const query = {}
+  if (crn !== undefined) {
+    query.crn = crn
+  }
+  if (sbi !== undefined) {
+    query.sbi = sbi
+  }
+
+  const projection = buildProjection(includeContent, includeEvents)
+  const messagesCursor = db.collection(collections.messages).find(query, { projection })
+  const messagesArray = await messagesCursor.toArray()
+
+  return messagesArray.map(message => transformMessage(message, includeEvents))
+}
+
+function buildProjection (includeContent = false, includeEvents = false) {
+  const projection = {
+    _id: 1,
+    crn: 1,
+    sbi: 1,
+    status: 1,
+    created: 1,
+    lastUpdated: 1
+  }
+
+  if (includeContent) {
+    projection.recipient = 1
+    projection.subject = 1
+    projection.body = 1
+  }
+
+  if (includeEvents) {
+    projection.events = 1
+  }
+
+  return projection
+}
+
+function transformMessage (message, includeEvents = false) {
+  const { _id, ...rest } = message
+  const transformedMessage = {
+    correlationId: _id,
+    ...rest
+  }
+
+  if (includeEvents && transformedMessage.events) {
+    transformedMessage.events = transformedMessage.events.map(({ _id: _mongoId, ...event }) => event)
+  }
+
+  return transformedMessage
+}
