@@ -6,9 +6,13 @@ export function getEventType (type) {
   }
 }
 
-const MESSAGE_EVENT_PREFIX = 'uk.gov.fcp.sfd.notification'
+const MESSAGE_EVENT_PREFIX = 'uk.gov.fcp.sfd.notification.'
 const MESSAGE_EVENT = 'message'
 
 export const eventTypes = {
   MESSAGE_EVENT
+}
+
+export const eventTypePrefixes = {
+  MESSAGE_EVENT_PREFIX
 }

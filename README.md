@@ -314,29 +314,11 @@ node ./scripts/send-events.js single.messageRequest
 
 Use the CDP terminal for your target environment. The AWS CLI is already installed and configured.
 
-1. Create a test message file (CloudEvent format):
+1. Create a test message file (SNS-wrapped CloudEvent format):
    ```bash
    cat > test-message.json << 'EOF'
    {
-     "specversion": "1.0",
-     "type": "uk.gov.fcp.sfd.notification.message.request",
-     "source": "sfd-comms-service",
-     "id": "test-001",
-     "time": "2025-10-19T10:30:00Z",
-     "datacontenttype": "application/json",
-     "data": {
-       "correlationId": "test-correlation-001",
-       "personalisation": {
-         "firstName": "Test",
-         "lastName": "User"
-       },
-       "recipient": {
-         "contactId": "test-contact-001",
-         "email": "test@example.com"
-       },
-       "reference": "TEST-REF-001",
-       "templateId": "test-template"
-     }
+     "Message": "{\"specversion\":\"1.0\",\"type\":\"uk.gov.fcp.sfd.notification.message.request\",\"source\":\"sfd-comms-service\",\"id\":\"550e8400-e29b-41d4-a716-446655440000\",\"time\":\"2025-10-19T10:30:00Z\",\"datacontenttype\":\"application/json\",\"data\":{\"correlationId\":\"test-correlation-001\",\"personalisation\":{\"firstName\":\"Test\",\"lastName\":\"User\"},\"recipient\":\"test@example.com\",\"reference\":\"TEST-REF-001\",\"templateId\":\"test-template\"}}"
    }
    EOF
    ```
@@ -344,7 +326,7 @@ Use the CDP terminal for your target environment. The AWS CLI is already install
 2. Send the message to the SQS queue:
    ```bash
    aws sqs send-message \
-     --queue-url "https://sqs.eu-west-2.amazonaws.com/<account-id>/fcp-fdm-events" \
+     --queue-url "https://sqs.eu-west-2.amazonaws.com/<account-id>/fcp_fdm_events" \
      --message-body file://test-message.json \
      --region eu-west-2
    ```
