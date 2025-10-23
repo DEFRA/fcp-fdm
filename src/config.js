@@ -4,6 +4,24 @@ import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo
 
 convict.addFormat(convictValidateMongoUri)
 convict.addFormats(convictFormatWithValidator)
+convict.addFormat({
+  name: 'security-group-array',
+  validate: (val) => {
+    if (val === null || val === '') {
+      return
+    }
+    const regex = /^[0-9a-fA-F-]{36}(,[0-9a-fA-F-]{36})*$/
+    if (!regex.test(val)) {
+      throw new Error('Must be a comma separated list of valid UUIDs')
+    }
+  },
+  coerce: (val) => {
+    if (val === null || val === '') {
+      return null
+    }
+    return val.split(',')
+  }
+})
 
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
@@ -187,6 +205,27 @@ const config = convict({
       nullable: true,
       default: null,
       env: 'DATA_GLOBAL_TTL'
+    }
+  },
+  auth: {
+    enabled: {
+      doc: 'API authentication enabled',
+      format: Boolean,
+      default: true,
+      env: 'AUTH_ENABLED'
+    },
+    tenant: {
+      doc: 'Azure tenant ID to authenticate clients',
+      format: String,
+      default: null,
+      nullable: true,
+      env: 'AUTH_TENANT_ID'
+    },
+    allowedGroupIds: {
+      doc: 'Security Group object IDs allowed to access the API, comma separated',
+      format: 'security-group-array',
+      default: [],
+      env: 'AUTH_ALLOWED_GROUP_IDS'
     }
   }
 })

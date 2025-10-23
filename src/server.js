@@ -1,5 +1,6 @@
 import Hapi from '@hapi/hapi'
 import Joi from 'joi'
+import Jwt from '@hapi/jwt'
 
 import { config } from './config.js'
 import { router } from './plugins/router.js'
@@ -11,6 +12,7 @@ import { pulse } from './common/helpers/pulse.js'
 import { requestTracing } from './common/helpers/request-tracing.js'
 import { setupProxy } from './common/helpers/proxy/setup-proxy.js'
 import { mongoDb } from './common/helpers/mongodb.js'
+import { auth } from './plugins/auth.js'
 
 async function createServer () {
   setupProxy()
@@ -43,6 +45,8 @@ async function createServer () {
   server.validator(Joi)
 
   await server.register([
+    Jwt,
+    auth,
     requestLogger,
     requestTracing,
     secureContext,
