@@ -7,7 +7,8 @@ const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
 const logger = createLogger()
 
 export async function save (event) {
-  const { correlationId, recipient, body, subject, crn, sbi } = event.data
+  const { correlationId, recipient, crn, sbi } = event.data
+  const { subject, body } = event.data.content || {}
   const status = extractStatus(event.type)
 
   const { db, client, collections } = getMongoDb()
