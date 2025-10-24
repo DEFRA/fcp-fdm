@@ -21,6 +21,9 @@ describe('config', () => {
     process.env.ENABLE_SECURE_CONTEXT = 'true'
     process.env.ENABLE_METRICS = 'true'
     process.env.TRACING_HEADER = 'x-custom-trace-id'
+    process.env.AUTH_ENABLED = 'false'
+    process.env.AUTH_TENANT_ID = 'test-tenant-123'
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321'
   })
 
   afterAll(() => {
@@ -170,5 +173,55 @@ describe('config', () => {
     delete process.env.TRACING_HEADER
     const { config } = await import('../../src/config.js')
     expect(config.get('tracing.header')).toBe('x-cdp-request-id')
+  })
+
+  test('should return auth enabled from environment variable', async () => {
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.enabled')).toBe(false)
+  })
+
+  test('should default auth enabled to true if not provided in environment variable', async () => {
+    delete process.env.AUTH_ENABLED
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.enabled')).toBe(true)
+  })
+
+  test('should return auth tenant from environment variable', async () => {
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.tenant')).toBe('test-tenant-123')
+  })
+
+  test('should return null auth tenant if not provided in environment variable', async () => {
+    delete process.env.AUTH_TENANT_ID
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.tenant')).toBeNull()
+  })
+
+  test('should return auth allowed group IDs from environment variable', async () => {
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789012', '87654321-4321-4321-4321-210987654321'])
+  })
+
+  test('should default auth allowed group IDs to empty array if not provided in environment variable', async () => {
+    delete process.env.AUTH_ALLOWED_GROUP_IDS
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual([])
+  })
+
+  test('should parse single auth allowed group ID from environment variable', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = 'abcdef12-3456-7890-abcd-ef1234567890'
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual(['abcdef12-3456-7890-abcd-ef1234567890'])
+  })
+
+  test('should throw error if auth allowed group IDs format is invalid', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = 'invalid-format'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow()
+  })
+
+  test('should return empty array for empty string auth allowed group IDs', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = ''
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual([])
   })
 })

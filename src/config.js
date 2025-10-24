@@ -10,14 +10,29 @@ convict.addFormat({
     if (val === null || val === '') {
       return
     }
-    const regex = /^[0-9a-fA-F-]{36}(,[0-9a-fA-F-]{36})*$/
-    if (!regex.test(val)) {
+
+    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+
+    if (Array.isArray(val)) {
+      for (const uuid of val) {
+        if (typeof uuid !== 'string' || !uuidRegex.test(uuid)) {
+          throw new Error('Must be a comma separated list of valid UUIDs')
+        }
+      }
+      return
+    }
+
+    const commaSeparatedRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(,[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})*$/
+    if (!commaSeparatedRegex.test(val)) {
       throw new Error('Must be a comma separated list of valid UUIDs')
     }
   },
   coerce: (val) => {
+    if (Array.isArray(val)) {
+      return val
+    }
     if (val === null || val === '') {
-      return null
+      return []
     }
     return val.split(',')
   }
