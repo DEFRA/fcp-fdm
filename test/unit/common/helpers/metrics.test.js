@@ -1,6 +1,6 @@
 import { describe, beforeEach, test, expect, vi } from 'vitest'
 import { StorageResolution, Unit } from 'aws-embedded-metrics'
-import { config } from '../../../../src/config.js'
+import { config } from '../../../../src/config/config.js'
 import { metricsCounter } from '../../../../src/common/helpers/metrics.js'
 
 const mockPutMetric = vi.fn()

@@ -1,5 +1,5 @@
 import { MongoClient } from 'mongodb'
-import { config } from '../../config.js'
+import { config } from '../../config/config.js'
 
 const EVENT_COLLECTION = 'events'
 const MESSAGE_COLLECTION = 'messages'

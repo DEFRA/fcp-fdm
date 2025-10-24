@@ -1,5 +1,5 @@
 import { consumeEvents } from './consumer.js'
-import { config } from '../config.js'
+import { config } from '../config/config.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
 const { sqs } = config.get('aws')

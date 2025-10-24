@@ -2,7 +2,7 @@ import Hapi from '@hapi/hapi'
 import Joi from 'joi'
 import Jwt from '@hapi/jwt'
 
-import { config } from './config.js'
+import { config } from './config/config.js'
 import { router } from './plugins/router.js'
 import { swagger } from './plugins/swagger.js'
 import { requestLogger } from './common/helpers/logging/request-logger.js'

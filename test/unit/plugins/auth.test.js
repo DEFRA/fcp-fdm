@@ -1,7 +1,7 @@
 import { expect, test, describe, beforeEach, vi } from 'vitest'
 
 const mockConfigGet = vi.fn()
-vi.mock('../../../src/config.js', () => ({
+vi.mock('../../../src/config/config.js', () => ({
   config: {
     get: mockConfigGet
   }

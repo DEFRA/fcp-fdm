@@ -1,4 +1,4 @@
-import { config } from '../config.js'
+import { config } from '../config/config.js'
 
 const tenant = config.get('auth.tenant')
 const allowedGroupIds = config.get('auth.allowedGroupIds') || []
