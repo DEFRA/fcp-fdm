@@ -224,4 +224,76 @@ describe('config', () => {
     const { config } = await import('../../src/config.js')
     expect(config.get('auth.allowedGroupIds')).toEqual([])
   })
+
+  test('should throw error for invalid UUID format in single group ID', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-12345678901'  // Too short
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for invalid UUID format with extra characters', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012x'  // Extra character
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for UUID with missing hyphens', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678123412341234123456789012'  // No hyphens
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for UUID with wrong hyphen positions', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '123456781-234-1234-1234-123456789012'  // Wrong hyphen position
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should accept uppercase UUIDs', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789ABC'
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789ABC'])
+  })
+
+  test('should accept mixed case UUIDs', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789abC'
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789abC'])
+  })
+
+  test('should throw error for comma-separated list with one invalid UUID', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,invalid-uuid'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for comma-separated list with invalid UUID in middle', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,invalid,87654321-4321-4321-4321-210987654321'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for string with leading comma', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = ',12345678-1234-1234-1234-123456789012'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for string with trailing comma', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for string with double comma', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,,87654321-4321-4321-4321-210987654321'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should throw error for string with spaces', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012, 87654321-4321-4321-4321-210987654321'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should accept multiple valid UUIDs', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,87654321-4321-4321-4321-210987654321,abcdef12-3456-7890-abcd-ef1234567890'
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual([
+      '12345678-1234-1234-1234-123456789012',
+      '87654321-4321-4321-4321-210987654321',
+      'abcdef12-3456-7890-abcd-ef1234567890'
+    ])
+  })
 })
