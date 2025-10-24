@@ -197,11 +197,6 @@ describe('config', () => {
     expect(config.get('auth.tenant')).toBeNull()
   })
 
-  test('should return auth allowed group IDs from environment variable', async () => {
-    const { config } = await import('../../src/config.js')
-    expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789012', '87654321-4321-4321-4321-210987654321'])
-  })
-
   test('should default auth allowed group IDs to empty array if not provided in environment variable', async () => {
     delete process.env.AUTH_ALLOWED_GROUP_IDS
     const { config } = await import('../../src/config.js')
@@ -226,22 +221,22 @@ describe('config', () => {
   })
 
   test('should throw error for invalid UUID format in single group ID', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-12345678901'  // Too short
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-12345678901'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
   test('should throw error for invalid UUID format with extra characters', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012x'  // Extra character
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012x'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
   test('should throw error for UUID with missing hyphens', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678123412341234123456789012'  // No hyphens
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678123412341234123456789012'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
   test('should throw error for UUID with wrong hyphen positions', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '123456781-234-1234-1234-123456789012'  // Wrong hyphen position
+    process.env.AUTH_ALLOWED_GROUP_IDS = '123456781-234-1234-1234-123456789012'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
@@ -257,34 +252,35 @@ describe('config', () => {
     expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789abC'])
   })
 
-  test('should throw error for comma-separated list with one invalid UUID', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,invalid-uuid'
-    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
-  })
-
   test('should throw error for comma-separated list with invalid UUID in middle', async () => {
     process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,invalid,87654321-4321-4321-4321-210987654321'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
-  test('should throw error for string with leading comma', async () => {
+  test('should handle leading comma in group IDs', async () => {
     process.env.AUTH_ALLOWED_GROUP_IDS = ',12345678-1234-1234-1234-123456789012'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
-  test('should throw error for string with trailing comma', async () => {
+  test('should handle trailing comma in group IDs', async () => {
     process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
-  test('should throw error for string with double comma', async () => {
-    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,,87654321-4321-4321-4321-210987654321'
+  test('should handle double comma in group IDs', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,,12345678-1234-1234-1234-123456789013'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 
   test('should throw error for string with spaces', async () => {
     process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012, 87654321-4321-4321-4321-210987654321'
     await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should convert single UUID string to array', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012'
+    const { config } = await import('../../src/config.js')
+    expect(config.get('auth.allowedGroupIds')).toEqual(['12345678-1234-1234-1234-123456789012'])
   })
 
   test('should accept multiple valid UUIDs', async () => {
@@ -295,5 +291,61 @@ describe('config', () => {
       '87654321-4321-4321-4321-210987654321',
       'abcdef12-3456-7890-abcd-ef1234567890'
     ])
+  })
+
+  test('should coerce array values unchanged', async () => {
+    delete process.env.AUTH_ALLOWED_GROUP_IDS
+    const { config } = await import('../../src/config.js')
+    expect(Array.isArray(config.get('auth.allowedGroupIds'))).toBe(true)
+    expect(config.get('auth.allowedGroupIds')).toEqual([])
+  })
+
+  test('should test array validation with invalid UUID in default', async () => {
+    const convict = await import('convict')
+
+    expect(() => {
+      const testConfig = convict.default({
+        testField: {
+          format: 'security-group-array',
+          default: ['invalid-uuid']
+        }
+      })
+      testConfig.validate()
+    }).toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should test array validation with mixed valid and invalid UUIDs', async () => {
+    const convict = await import('convict')
+
+    expect(() => {
+      const testConfig = convict.default({
+        testField: {
+          format: 'security-group-array',
+          default: ['12345678-1234-1234-1234-123456789012', 'invalid-uuid']
+        }
+      })
+      testConfig.validate()
+    }).toThrow('Must be a comma separated list of valid UUIDs')
+  })
+
+  test('should test array validation with valid UUIDs', async () => {
+    const convict = await import('convict')
+
+    const testConfig = convict.default({
+      testField: {
+        format: 'security-group-array',
+        default: ['12345678-1234-1234-1234-123456789012', '87654321-4321-4321-4321-210987654321']
+      }
+    })
+    testConfig.validate()
+    expect(testConfig.get('testField')).toEqual([
+      '12345678-1234-1234-1234-123456789012',
+      '87654321-4321-4321-4321-210987654321'
+    ])
+  })
+
+  test('should handle string that matches overall pattern but has invalid structure', async () => {
+    process.env.AUTH_ALLOWED_GROUP_IDS = '12345678-1234-1234-1234-123456789012,12345678-1234-1234-1234-12345678901z'
+    await expect(async () => await import('../../src/config.js')).rejects.toThrow('Must be a comma separated list of valid UUIDs')
   })
 })
