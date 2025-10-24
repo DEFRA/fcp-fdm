@@ -1,5 +1,5 @@
 import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
-import { config } from '../config.js'
+import { config } from '../config/config.js'
 import { processEvent } from './process.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 

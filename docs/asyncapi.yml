@@ -273,10 +273,13 @@ components:
                     type: string
                   message:
                     type: string
-        subject:
-          type: string
-        body:
-          type: string
+        content:
+          type: object
+          properties:
+            subject:
+              type: string
+            body:
+              type: string
 
     RetryExpiredData:
       type: object

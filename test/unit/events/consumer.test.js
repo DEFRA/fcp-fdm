@@ -16,7 +16,7 @@ vi.mock('../../../src/events/process.js', () => ({
   processEvent: mockProcessEvent
 }))
 
-vi.mock('../../../src/config.js', () => ({
+vi.mock('../../../src/config/config.js', () => ({
   config: {
     get: (key) => {
       if (key === 'aws') {

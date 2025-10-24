@@ -10,7 +10,7 @@ vi.mock('../../../src/events/consumer.js', () => ({
   consumeEvents: mockConsumeEvents
 }))
 
-vi.mock('../../../src/config.js', () => ({
+vi.mock('../../../src/config/config.js', () => ({
   config: {
     get: (key) => {
       if (key === 'aws') {

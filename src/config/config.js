@@ -1,9 +1,11 @@
 import convict from 'convict'
 import convictFormatWithValidator from 'convict-format-with-validator'
-import { convictValidateMongoUri } from './common/helpers/convict/validate-mongo-uri.js'
+import { convictValidateMongoUri } from '../common/helpers/convict/validate-mongo-uri.js'
+import { securityGroupArray } from './formats.js'
 
 convict.addFormat(convictValidateMongoUri)
 convict.addFormats(convictFormatWithValidator)
+convict.addFormat(securityGroupArray)
 
 const isProduction = process.env.NODE_ENV === 'production'
 const isTest = process.env.NODE_ENV === 'test'
@@ -187,6 +189,27 @@ const config = convict({
       nullable: true,
       default: null,
       env: 'DATA_GLOBAL_TTL'
+    }
+  },
+  auth: {
+    enabled: {
+      doc: 'API authentication enabled',
+      format: Boolean,
+      default: true,
+      env: 'AUTH_ENABLED'
+    },
+    tenant: {
+      doc: 'Azure tenant ID to authenticate clients',
+      format: String,
+      default: null,
+      nullable: true,
+      env: 'AUTH_TENANT_ID'
+    },
+    allowedGroupIds: {
+      doc: 'Security Group object IDs allowed to access the API, comma separated',
+      format: 'security-group-array',
+      default: [],
+      env: 'AUTH_ALLOWED_GROUP_IDS'
     }
   }
 })

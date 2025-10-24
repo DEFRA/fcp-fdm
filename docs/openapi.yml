@@ -13,6 +13,9 @@ servers:
   - url: http://localhost:3000
     description: Local development server
 
+security:
+  - BearerAuth: []
+
 paths:
   /health:
     get:
@@ -23,6 +26,7 @@ paths:
         Returns the health status of the FDM service. This endpoint can be used
         for monitoring, load balancer health checks, and service discovery.
       operationId: getHealth
+      security: []
       responses:
         '200':
           description: Service is healthy and operational
@@ -58,6 +62,7 @@ paths:
         Interactive API documentation powered by Swagger UI. Available only in
         development mode for exploring the API endpoints and schemas.
       operationId: getDocumentation
+      security: []
       responses:
         '200':
           description: Swagger UI documentation page
@@ -76,8 +81,21 @@ paths:
       description: |
         Retrieve all messages with optional filtering by CRN (Customer Reference Number) 
         or SBI (Single Business Identifier). Content and event history can be optionally included.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
       operationId: getMessages
+      security:
+        - BearerAuth: []
       parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
         - name: crn
           in: query
           description: Filter messages by Customer Reference Number
@@ -139,6 +157,32 @@ paths:
                           status: "delivered"
                           created: "2024-01-01T10:00:00.000Z"
                           lastUpdated: "2024-01-01T10:05:00.000Z"
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
 
   /api/v1/messages/{correlationId}:
     get:
@@ -148,8 +192,21 @@ paths:
       description: |
         Retrieve a specific message by its correlation ID. Content and event history 
         can be optionally included in the response.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
       operationId: getMessageByCorrelationId
+      security:
+        - BearerAuth: []
       parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
         - name: correlationId
           in: path
           description: The correlation ID of the message (UUID format)
@@ -206,6 +263,32 @@ paths:
                           - type: "uk.gov.fcp.sfd.notification.received"
                           - type: "uk.gov.fcp.sfd.notification.sending"
                           - type: "uk.gov.fcp.sfd.notification.delivered"
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
         '404':
           description: Message not found
           content:
@@ -360,3 +443,23 @@ components:
             - message
       required:
         - data
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        JWT Bearer token authentication using Microsoft Entra ID.
+        
+        **Token Requirements:**
+        - Valid JWT token from Microsoft Entra ID
+        - Token must include security groups in claims
+        - User must be member of authorized security groups
+        
+        **Header Format:** `Authorization: Bearer <jwt-token>`
+        
+        **Example Usage:**
+        ```
+        Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik...
+        ```

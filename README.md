@@ -333,6 +333,69 @@ Use the CDP terminal for your target environment. The AWS CLI is already install
 
 Replace `<account-id>` with CDP environment account ID.
 
+## API Endpoints
+
+Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
+
+Interactive API documentation can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
+
+### Authentication
+
+To authenticate with FDM for a specific environment, the following pre-requisite setup steps are required:
+
+#### Setup Requirements
+
+1. **Create a client App Registration** in the same tenant as the FDM in the target tenant
+
+2. **Configure security groups manifest** - ensure that security groups manifest value `"groupMembershipClaims": "SecurityGroup"` is set
+
+3. **Configure optional groups claim** - ensure that optional groups claim is added to the token configuration to include security groups in the groups property
+
+4. **Create a client Security Group** in the target tenant
+
+5. **Add the client App Registration** to the client Security Group
+
+6. **Notify the FDM team** to add the Security Group ID to the FDM service
+
+#### Authentication Flow
+
+Once setup is complete, perform the following steps to successfully authenticate with the API:
+
+1. **Authenticate with Entra** using your App Registration to retrieve an authentication token
+
+2. **Make an API request** to FDM passing the `Bearer <token>` header
+
+3. **FDM validates** the token and confirms if your service is authorised to access the data
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant Entra
+    participant FDM 
+    participant JWKS as JWKS Endpoint
+    
+    Note over Client,JWKS: Pre-requisite: App Registration & Security Group Setup
+    
+    Client->>Entra: 1. Authenticate with App Registration
+    Entra->>Client: 2. Return JWT Token (with security groups)
+    
+    Client->>FDM: 3. API Request with Bearer token
+    
+    rect rgb(240, 248, 255)
+        Note over FDM,JWKS: Token Validation Process
+        FDM->>JWKS: 4. Fetch public keys for signature verification
+        JWKS->>FDM: 5. Return signing keys
+        FDM->>FDM: 6. Verify token signature & claims
+        FDM->>FDM: 7. Check security groups against allowed list
+    end
+    
+    alt Valid Token & Authorized Groups
+        FDM->>Client: 8a. API Response (200 OK)
+    else Invalid Token or Unauthorized
+        FDM->>Client: 8b. Unauthorized (401)
+    end
+```
+
 ## Test Structure
 
 The test suite is organized into distinct categories.
@@ -364,19 +427,13 @@ npm run docker:test
 npm run docker:test:watch
 ```
 
-## API Endpoints
-
-Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
-
-Interactive API documentation can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
-
 ## Environment Variables
 
 The FDM service can be configured using the following environment variables:
 
 > Note: Default valid values are already applied for local development and testing through Docker Compose.
 
-### Core Service Configuration
+### Core Service
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
@@ -386,7 +443,7 @@ The FDM service can be configured using the following environment variables:
 | `SERVICE_VERSION` | Service version (injected in CDP environments) | `null` | No |
 | `ENVIRONMENT` | CDP environment name | `local` | No |
 
-### AWS Configuration
+### AWS
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
@@ -396,7 +453,7 @@ The FDM service can be configured using the following environment variables:
 | `AWS_SECRET_ACCESS_KEY` | AWS secret access key | `null` | No |
 | `AWS_SQS_QUEUE_URL` | SQS queue URL for event consumption | `null` | Yes |
 
-### MongoDB Configuration
+### MongoDB
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
@@ -405,7 +462,7 @@ The FDM service can be configured using the following environment variables:
 | `MONGO_RETRY_WRITES` | Enable MongoDB write retries | `null` | No |
 | `MONGO_READ_PREFERENCE` | MongoDB read preference | `null` | No |
 
-### Logging Configuration
+### Logging
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
@@ -422,6 +479,14 @@ The FDM service can be configured using the following environment variables:
 | `ENABLE_METRICS` | Enable metrics reporting | `true` (prod), `false` (dev) | No |
 | `TRACING_HEADER` | CDP tracing header name | `x-cdp-request-id` | No |
 | `DATA_GLOBAL_TTL` | Global TTL for data in seconds | `null` | No |
+
+### Authentication
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `AUTH_ENABLED` | Enable authentication | `true` | No |
+| `AUTH_TENANT_ID` | Microsoft Entra ID tenant ID | `null` | If Auth Enabled |
+| `AUTH_ALLOWED_GROUP_IDS` | Comma-separated allowed security group IDs | `null` | If Auth Enabled |
 
 ## Using FDM in Your Docker Compose
 
