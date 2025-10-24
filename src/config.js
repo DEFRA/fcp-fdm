@@ -11,7 +11,8 @@ convict.addFormat({
       return
     }
 
-    const uuidRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/
+    const uuidPattern = '[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}'
+    const uuidRegex = new RegExp(`^${uuidPattern}$`)
 
     if (Array.isArray(val)) {
       for (const uuid of val) {
@@ -22,7 +23,7 @@ convict.addFormat({
       return
     }
 
-    const commaSeparatedRegex = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(,[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12})*$/
+    const commaSeparatedRegex = new RegExp(`^${uuidPattern}(,${uuidPattern})*$`)
     if (!commaSeparatedRegex.test(val)) {
       throw new Error('Must be a comma separated list of valid UUIDs')
     }
