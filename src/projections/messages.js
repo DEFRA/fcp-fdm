@@ -19,7 +19,7 @@ export async function getMessageByCorrelationId (correlationId, options = {}) {
 
 export async function getMessages (filters = {}) {
   const { db, collections } = getMongoDb()
-  const { crn, sbi, includeContent = false, includeEvents = false } = filters
+  const { crn, sbi, includeContent, includeEvents, page, pageSize } = filters
 
   const query = {}
   if (crn !== undefined) {
@@ -30,10 +30,23 @@ export async function getMessages (filters = {}) {
   }
 
   const projection = buildProjection(includeContent, includeEvents)
-  const messagesCursor = db.collection(collections.messages).find(query, { projection })
-  const messagesArray = await messagesCursor.toArray()
 
-  return messagesArray.map(message => transformMessage(message, includeEvents))
+  const cursor = db.collection(collections.messages)
+    .find(query, { projection })
+    .sort({ created: -1, _id: -1 })
+    .skip((page - 1) * pageSize)
+    .limit(pageSize)
+
+  const [messages, total] = await Promise.all([
+    cursor.toArray(),
+    db.collection(collections.messages).countDocuments(query)
+  ])
+
+  return {
+    messages: messages.map(message => transformMessage(message, includeEvents)),
+    total,
+    pages: Math.ceil(total / pageSize)
+  }
 }
 
 function buildProjection (includeContent = false, includeEvents = false) {

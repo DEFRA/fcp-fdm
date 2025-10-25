@@ -1,6 +1,7 @@
 import { constants as httpConstants } from 'node:http2'
 import Joi from 'joi'
 import { getMessages, getMessageByCorrelationId } from '../projections/messages.js'
+import { getPageLinks } from '../common/helpers/pagination.js'
 
 const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
@@ -23,9 +24,20 @@ const api = [{
     }
   },
   handler: async (request, h) => {
-    const messages = await getMessages(request.query)
+    const { page, pageSize } = request.query
 
-    return h.response({ data: { messages } })
+    const { messages, total, pages } = await getMessages(request.query)
+
+    return h.response({
+      data: { messages },
+      links: getPageLinks(request, page, pageSize, pages),
+      meta: {
+        page,
+        pageSize,
+        total,
+        pages
+      }
+    })
   }
 }, {
   method: 'GET',
