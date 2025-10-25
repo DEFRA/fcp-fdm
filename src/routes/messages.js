@@ -16,12 +16,14 @@ const api = [{
         crn: Joi.number().optional().description('Filter messages by CRN'),
         sbi: Joi.number().optional().description('Filter messages by SBI'),
         includeContent: Joi.boolean().default(false).description('Whether to include the recipient, subject and body'),
-        includeEvents: Joi.boolean().default(false).description('Whether to include the event history')
+        includeEvents: Joi.boolean().default(false).description('Whether to include the event history'),
+        page: Joi.number().integer().min(1).default(1).description('The page number for pagination'),
+        pageSize: Joi.number().integer().min(1).max(100).default(20).description('The number of items per page for pagination')
       }
     }
   },
   handler: async (request, h) => {
-    const { crn, sbi, includeContent, includeEvents } = request.query
+    const { crn, sbi, includeContent, includeEvents, page, pageSize } = request.query
 
     const messages = await getMessages({ crn, sbi, includeContent, includeEvents })
 
