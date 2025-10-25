@@ -23,9 +23,7 @@ const api = [{
     }
   },
   handler: async (request, h) => {
-    const { crn, sbi, includeContent, includeEvents, page, pageSize } = request.query
-
-    const messages = await getMessages({ crn, sbi, includeContent, includeEvents })
+    const messages = await getMessages(request.query)
 
     return h.response({ data: { messages } })
   }
