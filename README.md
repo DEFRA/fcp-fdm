@@ -11,6 +11,56 @@ The Farming Data Model (FDM) service is a common component to support data excha
 
 FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These events are persisted and precompiled into a data model which can be queried via REST API endpoints.
 
+## Contents
+
+- [Architecture Overview](#architecture-overview)
+- [Event Processing Pipeline](#event-processing-pipeline)
+  - [Processing Flow](#processing-flow)
+  - [Code Layer Processing](#code-layer-processing)
+- [Event Types And Scenarios](#event-types-and-scenarios)
+  - [Message Events](#message-events)
+- [Retry Logic And Dead Letter Queue](#retry-logic-and-dead-letter-queue)
+  - [Sqs Configuration](#sqs-configuration)
+  - [Localstack Setup](#localstack-setup)
+  - [Mongodb Event Storage](#mongodb-event-storage)
+- [Adding New Event Types](#adding-new-event-types)
+  - [1. Update Event Type Mapping](#1-update-event-type-mapping)
+  - [2. Create Event Schema](#2-create-event-schema)
+  - [3. Create Save Handler](#3-create-save-handler)
+  - [4. Naming Convention](#4-naming-convention)
+  - [5. Add Test Coverage](#5-add-test-coverage)
+  - [Sending Test Events](#sending-test-events)
+  - [Sending Test Events In Cdp Environments](#sending-test-events-in-cdp-environments)
+- [Api Endpoints](#api-endpoints)
+  - [Authentication](#authentication)
+    - [Setup Requirements](#setup-requirements)
+    - [Authentication Flow](#authentication-flow)
+- [Test Structure](#test-structure)
+  - [Test Categories](#test-categories)
+  - [Running Tests](#running-tests)
+- [Environment Variables](#environment-variables)
+  - [Core Service](#core-service)
+  - [Aws](#aws)
+  - [Mongodb](#mongodb)
+  - [Logging](#logging)
+  - [Security And Performance](#security-and-performance)
+  - [Authentication](#authentication-1)
+- [Using Fdm In Your Docker Compose](#using-fdm-in-your-docker-compose)
+  - [Dependencies](#dependencies)
+  - [Minimum Setup](#minimum-setup)
+  - [Localstack Initialization Script](#localstack-initialization-script)
+  - [Important Notes](#important-notes)
+  - [Accessing The Service](#accessing-the-service)
+- [Requirements](#requirements)
+  - [Docker](#docker)
+  - [Local Development](#local-development)
+    - [Setup](#setup)
+    - [Development](#development)
+    - [Testing](#testing)
+- [Licence](#licence)
+  - [About The Licence](#about-the-licence)
+
+
 ## Architecture Overview
 
 The FDM service follows an event-driven architecture pattern with the following key components:
