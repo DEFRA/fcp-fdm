@@ -124,16 +124,35 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: page
+          in: query
+          description: Page number for paginated results (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 2
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 10
       responses:
         '200':
           description: Successfully retrieved messages
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/MessagesResponse'
+                $ref: '#/components/schemas/PaginatedMessagesResponse'
               examples:
                 basic:
-                  summary: Basic messages without content or events
+                  summary: Basic paginated messages response
                   value:
                     data:
                       messages:
@@ -143,8 +162,17 @@ paths:
                           status: "delivered"
                           created: "2024-01-01T10:00:00.000Z"
                           lastUpdated: "2024-01-01T10:05:00.000Z"
+                    links:
+                      self: "/api/v1/messages?page=1&pageSize=20"
+                      next: "/api/v1/messages?page=2&pageSize=20"
+                      prev: null
+                    meta:
+                      page: 1
+                      pageSize: 20
+                      totalPages: 5
+                      totalItems: 100
                 withContent:
-                  summary: Messages with content included
+                  summary: Paginated messages with content included
                   value:
                     data:
                       messages:
@@ -157,6 +185,15 @@ paths:
                           status: "delivered"
                           created: "2024-01-01T10:00:00.000Z"
                           lastUpdated: "2024-01-01T10:05:00.000Z"
+                    links:
+                      self: "/api/v1/messages?page=1&pageSize=20"
+                      next: "/api/v1/messages?page=2&pageSize=20"
+                      prev: null
+                    meta:
+                      page: 1
+                      pageSize: 20
+                      totalPages: 5
+                      totalItems: 100
         '401':
           description: Unauthorized - Invalid or missing JWT token
           content:
@@ -416,7 +453,7 @@ components:
       required:
         - type
 
-    MessagesResponse:
+    PaginatedMessagesResponse:
       type: object
       properties:
         data:
@@ -428,8 +465,53 @@ components:
                 $ref: '#/components/schemas/Message'
           required:
             - messages
+        links:
+          type: object
+          description: Pagination links for navigation
+          properties:
+            self:
+              type: string
+              format: uri
+              description: Link to the current page
+            next:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the next page, if available
+            prev:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the previous page, if available
+          required:
+            - self
+        meta:
+          type: object
+          description: Pagination metadata
+          properties:
+            page:
+              type: integer
+              description: Current page number
+            pageSize:
+              type: integer
+              description: Number of items per page
+            totalPages:
+              type: integer
+              description: Total number of pages
+            totalItems:
+              type: integer
+              description: Total number of items
+          required:
+            - page
+            - pageSize
+            - totalPages
+            - totalItems
       required:
         - data
+        - links
+        - meta
 
     MessageResponse:
       type: object

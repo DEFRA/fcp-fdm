@@ -22,7 +22,7 @@ let server
 beforeEach(async () => {
   vi.resetAllMocks()
 
-  mockGetMessages.mockResolvedValue(['message1', 'message2'])
+  mockGetMessages.mockResolvedValue({ messages: ['message1', 'message2'], total: 2, pages: 1 })
   mockGetMessageByCorrelationId.mockResolvedValue('message1')
 
   server = await createServer()
@@ -41,9 +41,9 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: false })
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
 
   test('should filter messages by CRN if requested', async () => {
@@ -53,9 +53,9 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, includeContent: false, includeEvents: false })
+    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
 
   test('should filter messages by SBI if requested', async () => {
@@ -65,9 +65,9 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ sbi: 123456789, includeContent: false, includeEvents: false })
+    expect(mockGetMessages).toHaveBeenCalledWith({ sbi: 123456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
 
   test('should filter messages by CRN and SBI if requested', async () => {
@@ -77,9 +77,9 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, sbi: 123456789, includeContent: false, includeEvents: false })
+    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, sbi: 123456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
 
   test('should include content if requested', async () => {
@@ -89,9 +89,9 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: true, includeEvents: false })
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: true, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
 
   test('should include events if requested', async () => {
@@ -101,9 +101,64 @@ describe('GET /api/v1/messages', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: true })
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: true, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
-    expect(response.payload).equals(JSON.stringify({ data: { messages: ['message1', 'message2'] } }))
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
+  })
+
+  test('should pass page and pageSize query params to getMessages', async () => {
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages?page=2&pageSize=5'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: false, page: 2, pageSize: 5 })
+    expect(response.statusCode).toBe(HTTP_STATUS_OK)
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
+  })
+
+  test('should include correct links in response', async () => {
+    mockGetMessages.mockResolvedValueOnce({
+      messages: ['message1', 'message2'],
+      total: 10,
+      pages: 5
+    })
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages?page=2&pageSize=2'
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+
+    expect(payload.links).toEqual(expect.objectContaining({
+      self: expect.any(String),
+      first: expect.any(String),
+      last: expect.any(String),
+      prev: expect.any(String),
+      next: expect.any(String)
+    }))
+  })
+
+  test('should include correct meta in response', async () => {
+    mockGetMessages.mockResolvedValueOnce({
+      messages: ['message1', 'message2'],
+      total: 10,
+      pages: 5
+    })
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages?page=2&pageSize=2'
+    }
+    const response = await server.inject(options)
+    const payload = JSON.parse(response.payload)
+
+    expect(payload.meta).toEqual({
+      page: 2,
+      pageSize: 2,
+      total: 10,
+      pages: 5
+    })
   })
 })
 
@@ -157,4 +212,10 @@ describe('GET /api/v1/messages/{correlationId}', () => {
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(response.payload).equals(JSON.stringify({ data: { message: 'message1' } }))
   })
+
+  // test pagination parameters
+
+  // test links response contents
+
+  // test meta response contents
 })

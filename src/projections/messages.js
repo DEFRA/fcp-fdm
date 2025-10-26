@@ -19,7 +19,7 @@ export async function getMessageByCorrelationId (correlationId, options = {}) {
 
 export async function getMessages (filters = {}) {
   const { db, collections } = getMongoDb()
-  const { crn, sbi, includeContent, includeEvents, page, pageSize } = filters
+  const { crn, sbi, includeContent = false, includeEvents = false, page = 1, pageSize = 20 } = filters
 
   const query = {}
   if (crn !== undefined) {

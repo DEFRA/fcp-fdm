@@ -115,39 +115,39 @@ afterAll(async () => {
 
 describe('getMessages', () => {
   test('should retrieve all messages without content and events', async () => {
-    const messages = await getMessages()
-    expect(messages).toEqual(testMessages.map(createBaseMessage))
+    const { messages } = await getMessages()
+    expect(messages).toEqual(expect.arrayContaining(testMessages.map(createBaseMessage)))
     expect(messages).toHaveLength(4)
   })
 
   test('should filter messages by CRN if requested - multiple results', async () => {
     const crn = 1234567890
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
-    const messages = await getMessages({ crn })
-    expect(messages).toEqual(expectedMessages.map(createBaseMessage))
+    const { messages } = await getMessages({ crn })
+    expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
     expect(messages).toHaveLength(2)
   })
 
   test('should filter messages by CRN if requested - single result', async () => {
     const crn = 1234567891
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
-    const messages = await getMessages({ crn })
-    expect(messages).toEqual(expectedMessages.map(createBaseMessage))
+    const { messages } = await getMessages({ crn })
+    expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
     expect(messages).toHaveLength(2)
   })
 
   test('should filter messages by SBI if requested - multiple results', async () => {
     const sbi = 987654321
     const expectedMessages = testMessages.filter(msg => msg.sbi === sbi)
-    const messages = await getMessages({ sbi })
-    expect(messages).toEqual(expectedMessages.map(createBaseMessage))
+    const { messages } = await getMessages({ sbi })
+    expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
     expect(messages).toHaveLength(2)
   })
 
   test('should filter messages by SBI if requested - single result', async () => {
     const sbi = 987654322
     const expectedMessages = testMessages.filter(msg => msg.sbi === sbi)
-    const messages = await getMessages({ sbi })
+    const { messages } = await getMessages({ sbi })
     expect(messages).toEqual(expectedMessages.map(createBaseMessage))
     expect(messages).toHaveLength(1)
   })
@@ -156,47 +156,84 @@ describe('getMessages', () => {
     const crn = 1234567890
     const sbi = 987654321
     const expectedMessages = testMessages.filter(msg => msg.crn === crn && msg.sbi === sbi)
-    const messages = await getMessages({ crn, sbi })
+    const { messages } = await getMessages({ crn, sbi })
     expect(messages).toEqual(expectedMessages.map(createBaseMessage))
     expect(messages).toHaveLength(1)
   })
 
   test('should filter messages by CRN and SBI if requested - no matches', async () => {
-    const messages = await getMessages({ crn: 1234567890, sbi: 987654323 })
+    const { messages } = await getMessages({ crn: 1234567890, sbi: 987654323 })
     expect(messages).toEqual([]) // No message has this combination
     expect(messages).toHaveLength(0)
   })
 
   test('should include content if requested', async () => {
-    const messages = await getMessages({ includeContent: true })
-    expect(messages).toEqual(testMessages.map(createMessageWithContent))
+    const { messages } = await getMessages({ includeContent: true })
+    expect(messages).toEqual(expect.arrayContaining(testMessages.map(createMessageWithContent)))
     expect(messages).toHaveLength(4)
   })
 
   test('should include events if requested', async () => {
-    const messages = await getMessages({ includeEvents: true })
-    expect(messages).toEqual(testMessages.map(createMessageWithEvents))
+    const { messages } = await getMessages({ includeEvents: true })
+    expect(messages).toEqual(expect.arrayContaining(testMessages.map(createMessageWithEvents)))
     expect(messages).toHaveLength(4)
   })
 
   test('should include both content and events if requested', async () => {
-    const messages = await getMessages({ includeContent: true, includeEvents: true })
-    expect(messages).toEqual(testMessages.map(createFullMessage))
+    const { messages } = await getMessages({ includeContent: true, includeEvents: true })
+    expect(messages).toEqual(expect.arrayContaining(testMessages.map(createFullMessage)))
     expect(messages).toHaveLength(4)
   })
 
   test('should combine filtering with content inclusion', async () => {
     const crn = 1234567890
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
-    const messages = await getMessages({ crn, includeContent: true })
-    expect(messages).toEqual(expectedMessages.map(createMessageWithContent))
+    const { messages } = await getMessages({ crn, includeContent: true })
+    expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createMessageWithContent)))
     expect(messages).toHaveLength(2)
   })
 
   test('should return empty array when no messages match filter', async () => {
-    const messages = await getMessages({ crn: 9999999999 })
+    const { messages } = await getMessages({ crn: 9999999999 })
     expect(messages).toEqual([])
     expect(messages).toHaveLength(0)
+  })
+
+  test('should return messages in descending order of created by default', async () => {
+    const { messages } = await getMessages()
+    const sorted = [...messages].sort((a, b) => b.created - a.created)
+    expect(messages).toEqual(sorted)
+  })
+
+  test('should return only the first page of results with custom pageSize (created desc)', async () => {
+    const sorted = [...testMessages].sort((a, b) => b.created - a.created)
+    const { messages, total, pages } = await getMessages({ page: 1, pageSize: 2 })
+    expect(messages).toEqual([
+      createBaseMessage(sorted[0]),
+      createBaseMessage(sorted[1])
+    ])
+    expect(messages).toHaveLength(2)
+    expect(total).toBe(4)
+    expect(pages).toBe(2)
+  })
+
+  test('should return the second page of results with custom pageSize (created desc)', async () => {
+    const sorted = [...testMessages].sort((a, b) => b.created - a.created)
+    const { messages, total, pages } = await getMessages({ page: 2, pageSize: 2 })
+    expect(messages).toEqual([
+      createBaseMessage(sorted[2]),
+      createBaseMessage(sorted[3])
+    ])
+    expect(messages).toHaveLength(2)
+    expect(total).toBe(4)
+    expect(pages).toBe(2)
+  })
+
+  test('should explicitly order messages by created descending', async () => {
+    const { messages } = await getMessages()
+    for (let i = 0; i < messages.length - 1; i++) {
+      expect(messages[i].created >= messages[i + 1].created).toBe(true)
+    }
   })
 })
 
