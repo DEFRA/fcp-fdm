@@ -497,17 +497,17 @@ components:
             pageSize:
               type: integer
               description: Number of items per page
-            totalPages:
+            pages:
               type: integer
               description: Total number of pages
-            totalItems:
+            total:
               type: integer
               description: Total number of items
           required:
             - page
             - pageSize
-            - totalPages
-            - totalItems
+            - pages
+            - total
       required:
         - data
         - links

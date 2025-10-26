@@ -1,3 +1,5 @@
+name: fcp-fdm-test
+
 services:
   fcp-fdm:
     build:
