@@ -1,6 +1,7 @@
 import { constants as httpConstants } from 'node:http2'
 import Joi from 'joi'
 import { getMessages, getMessageByCorrelationId } from '../projections/messages.js'
+import { getPageLinks } from '../common/helpers/pagination.js'
 
 const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
@@ -16,16 +17,27 @@ const api = [{
         crn: Joi.number().optional().description('Filter messages by CRN'),
         sbi: Joi.number().optional().description('Filter messages by SBI'),
         includeContent: Joi.boolean().default(false).description('Whether to include the recipient, subject and body'),
-        includeEvents: Joi.boolean().default(false).description('Whether to include the event history')
+        includeEvents: Joi.boolean().default(false).description('Whether to include the event history'),
+        page: Joi.number().integer().min(1).default(1).description('The page number for pagination'),
+        pageSize: Joi.number().integer().min(1).max(100).default(20).description('The number of items per page for pagination')
       }
     }
   },
   handler: async (request, h) => {
-    const { crn, sbi, includeContent, includeEvents } = request.query
+    const { page, pageSize } = request.query
 
-    const messages = await getMessages({ crn, sbi, includeContent, includeEvents })
+    const { messages, total, pages } = await getMessages(request.query)
 
-    return h.response({ data: { messages } })
+    return h.response({
+      data: { messages },
+      links: getPageLinks(request, page, pageSize, pages),
+      meta: {
+        page,
+        pageSize,
+        total,
+        pages
+      }
+    })
   }
 }, {
   method: 'GET',

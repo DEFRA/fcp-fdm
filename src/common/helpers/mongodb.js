@@ -53,7 +53,6 @@ export async function createMongoDbConnection (options) {
   mongoDbDatabase = db
   mongoDbName = databaseName
 
-  await removeDefunctCollections(db)
   await createIndexes(db)
   await configureGlobalTtlIndexes(db)
 }
@@ -69,17 +68,10 @@ export function getMongoDb () {
 async function createIndexes (db) {
   await db.collection(EVENT_COLLECTION).createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
   await db.collection(EVENT_COLLECTION).createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
-}
-
-async function removeDefunctCollections (db) {
-  const defunctCollections = ['mongo-locks', 'events-temp']
-  const collections = await db.listCollections().toArray()
-
-  for (const defunctCollection of defunctCollections) {
-    if (collections.some(c => c.name === defunctCollection)) {
-      await db.collection(defunctCollection).drop()
-    }
-  }
+  await db.collection(MESSAGE_COLLECTION).createIndex({ created: -1, _id: -1 }, { name: 'messages_by_created' })
+  await db.collection(MESSAGE_COLLECTION).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_created' })
+  await db.collection(MESSAGE_COLLECTION).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_sbi_created' })
+  await db.collection(MESSAGE_COLLECTION).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_sbi_created' })
 }
 
 async function configureGlobalTtlIndexes (db) {
