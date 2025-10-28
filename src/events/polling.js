@@ -5,12 +5,24 @@ import { createLogger } from '../common/helpers/logging/logger.js'
 const { sqs } = config.get('aws')
 const logger = createLogger()
 
+let backOff = sqs.pollingInterval
+const maxBackOff = Math.max(15000, sqs.pollingInterval * 15)
+
+const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4))
+
 export async function pollForEvents () {
   try {
-    await consumeEvents()
+    const hadEvents = await consumeEvents()
+    if (hadEvents) {
+      backOff = sqs.pollingInterval
+      setImmediate(pollForEvents)
+    } else {
+      backOff = Math.min(maxBackOff, backOff * 2)
+      setTimeout(pollForEvents, jitter(backOff))
+    }
   } catch (err) {
     logger.error(err, 'Error polling for event messages')
-  } finally {
-    setTimeout(pollForEvents, sqs.pollingInterval)
+    backOff = Math.min(maxBackOff, Math.max(1000, backOff * 2))
+    setTimeout(pollForEvents, jitter(backOff))
   }
 }
