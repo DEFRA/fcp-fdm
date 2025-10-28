@@ -3,6 +3,7 @@ import { vi, describe, beforeEach, test, expect } from 'vitest'
 vi.useFakeTimers()
 
 const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(() => {})
+const setImmediateSpy = vi.spyOn(globalThis, 'setImmediate').mockImplementation(() => {})
 
 const mockConsumeEvents = vi.fn()
 
@@ -40,22 +41,26 @@ describe('pollForEvents', () => {
     vi.clearAllMocks()
   })
 
-  test('should trigger event consumption', async () => {
+  test('should trigger event consumption and schedule next poll if returns true', async () => {
+    mockConsumeEvents.mockResolvedValueOnce(true)
     await pollForEvents()
     expect(mockConsumeEvents).toHaveBeenCalled()
+    expect(setImmediateSpy).toHaveBeenCalledWith(pollForEvents)
   })
 
-  test('should trigger polling again after configured interval if consumption does not throw error', async () => {
+  test('should schedule next poll if consumption returns false', async () => {
+    mockConsumeEvents.mockResolvedValueOnce(false)
     await pollForEvents()
+    vi.runAllTimers()
+    expect(mockConsumeEvents).toHaveBeenCalled()
     expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, expect.any(Number))
   })
 
   test('should log error and still schedule next poll if consumption throws error', async () => {
     const testError = new Error('Test consumption error')
     mockConsumeEvents.mockRejectedValueOnce(testError)
-
     await pollForEvents()
-
+    vi.runAllTimers()
     expect(mockLogError).toHaveBeenCalledWith(testError, 'Error polling for event messages')
     expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, expect.any(Number))
   })

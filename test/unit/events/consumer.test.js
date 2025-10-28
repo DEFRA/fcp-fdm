@@ -52,9 +52,8 @@ describe('consumeEvents', () => {
 
   test('should check for new events as SQS messages', async () => {
     mockSqsClient.send.mockResolvedValueOnce({ Messages: [] })
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(false)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(1)
     expect(mockSqsClient.send).toHaveBeenCalledWith(expect.objectContaining({
       params: expect.objectContaining({
@@ -69,9 +68,8 @@ describe('consumeEvents', () => {
 
   test('should not process events if no event messages are received', async () => {
     mockSqsClient.send.mockResolvedValueOnce({ Messages: null })
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(false)
     expect(mockProcessEvent).not.toHaveBeenCalled()
     expect(mockSqsClient.send).toHaveBeenCalledTimes(1)
   })
@@ -80,13 +78,11 @@ describe('consumeEvents', () => {
     const testMessages = [
       { ReceiptHandle: 'receipt-1', Body: 'message-1' }
     ]
-
     mockSqsClient.send
       .mockResolvedValueOnce({ Messages: testMessages }) // ReceiveMessageCommand
       .mockResolvedValueOnce({}) // DeleteMessageCommand for message 1
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(2)
     expect(mockProcessEvent).toHaveBeenCalledTimes(1)
     expect(mockProcessEvent).toHaveBeenCalledWith(testMessages[0])
@@ -94,12 +90,11 @@ describe('consumeEvents', () => {
 
   test('should delete message from SQS after successful processing', async () => {
     const testMessage = { ReceiptHandle: 'receipt-1', Body: 'message-1' }
-
     mockSqsClient.send
       .mockResolvedValueOnce({ Messages: [testMessage] }) // ReceiveMessageCommand
       .mockResolvedValueOnce({}) // DeleteMessageCommand
-
-    await consumeEvents()
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(2)
     expect(mockSqsClient.send).toHaveBeenNthCalledWith(2, expect.objectContaining({
       params: {
@@ -114,14 +109,12 @@ describe('consumeEvents', () => {
       { ReceiptHandle: 'receipt-1', Body: 'message-1' },
       { ReceiptHandle: 'receipt-2', Body: 'message-2' }
     ]
-
     mockSqsClient.send
       .mockResolvedValueOnce({ Messages: testMessages }) // ReceiveMessageCommand
       .mockResolvedValueOnce({}) // DeleteMessageCommand for message 1
       .mockResolvedValueOnce({}) // DeleteMessageCommand for message 2
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(3)
     expect(mockProcessEvent).toHaveBeenCalledTimes(2)
     expect(mockProcessEvent).toHaveBeenCalledWith(testMessages[0])
@@ -133,14 +126,12 @@ describe('consumeEvents', () => {
       { ReceiptHandle: 'receipt-1', Body: 'message-1' },
       { ReceiptHandle: 'receipt-2', Body: 'message-2' }
     ]
-
     mockSqsClient.send
       .mockResolvedValueOnce({ Messages: testMessages }) // ReceiveMessageCommand
       .mockResolvedValueOnce({}) // DeleteMessageCommand for message 1
       .mockResolvedValueOnce({}) // DeleteMessageCommand for message 2
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(3)
     expect(mockSqsClient.send).toHaveBeenNthCalledWith(2, expect.objectContaining({
       params: {
@@ -162,14 +153,12 @@ describe('consumeEvents', () => {
       { ReceiptHandle: 'receipt-2', Body: 'message-2' }
     ]
     const processError = new Error('Processing failed')
-
     mockSqsClient.send.mockResolvedValueOnce({ Messages: testMessages })
     mockProcessEvent
       .mockRejectedValueOnce(processError) // First message fails
       .mockResolvedValueOnce() // Second message succeeds
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockProcessEvent).toHaveBeenCalledTimes(2)
     expect(mockLogError).toHaveBeenCalledWith(processError, 'Unable to process event')
     expect(mockSqsClient.send).toHaveBeenCalledTimes(2) // Only delete successful message
@@ -178,12 +167,10 @@ describe('consumeEvents', () => {
   test('should not delete message when processing fails', async () => {
     const testMessage = { ReceiptHandle: 'receipt-1', Body: 'message-1' }
     const processError = new Error('Processing failed')
-
     mockSqsClient.send.mockResolvedValueOnce({ Messages: [testMessage] })
     mockProcessEvent.mockRejectedValueOnce(processError)
-
-    await consumeEvents()
-
+    const result = await consumeEvents()
+    expect(result).toBe(true)
     expect(mockSqsClient.send).toHaveBeenCalledTimes(1) // Only ReceiveMessage, no DeleteMessage
     expect(mockLogError).toHaveBeenCalledWith(processError, 'Unable to process event')
   })

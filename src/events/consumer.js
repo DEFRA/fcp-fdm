@@ -26,7 +26,7 @@ const receiveParams = {
 export async function consumeEvents () {
   const { Messages } = await sqsClient.send(new ReceiveMessageCommand(receiveParams))
 
-  if (Messages) {
+  if (Array.isArray(Messages) && Messages.length > 0) {
     for (const event of Messages) {
       try {
         await processEvent(event)
