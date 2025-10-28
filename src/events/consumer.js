@@ -27,22 +27,21 @@ export async function consumeEvents () {
   const { Messages } = await sqsClient.send(new ReceiveMessageCommand(receiveParams))
 
   if (Array.isArray(Messages) && Messages.length > 0) {
-    const processedReceiptHandles = []
+    const processedEvents = []
 
     for (const event of Messages) {
       try {
         await processEvent(event)
-        processedReceiptHandles.push({ Id: event.MessageId, ReceiptHandle: event.ReceiptHandle })
+        processedEvents.push({ Id: event.MessageId, ReceiptHandle: event.ReceiptHandle })
       } catch (err) {
         logger.error(err, 'Unable to process event')
       }
-      try {
+
+      if (processedEvents.length > 0) {
         await sqsClient.send(new DeleteMessageBatchCommand({
           QueueUrl: sqs.queueUrl,
-          Entries: processedReceiptHandles
+          Entries: processedEvents
         }))
-      } catch (err) {
-        logger.error(err, 'Unable to delete processed messages')
       }
     }
     return true
