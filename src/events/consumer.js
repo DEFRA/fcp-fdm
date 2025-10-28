@@ -1,4 +1,4 @@
-import { ReceiveMessageCommand, DeleteMessageCommand, SQSClient } from '@aws-sdk/client-sqs'
+import { ReceiveMessageCommand, DeleteMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { config } from '../config/config.js'
 import { processEvent } from './process.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
@@ -27,15 +27,22 @@ export async function consumeEvents () {
   const { Messages } = await sqsClient.send(new ReceiveMessageCommand(receiveParams))
 
   if (Array.isArray(Messages) && Messages.length > 0) {
+    const processedReceiptHandles = []
+
     for (const event of Messages) {
       try {
         await processEvent(event)
-        await sqsClient.send(new DeleteMessageCommand({
-          QueueUrl: sqs.queueUrl,
-          ReceiptHandle: event.ReceiptHandle
-        }))
+        processedReceiptHandles.push({ Id: event.MessageId, ReceiptHandle: event.ReceiptHandle })
       } catch (err) {
         logger.error(err, 'Unable to process event')
+      }
+      try {
+        await sqsClient.send(new DeleteMessageBatchCommand({
+          QueueUrl: sqs.queueUrl,
+          Entries: processedReceiptHandles
+        }))
+      } catch (err) {
+        logger.error(err, 'Unable to delete processed messages')
       }
     }
     return true
