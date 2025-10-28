@@ -38,5 +38,7 @@ export async function consumeEvents () {
         logger.error(err, 'Unable to process event')
       }
     }
+    return true
   }
+  return false
 }

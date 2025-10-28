@@ -114,7 +114,7 @@ const config = convict({
       },
       pollingInterval: {
         doc: 'Interval in milliseconds to poll for messages.',
-        format: 'int',
+        format: 'nat',
         default: 1000
       }
     }

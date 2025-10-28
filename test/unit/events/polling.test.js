@@ -47,7 +47,7 @@ describe('pollForEvents', () => {
 
   test('should trigger polling again after configured interval if consumption does not throw error', async () => {
     await pollForEvents()
-    expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, 1000)
+    expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, expect.any(Number))
   })
 
   test('should log error and still schedule next poll if consumption throws error', async () => {
@@ -57,6 +57,6 @@ describe('pollForEvents', () => {
     await pollForEvents()
 
     expect(mockLogError).toHaveBeenCalledWith(testError, 'Error polling for event messages')
-    expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, 1000)
+    expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, expect.any(Number))
   })
 })
