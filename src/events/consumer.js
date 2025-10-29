@@ -11,9 +11,10 @@ const logger = createLogger()
 
 const agent = new https.Agent({
   keepAlive: true,
-  maxSockets: 128,
-  maxFreeSockets: 20,
-  timeout: 20000
+  keepAliveMsecs: 1000,
+  maxSockets: 32,
+  maxFreeSockets: 10,
+  timeout: 60000
 })
 
 const sqsClient = new SQSClient({
@@ -23,7 +24,9 @@ const sqsClient = new SQSClient({
     credentials: { accessKeyId, secretAccessKey }
   }),
   requestHandler: new NodeHttpHandler({
-    httpsAgent: agent
+    httpsAgent: agent,
+    connectionTimeout: 2000,
+    socketTimeout: 30000
   })
 })
 
