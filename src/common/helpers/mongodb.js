@@ -9,9 +9,8 @@ const mongoDbCollections = {
   messages: MESSAGE_COLLECTION
 }
 
-let mongoDbClient
-let mongoDbDatabase
-let mongoDbName
+const mongoConsumer = {}
+const mongoApi = {}
 
 export const mongoDb = {
   plugin: {
@@ -22,12 +21,7 @@ export const mongoDb = {
 
       await createMongoDbConnection(options)
 
-      server.logger.info(`MongoDb connected to ${mongoDbName}`)
-
-      server.decorate('server', 'mongoClient', mongoDbClient)
-      server.decorate('server', 'db', mongoDbDatabase)
-      server.decorate('request', 'db', () => mongoDbDatabase, { apply: true })
-
+      server.logger.info(`MongoDb connected to ${options.databaseName}`)
       server.events.on('stop', async () => {
         server.logger.info('Closing Mongo client')
         try {
@@ -42,29 +36,39 @@ export const mongoDb = {
 }
 
 export async function createMongoDbConnection (options) {
-  if (!mongoDbClient || !mongoDbDatabase) {
-    const client = await MongoClient.connect(options.mongoUrl, {
-      ...options.mongoOptions
+  if (!mongoConsumer.client || !mongoConsumer.db) {
+    mongoConsumer.client = await MongoClient.connect(options.mongoUrl, {
+      ...options.mongoOptions,
+      maxPoolSize: 20
     })
+    mongoConsumer.db = mongoConsumer.client.db(options.databaseName)
+    mongoConsumer.databaseName = options.databaseName
 
-    const databaseName = options.databaseName
-    const db = client.db(databaseName)
+    await createIndexes(mongoConsumer.db)
+    await configureGlobalTtlIndexes(mongoConsumer.db)
+  }
 
-    mongoDbClient = client
-    mongoDbDatabase = db
-    mongoDbName = databaseName
-
-    await createIndexes(db)
-    await configureGlobalTtlIndexes(db)
+  if (!mongoApi.client || !mongoApi.db) {
+    mongoApi.client = await MongoClient.connect(options.mongoUrl, {
+      ...options.mongoOptions,
+      maxPoolSize: 40
+    })
+    mongoApi.db = mongoApi.client.db(options.databaseName)
+    mongoApi.databaseName = options.databaseName
   }
 }
 
 export async function closeMongoDbConnection () {
-  await mongoDbClient?.close(true)
+  await mongoConsumer.client?.close(true)
+  await mongoApi.client?.close(true)
 }
 
-export function getMongoDb () {
-  return { client: mongoDbClient, db: mongoDbDatabase, collections: mongoDbCollections }
+export function getMongoDb (readOnly = false) {
+  if (readOnly) {
+    return { client: mongoApi.client, db: mongoApi.db, collections: mongoDbCollections }
+  }
+
+  return { client: mongoConsumer.client, db: mongoConsumer.db, collections: mongoDbCollections }
 }
 
 async function createIndexes (db) {
