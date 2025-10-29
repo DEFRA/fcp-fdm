@@ -42,19 +42,21 @@ export const mongoDb = {
 }
 
 export async function createMongoDbConnection (options) {
-  const client = await MongoClient.connect(options.mongoUrl, {
-    ...options.mongoOptions
-  })
+  if (!mongoDbClient || !mongoDbDatabase) {
+    const client = await MongoClient.connect(options.mongoUrl, {
+      ...options.mongoOptions
+    })
 
-  const databaseName = options.databaseName
-  const db = client.db(databaseName)
+    const databaseName = options.databaseName
+    const db = client.db(databaseName)
 
-  mongoDbClient = client
-  mongoDbDatabase = db
-  mongoDbName = databaseName
+    mongoDbClient = client
+    mongoDbDatabase = db
+    mongoDbName = databaseName
 
-  await createIndexes(db)
-  await configureGlobalTtlIndexes(db)
+    await createIndexes(db)
+    await configureGlobalTtlIndexes(db)
+  }
 }
 
 export async function closeMongoDbConnection () {
