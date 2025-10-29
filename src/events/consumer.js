@@ -18,8 +18,6 @@ const sqsClient = new SQSClient({
 const receiveParams = {
   QueueUrl: sqs.queueUrl,
   MaxNumberOfMessages: 10,
-  MessageAttributeNames: ['All'],
-  AttributeNames: ['SentTimestamp'],
   WaitTimeSeconds: 10,
 }
 

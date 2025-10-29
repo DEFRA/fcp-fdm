@@ -59,8 +59,6 @@ describe('consumeEvents', () => {
       params: expect.objectContaining({
         QueueUrl: 'http://localhost:4566/000000000000/test-queue',
         MaxNumberOfMessages: 10,
-        MessageAttributeNames: ['All'],
-        AttributeNames: ['SentTimestamp'],
         WaitTimeSeconds: 10,
       })
     }))
