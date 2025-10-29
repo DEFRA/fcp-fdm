@@ -124,11 +124,11 @@ describe('consumeEvents', () => {
       .mockResolvedValueOnce({}) // DeleteMessageBatchCommand after first event
     const result = await consumeEvents()
     expect(result).toBe(true)
-    expect(mockSqsClient.send).toHaveBeenCalledTimes(3)
+    expect(mockSqsClient.send).toHaveBeenCalledTimes(2)
     expect(mockProcessEvent).toHaveBeenCalledTimes(2)
     expect(mockProcessEvent).toHaveBeenCalledWith(testMessages[0])
     expect(mockProcessEvent).toHaveBeenCalledWith(testMessages[1])
-    expect(mockSqsClient.send.mock.calls[2][0].params).toEqual({
+    expect(mockSqsClient.send.mock.calls[1][0].params).toEqual({
       QueueUrl: 'http://localhost:4566/000000000000/test-queue',
       Entries: [
         { Id: 'id-1', ReceiptHandle: 'receipt-1' },
@@ -147,7 +147,7 @@ describe('consumeEvents', () => {
       .mockResolvedValueOnce({}) // DeleteMessageBatchCommand after events
     const result = await consumeEvents()
     expect(result).toBe(true)
-    expect(mockSqsClient.send).toHaveBeenCalledTimes(3)
+    expect(mockSqsClient.send).toHaveBeenCalledTimes(2)
     expect(mockSqsClient.send.mock.calls[1][0].params).toEqual({
       QueueUrl: 'http://localhost:4566/000000000000/test-queue',
       Entries: [

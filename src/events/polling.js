@@ -10,7 +10,15 @@ const maxBackOff = Math.max(15000, sqs.pollingInterval * 15)
 
 const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4))
 
+let inFlight = false
+
 export async function pollForEvents () {
+  if (inFlight) {
+    return
+  }
+
+  inFlight = true
+
   try {
     const hadEvents = await consumeEvents()
     if (hadEvents) {
@@ -24,5 +32,7 @@ export async function pollForEvents () {
     logger.error(err, 'Error polling for event messages')
     backOff = Math.min(maxBackOff, Math.max(1000, backOff * 2))
     setTimeout(pollForEvents, jitter(backOff))
+  } finally {
+    inFlight = false
   }
 }

@@ -36,13 +36,13 @@ export async function consumeEvents () {
       } catch (err) {
         logger.error(err, 'Unable to process event')
       }
+    }
 
-      if (processedEvents.length > 0) {
-        await sqsClient.send(new DeleteMessageBatchCommand({
-          QueueUrl: sqs.queueUrl,
-          Entries: processedEvents
-        }))
-      }
+    if (processedEvents.length > 0) {
+      await sqsClient.send(new DeleteMessageBatchCommand({
+        QueueUrl: sqs.queueUrl,
+        Entries: processedEvents
+      }))
     }
     return true
   }
