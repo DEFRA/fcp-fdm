@@ -102,8 +102,6 @@ export async function save (event) {
     ],
     { upsert: true }
   )
-
-  logger.info(`Saved message event. ID: ${event.id}, Correlation ID: ${correlationId}, Status: ${status}`)
 }
 
 function extractStatus (eventType) {
