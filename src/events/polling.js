@@ -1,15 +1,17 @@
 import { consumeEvents } from './consumer.js'
-import { config } from '../config/config.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
-const { sqs } = config.get('aws')
 const logger = createLogger()
 
-let backOff = sqs.pollingInterval
-const maxBackOff = Math.max(15000, sqs.pollingInterval * 15)
-const minBackOff = 5
+const DEFAULT_BACK_OFF = 1000
+const MAX_BACK_OFF = 32000
+const MIN_BACK_OFF = 5
 
-const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4))
+let currentBackOff = 1000
+
+// Jitter function to add randomness to back-off intervals to avoid thundering herd problem
+const JITTER_FACTOR = 0.2 // Jitter range ±20%
+const jitter = ms => Math.round(ms * (1 + JITTER_FACTOR * (Math.random() - 0.5)))
 
 let inFlight = false
 
@@ -23,16 +25,16 @@ export async function pollForEvents () {
   try {
     const hadEvents = await consumeEvents()
     if (hadEvents) {
-      backOff = sqs.pollingInterval
-      setTimeout(pollForEvents, minBackOff)
+      currentBackOff = DEFAULT_BACK_OFF
+      setTimeout(pollForEvents, MIN_BACK_OFF)
     } else {
-      backOff = Math.min(maxBackOff, backOff * 2)
-      setTimeout(pollForEvents, jitter(backOff))
+      currentBackOff = Math.min(MAX_BACK_OFF, currentBackOff * 2)
+      setTimeout(pollForEvents, jitter(currentBackOff))
     }
   } catch (err) {
     logger.error(err, 'Error polling for event messages')
-    backOff = Math.min(maxBackOff, Math.max(1000, backOff * 2))
-    setTimeout(pollForEvents, jitter(backOff))
+    currentBackOff = MAX_BACK_OFF
+    setTimeout(pollForEvents, jitter(currentBackOff))
   } finally {
     inFlight = false
   }

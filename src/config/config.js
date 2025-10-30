@@ -111,11 +111,6 @@ const config = convict({
         format: String,
         env: 'AWS_SQS_QUEUE_URL',
         default: null
-      },
-      pollingInterval: {
-        doc: 'Interval in milliseconds to poll for messages.',
-        format: 'nat',
-        default: 1000
       }
     }
   },

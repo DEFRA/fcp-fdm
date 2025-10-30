@@ -7,10 +7,6 @@ const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
 const logger = createLogger()
 
 export async function save (event) {
-  const { correlationId, recipient, crn, sbi } = event.data
-  const { subject, body } = event.data.content || {}
-  const status = extractStatus(event.type)
-
   const { db, collections } = getMongoDb()
   const { events: eventCollection, messages: messageCollection } = collections
 
@@ -18,7 +14,6 @@ export async function save (event) {
   const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: now }
 
   try {
-    // save new event
     await db.collection(eventCollection).insertOne(eventEntity)
   } catch (err) {
     if (err.message.includes('E11000 duplicate key error')) {
@@ -27,6 +22,15 @@ export async function save (event) {
       throw err
     }
   }
+
+  await upsertMessage(event, eventEntity, db, messageCollection, now)
+}
+
+async function upsertMessage (event, eventEntity, db, messageCollection, now) {
+  const { correlationId, recipient, crn, sbi } = event.data
+  const { subject, body } = event.data.content || {}
+
+  const status = extractStatus(event.type)
 
   const eventSummary = {
     _id: eventEntity._id,
@@ -38,7 +42,6 @@ export async function save (event) {
     received: eventEntity.received
   }
 
-  // save new/update existing message
   await db.collection(messageCollection).updateOne(
     { _id: correlationId },
     [
@@ -97,7 +100,6 @@ export async function save (event) {
         }
       },
 
-      // tidy up temp fields
       { $unset: ['_incomingTime', '_prevLastEventTime'] }
     ],
     { upsert: true }
