@@ -1,7 +1,7 @@
 import { getMongoDb } from '../common/helpers/mongodb.js'
 
 export async function getMessageByCorrelationId (correlationId, options = {}) {
-  const { db, collections } = getMongoDb(true)
+  const { db, collections } = getMongoDb()
   const { includeContent = false, includeEvents = false } = options
 
   const projection = buildProjection(includeContent, includeEvents)
@@ -18,7 +18,7 @@ export async function getMessageByCorrelationId (correlationId, options = {}) {
 }
 
 export async function getMessages (filters = {}) {
-  const { db, collections } = getMongoDb(true)
+  const { db, collections } = getMongoDb()
   const { crn, sbi, includeContent = false, includeEvents = false, page = 1, pageSize = 20 } = filters
 
   const query = {}
