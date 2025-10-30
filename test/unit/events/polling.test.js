@@ -3,7 +3,6 @@ import { vi, describe, beforeEach, test, expect } from 'vitest'
 vi.useFakeTimers()
 
 const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(() => {})
-const setImmediateSpy = vi.spyOn(globalThis, 'setImmediate').mockImplementation(() => {})
 
 const mockConsumeEvents = vi.fn()
 
@@ -45,7 +44,7 @@ describe('pollForEvents', () => {
     mockConsumeEvents.mockResolvedValueOnce(true)
     await pollForEvents()
     expect(mockConsumeEvents).toHaveBeenCalled()
-    expect(setImmediateSpy).toHaveBeenCalledWith(pollForEvents)
+    expect(setTimeoutSpy).toHaveBeenCalledWith(pollForEvents, expect.any(Number))
   })
 
   test('should schedule next poll if consumption returns false', async () => {
