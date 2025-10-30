@@ -9,8 +9,7 @@ const mongoDbCollections = {
   messages: MESSAGE_COLLECTION
 }
 
-const mongoConsumer = {}
-const mongoApi = {}
+const mongo = {}
 
 export const mongoDb = {
   plugin: {
@@ -36,39 +35,25 @@ export const mongoDb = {
 }
 
 export async function createMongoDbConnection (options) {
-  if (!mongoConsumer.client || !mongoConsumer.db) {
-    mongoConsumer.client = await MongoClient.connect(options.mongoUrl, {
+  if (!mongo.client || !mongo.db) {
+    mongo.client = await MongoClient.connect(options.mongoUrl, {
       ...options.mongoOptions,
       maxPoolSize: 20
     })
-    mongoConsumer.db = mongoConsumer.client.db(options.databaseName)
-    mongoConsumer.databaseName = options.databaseName
+    mongo.db = mongo.client.db(options.databaseName)
+    mongo.databaseName = options.databaseName
 
-    await createIndexes(mongoConsumer.db)
-    await configureGlobalTtlIndexes(mongoConsumer.db)
-  }
-
-  if (!mongoApi.client || !mongoApi.db) {
-    mongoApi.client = await MongoClient.connect(options.mongoUrl, {
-      ...options.mongoOptions,
-      maxPoolSize: 40
-    })
-    mongoApi.db = mongoApi.client.db(options.databaseName)
-    mongoApi.databaseName = options.databaseName
+    await createIndexes(mongo.db)
+    await configureGlobalTtlIndexes(mongo.db)
   }
 }
 
 export async function closeMongoDbConnection () {
-  await mongoConsumer.client?.close(true)
-  await mongoApi.client?.close(true)
+  await mongo.client?.close(true)
 }
 
-export function getMongoDb (readOnly = false) {
-  if (readOnly) {
-    return { client: mongoApi.client, db: mongoApi.db, collections: mongoDbCollections }
-  }
-
-  return { client: mongoConsumer.client, db: mongoConsumer.db, collections: mongoDbCollections }
+export function getMongoDb () {
+  return { client: mongo.client, db: mongo.db, collections: mongoDbCollections }
 }
 
 async function createIndexes (db) {
