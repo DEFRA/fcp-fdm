@@ -10,21 +10,6 @@ vi.mock('../../../src/events/consumer.js', () => ({
   consumeEvents: mockConsumeEvents
 }))
 
-vi.mock('../../../src/config/config.js', () => ({
-  config: {
-    get: (key) => {
-      if (key === 'aws') {
-        return {
-          sqs: {
-            pollingInterval: 1000
-          }
-        }
-      }
-      return null
-    }
-  }
-}))
-
 const mockLogError = vi.fn()
 
 vi.mock('../../../src/common/helpers/logging/logger.js', () => ({
