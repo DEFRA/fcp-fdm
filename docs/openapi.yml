@@ -169,8 +169,6 @@ paths:
                     meta:
                       page: 1
                       pageSize: 20
-                      totalPages: 5
-                      totalItems: 100
                 withContent:
                   summary: Paginated messages with content included
                   value:
@@ -192,8 +190,6 @@ paths:
                     meta:
                       page: 1
                       pageSize: 20
-                      totalPages: 5
-                      totalItems: 100
         '401':
           description: Unauthorized - Invalid or missing JWT token
           content:
@@ -497,17 +493,9 @@ components:
             pageSize:
               type: integer
               description: Number of items per page
-            pages:
-              type: integer
-              description: Total number of pages
-            total:
-              type: integer
-              description: Total number of items
           required:
             - page
             - pageSize
-            - pages
-            - total
       required:
         - data
         - links
