@@ -217,7 +217,7 @@ describe('getMessages', () => {
 
   test('should return the second page of results with custom pageSize (created desc)', async () => {
     const sorted = [...testMessages].sort((a, b) => b.created - a.created)
-    const { messages} = await getMessages({ page: 2, pageSize: 2 })
+    const { messages } = await getMessages({ page: 2, pageSize: 2 })
     expect(messages).toEqual([
       createBaseMessage(sorted[2]),
       createBaseMessage(sorted[3])
