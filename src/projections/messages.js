@@ -3,11 +3,12 @@ import { getMongoDb } from '../common/helpers/mongodb.js'
 export async function getMessageByCorrelationId (correlationId, options = {}) {
   const { db, collections } = getMongoDb()
   const { includeContent = false, includeEvents = false } = options
+  const messageCollection = db.collection(collections.messages)
 
   const projection = buildProjection(includeContent, includeEvents)
-  const message = await db.collection(collections.messages).findOne(
+  const message = await messageCollection.findOne(
     { _id: correlationId },
-    { projection }
+    { projection, readPreference: 'secondaryPreferred' }
   )
 
   if (!message) {
@@ -21,6 +22,8 @@ export async function getMessages (filters = {}) {
   const { db, collections } = getMongoDb()
   const { crn, sbi, includeContent = false, includeEvents = false, page = 1, pageSize = 20 } = filters
 
+  const messageCollection = db.collection(collections.messages)
+
   const query = {}
   if (crn !== undefined) {
     query.crn = crn
@@ -31,15 +34,32 @@ export async function getMessages (filters = {}) {
 
   const projection = buildProjection(includeContent, includeEvents)
 
-  const cursor = db.collection(collections.messages)
-    .find(query, { projection })
-    .sort({ created: -1, _id: -1 })
+  const hasCrn = query.crn != null
+  const hasSbi = query.sbi != null
+
+  let hint
+  if (hasCrn && hasSbi) {
+    hint = 'messages_by_crn_sbi_created'
+  } else if (hasCrn) {
+    hint = 'messages_by_crn_created'
+  } else if (hasSbi) {
+    hint = 'messages_by_sbi_created'
+  } else {
+    hint = 'messages_by_created'
+  }
+
+  const cursor = messageCollection.find(query, {
+    projection,
+    hint,
+    sort: { created: -1, _id: -1 },
+    readPreference: 'secondaryPreferred'
+  })
     .skip((page - 1) * pageSize)
     .limit(pageSize)
 
   const [messages, total] = await Promise.all([
     cursor.toArray(),
-    db.collection(collections.messages).countDocuments(query)
+    messageCollection.countDocuments(query, { hint, readPreference: 'secondaryPreferred' })
   ])
 
   return {
