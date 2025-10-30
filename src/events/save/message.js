@@ -55,7 +55,7 @@ export async function save (event) {
         }
       },
 
-      // rebuild events: remove any existing copy with same _id, then append the full new event
+      // rebuild events: remove any existing copy with same _id, then append event summary
       {
         $set: {
           events: {
