@@ -7,6 +7,7 @@ const logger = createLogger()
 
 let backOff = sqs.pollingInterval
 const maxBackOff = Math.max(15000, sqs.pollingInterval * 15)
+const minBackOff = 5
 
 const jitter = (ms) => Math.round(ms * (0.8 + Math.random() * 0.4))
 
@@ -23,7 +24,7 @@ export async function pollForEvents () {
     const hadEvents = await consumeEvents()
     if (hadEvents) {
       backOff = sqs.pollingInterval
-      setImmediate(pollForEvents)
+      setTimeout(pollForEvents, minBackOff)
     } else {
       backOff = Math.min(maxBackOff, backOff * 2)
       setTimeout(pollForEvents, jitter(backOff))
