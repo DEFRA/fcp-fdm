@@ -28,6 +28,16 @@ export async function save (event) {
     }
   }
 
+  const eventSummary = {
+    _id: eventEntity._id,
+    type: eventEntity.type,
+    source: eventEntity.source,
+    id: eventEntity.id,
+    time: eventEntity.time,
+    subject: eventEntity.subject,
+    received: eventEntity.received
+  }
+
   // save new/update existing message
   await db.collection(messageCollection).updateOne(
     { _id: correlationId },
@@ -60,7 +70,7 @@ export async function save (event) {
                       cond: { $ne: ['$$e._id', eventEntity._id] }
                     }
                   },
-                  [eventEntity]
+                  [eventSummary]
                 ]
               }
             }
