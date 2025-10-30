@@ -134,7 +134,6 @@ describe('GET /api/v1/messages', () => {
     expect(payload.links).toEqual(expect.objectContaining({
       self: expect.any(String),
       first: expect.any(String),
-      last: expect.any(String),
       prev: expect.any(String),
       next: expect.any(String)
     }))
@@ -142,9 +141,7 @@ describe('GET /api/v1/messages', () => {
 
   test('should include correct meta in response', async () => {
     mockGetMessages.mockResolvedValueOnce({
-      messages: ['message1', 'message2'],
-      total: 10,
-      pages: 5
+      messages: ['message1', 'message2']
     })
     const options = {
       method: 'GET',
@@ -155,9 +152,7 @@ describe('GET /api/v1/messages', () => {
 
     expect(payload.meta).toEqual({
       page: 2,
-      pageSize: 2,
-      total: 10,
-      pages: 5
+      pageSize: 2
     })
   })
 })

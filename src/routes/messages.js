@@ -26,16 +26,14 @@ const api = [{
   handler: async (request, h) => {
     const { page, pageSize } = request.query
 
-    const { messages, total, pages } = await getMessages(request.query)
+    const { messages } = await getMessages(request.query)
 
     return h.response({
       data: { messages },
-      links: getPageLinks(request, page, pageSize, pages),
+      links: getPageLinks(request, page, pageSize),
       meta: {
         page,
-        pageSize,
-        total,
-        pages
+        pageSize
       }
     })
   }
