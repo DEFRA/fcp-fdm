@@ -1,32 +1,17 @@
-import https from 'node:https'
 import { ReceiveMessageCommand, DeleteMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs'
 import { config } from '../config/config.js'
 import { processEvent } from './process.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
-import { NodeHttpHandler } from '@smithy/node-http-handler'
 
 const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
 
 const logger = createLogger()
-
-const agent = new https.Agent({
-  keepAlive: true,
-  keepAliveMsecs: 1000,
-  maxSockets: 32,
-  maxFreeSockets: 10,
-  timeout: 60000
-})
 
 const sqsClient = new SQSClient({
   region,
   ...(endpoint && {
     endpoint,
     credentials: { accessKeyId, secretAccessKey }
-  }),
-  requestHandler: new NodeHttpHandler({
-    httpsAgent: agent,
-    connectionTimeout: 2000,
-    socketTimeout: 30000
   })
 })
 

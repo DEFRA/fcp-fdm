@@ -57,14 +57,10 @@ export async function getMessages (filters = {}) {
     .skip((page - 1) * pageSize)
     .limit(pageSize)
 
-  const [messages] = await Promise.all([
-    cursor.toArray()
-  ])
+  const messages = await cursor.toArray()
 
   return {
-    messages: messages.map(message => transformMessage(message, includeEvents)),
-    // total,
-    // pages: Math.ceil(total / pageSize)
+    messages: messages.map(message => transformMessage(message, includeEvents))
   }
 }
 
