@@ -207,26 +207,22 @@ describe('getMessages', () => {
 
   test('should return only the first page of results with custom pageSize (created desc)', async () => {
     const sorted = [...testMessages].sort((a, b) => b.created - a.created)
-    const { messages, total, pages } = await getMessages({ page: 1, pageSize: 2 })
+    const { messages } = await getMessages({ page: 1, pageSize: 2 })
     expect(messages).toEqual([
       createBaseMessage(sorted[0]),
       createBaseMessage(sorted[1])
     ])
     expect(messages).toHaveLength(2)
-    expect(total).toBe(4)
-    expect(pages).toBe(2)
   })
 
   test('should return the second page of results with custom pageSize (created desc)', async () => {
     const sorted = [...testMessages].sort((a, b) => b.created - a.created)
-    const { messages, total, pages } = await getMessages({ page: 2, pageSize: 2 })
+    const { messages } = await getMessages({ page: 2, pageSize: 2 })
     expect(messages).toEqual([
       createBaseMessage(sorted[2]),
       createBaseMessage(sorted[3])
     ])
     expect(messages).toHaveLength(2)
-    expect(total).toBe(4)
-    expect(pages).toBe(2)
   })
 
   test('should explicitly order messages by created descending', async () => {

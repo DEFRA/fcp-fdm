@@ -57,15 +57,14 @@ export async function getMessages (filters = {}) {
     .skip((page - 1) * pageSize)
     .limit(pageSize)
 
-  const [messages, total] = await Promise.all([
-    cursor.toArray(),
-    messageCollection.countDocuments(query, { hint, readPreference: 'secondaryPreferred' })
+  const [messages] = await Promise.all([
+    cursor.toArray()
   ])
 
   return {
     messages: messages.map(message => transformMessage(message, includeEvents)),
-    total,
-    pages: Math.ceil(total / pageSize)
+    // total,
+    // pages: Math.ceil(total / pageSize)
   }
 }
 
