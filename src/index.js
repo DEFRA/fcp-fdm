@@ -14,11 +14,3 @@ process.on('unhandledRejection', (err) => {
   logger.error(err)
   process.exitCode = 1
 })
-
-setInterval(() => {
-  const { heapUsed, rss } = process.memoryUsage()
-  logger.info({
-    heapUsedMB: (heapUsed / 1e6).toFixed(1),
-    rssMB: (rss / 1e6).toFixed(1)
-  })
-}, 10000).unref()
