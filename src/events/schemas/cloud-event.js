@@ -1,6 +1,6 @@
 import Joi from 'joi'
 
-export default Joi.object({
+const cloudEvent = Joi.object({
   specversion: Joi.string().required(),
   type: Joi.string().required(),
   source: Joi.string().required(),
@@ -10,3 +10,5 @@ export default Joi.object({
   datacontenttype: Joi.string().default('None'),
   data: Joi.any().default({})
 }).required()
+
+export default cloudEvent

@@ -4,12 +4,21 @@ import { createLogger } from './common/helpers/logging/logger.js'
 import { startServer } from './common/helpers/start-server.js'
 import { pollForEvents } from './events/polling.js'
 
+const logger = createLogger()
+
 await startServer()
 await pollForEvents()
 
 process.on('unhandledRejection', (err) => {
-  const logger = createLogger()
   logger.info('Unhandled rejection')
   logger.error(err)
   process.exitCode = 1
 })
+
+setInterval(() => {
+  const { heapUsed, rss } = process.memoryUsage()
+  logger.info({
+    heapUsedMB: (heapUsed / 1e6).toFixed(1),
+    rssMB: (rss / 1e6).toFixed(1)
+  })
+}, 10000).unref()
