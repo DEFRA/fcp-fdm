@@ -38,6 +38,8 @@ export function stopPolling () {
     clearTimeout(pollTimeout)
     pollTimeout = null
   }
+
+  logger.info('Event polling stopped')
 }
 
 export async function pollForEvents () {

@@ -3,6 +3,7 @@ import { vi, describe, beforeEach, test, expect } from 'vitest'
 vi.useFakeTimers()
 
 const setTimeoutSpy = vi.spyOn(globalThis, 'setTimeout').mockImplementation(() => 123)
+const clearTimeoutSpy = vi.spyOn(globalThis, 'clearTimeout')
 
 const mockConsumeEvents = vi.fn()
 
@@ -44,9 +45,37 @@ describe('Polling', () => {
   })
 
   describe('stopPolling', () => {
+    test('should stop polling and log message', () => {
+      pollingModule.startPolling()
+      vi.clearAllMocks()
+
+      pollingModule.stopPolling()
+
+      expect(mockLogInfo).toHaveBeenCalledWith('Event polling stopped')
+    })
+
+    test('should clear timeout when stopping after polling has created one', async () => {
+      mockConsumeEvents.mockResolvedValueOnce(true)
+      pollingModule.startPolling()
+
+      // Manually trigger pollForEvents to create a timeout
+      await pollingModule.pollForEvents()
+
+      vi.clearAllMocks()
+      pollingModule.stopPolling()
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(123)
+      expect(mockLogInfo).toHaveBeenCalledWith('Event polling stopped')
+    })
+
     test('should not log if polling already stopped', () => {
       pollingModule.stopPolling() // Already stopped
       expect(mockLogInfo).not.toHaveBeenCalledWith('Event polling stopped')
+    })
+
+    test('should not call clearTimeout if no timeout exists', () => {
+      pollingModule.stopPolling() // Stop when no timeout is active
+      expect(clearTimeoutSpy).not.toHaveBeenCalled()
     })
   })
 
@@ -124,6 +153,33 @@ describe('Polling', () => {
       await firstPoll
 
       expect(setTimeoutSpy).toHaveBeenCalledTimes(1) // Only one setTimeout scheduled
+    })
+
+    test('should clear existing timeout before setting new one when timeout exists', async () => {
+      mockConsumeEvents.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
+      pollingModule.startPolling()
+
+      // First poll creates a timeout
+      await pollingModule.pollForEvents()
+      vi.clearAllMocks() // Clear the calls from first poll
+
+      // Second poll should clear the existing timeout before setting new one
+      await pollingModule.pollForEvents()
+
+      expect(clearTimeoutSpy).toHaveBeenCalledWith(123) // Mock timeout ID
+      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, 5) // MIN_BACK_OFF
+    })
+
+    test('should not clear timeout on first poll when none exists', async () => {
+      mockConsumeEvents.mockResolvedValueOnce(true)
+      pollingModule.startPolling()
+      vi.clearAllMocks() // Clear the startPolling call
+
+      await pollingModule.pollForEvents()
+
+      // On first poll, no existing timeout to clear
+      expect(clearTimeoutSpy).not.toHaveBeenCalled()
+      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, 5) // MIN_BACK_OFF
     })
   })
 })
