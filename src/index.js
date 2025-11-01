@@ -2,14 +2,23 @@ import process from 'node:process'
 
 import { createLogger } from './common/helpers/logging/logger.js'
 import { startServer } from './common/helpers/start-server.js'
-import { pollForEvents } from './events/polling.js'
-
-const logger = createLogger()
+import { startPolling, stopPolling } from './events/polling.js'
+import { closeMongoDbConnection } from './common/helpers/mongodb.js'
 
 await startServer()
-await pollForEvents()
+startPolling()
+
+async function shutdown () {
+  stopPolling()
+  await closeMongoDbConnection()
+  process.exit(0)
+}
+
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
 
 process.on('unhandledRejection', (err) => {
+  const logger = createLogger()
   logger.info('Unhandled rejection')
   logger.error(err)
   process.exitCode = 1
