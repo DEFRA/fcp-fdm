@@ -1,8 +1,11 @@
 import { getMongoDb } from '../../common/helpers/mongodb.js'
 import { createLogger } from '../../common/helpers/logging/logger.js'
 import { eventTypePrefixes } from '../types.js'
+import { config } from '../../config/config.js'
 
 const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
+
+const maxTimeMS = config.get('mongo.maxTimeMS')
 
 const logger = createLogger()
 
@@ -13,14 +16,15 @@ export async function save (event) {
   const now = new Date()
   const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: now }
 
-  try {
-    await db.collection(eventCollection).insertOne(eventEntity)
-  } catch (err) {
-    if (err.message.includes('E11000 duplicate key error')) {
-      logger.warn(`Skipping duplicate event. ID: ${event.id}`)
-    } else {
-      throw err
-    }
+  const result = await db.collection(eventCollection).updateOne(
+    { _id: eventEntity._id },
+    { $setOnInsert: eventEntity },
+    { upsert: true, maxTimeMS }
+  )
+
+  if (result.matchedCount > 0) {
+    logger.warn(`Skipping duplicate event. ID: ${event.id}`)
+    return
   }
 
   await upsertMessage(event, eventEntity, db, messageCollection, now)
@@ -58,24 +62,15 @@ async function upsertMessage (event, eventEntity, db, messageCollection, now) {
         }
       },
 
-      // rebuild events: remove any existing copy with same _id, then append event summary
       {
         $set: {
           events: {
-            $let: {
-              vars: { evs: { $ifNull: ['$events', []] } },
-              in: {
-                $concatArrays: [
-                  {
-                    $filter: {
-                      input: '$$evs',
-                      as: 'e',
-                      cond: { $ne: ['$$e._id', eventEntity._id] }
-                    }
-                  },
-                  [eventSummary]
-                ]
-              }
+            $cond: {
+              if: {
+                $in: [eventEntity._id, { $ifNull: [{ $map: { input: '$events', as: 'e', in: '$$e._id' } }, []] }]
+              },
+              then: '$events', // Event already exists, keep array as-is
+              else: { $concatArrays: [{ $ifNull: ['$events', []] }, [eventSummary]] }
             }
           }
         }
@@ -102,7 +97,7 @@ async function upsertMessage (event, eventEntity, db, messageCollection, now) {
 
       { $unset: ['_incomingTime', '_prevLastEventTime'] }
     ],
-    { upsert: true }
+    { upsert: true, maxTimeMS }
   )
 }
 
