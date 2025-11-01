@@ -10,15 +10,14 @@ const logger = createLogger()
 await startServer()
 startPolling()
 
-const shutdown = async (signal) => {
+const shutdown = async () => {
   stopPolling()
   await closeMongoDbConnection()
-
   process.exit(0)
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'))
-process.on('SIGINT', () => shutdown('SIGINT'))
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
 
 process.on('unhandledRejection', (err) => {
   logger.info('Unhandled rejection')
