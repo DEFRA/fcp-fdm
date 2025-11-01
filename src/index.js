@@ -5,12 +5,10 @@ import { startServer } from './common/helpers/start-server.js'
 import { startPolling, stopPolling } from './events/polling.js'
 import { closeMongoDbConnection } from './common/helpers/mongodb.js'
 
-const logger = createLogger()
-
 await startServer()
 startPolling()
 
-const shutdown = async () => {
+async function shutdown () {
   stopPolling()
   await closeMongoDbConnection()
   process.exit(0)
@@ -20,6 +18,7 @@ process.on('SIGTERM', shutdown)
 process.on('SIGINT', shutdown)
 
 process.on('unhandledRejection', (err) => {
+  const logger = createLogger()
   logger.info('Unhandled rejection')
   logger.error(err)
   process.exitCode = 1
