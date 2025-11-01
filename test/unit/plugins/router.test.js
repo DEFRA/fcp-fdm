@@ -1,6 +1,7 @@
 import { expect, test, describe, beforeEach, vi } from 'vitest'
 
 vi.mock('../../../src/routes/health.js')
+vi.mock('../../../src/routes/messages.js')
 
 const { health } = await import('../../../src/routes/health.js')
 const { messages } = await import('../../../src/routes/messages.js')
