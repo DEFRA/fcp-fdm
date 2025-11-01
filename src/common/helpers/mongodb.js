@@ -37,8 +37,7 @@ export const mongoDb = {
 export async function createMongoDbConnection (options) {
   if (!mongo.client || !mongo.db) {
     mongo.client = await MongoClient.connect(options.mongoUrl, {
-      ...options.mongoOptions,
-      maxPoolSize: 20
+      ...options.mongoOptions
     })
     mongo.db = mongo.client.db(options.databaseName)
     mongo.databaseName = options.databaseName

@@ -127,6 +127,12 @@ const config = convict({
       default: 'fcp-fdm',
       env: 'MONGO_DATABASE'
     },
+    maxTimeMS: {
+      doc: 'Default maxTimeMS for mongodb queries',
+      format: Number,
+      default: 30000,
+      env: 'MONGO_MAX_TIME_MS'
+    },
     mongoOptions: {
       retryWrites: {
         doc: 'Enable Mongo write retries, overrides mongo URI when set.',

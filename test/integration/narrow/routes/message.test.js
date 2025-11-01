@@ -155,6 +155,34 @@ describe('GET /api/v1/messages', () => {
       pageSize: 2
     })
   })
+
+  test('should return 504 if database operation times out', async () => {
+    mockGetMessages.mockRejectedValueOnce(new Error('operation exceeded time limit'))
+
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
+    expect(response.statusCode).toBe(504)
+    expect(JSON.parse(response.payload).message).toBe('Operation timed out')
+  })
+
+  test('should return 500 for other errors', async () => {
+    mockGetMessages.mockRejectedValueOnce(new Error('Some other database error'))
+
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetMessages).toHaveBeenCalledWith({ includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
+    expect(response.statusCode).toBe(500)
+    expect(JSON.parse(response.payload).message).toBe('An internal server error occurred')
+  })
 })
 
 describe('GET /api/v1/messages/{correlationId}', () => {
@@ -208,9 +236,31 @@ describe('GET /api/v1/messages/{correlationId}', () => {
     expect(response.payload).equals(JSON.stringify({ data: { message: 'message1' } }))
   })
 
-  // test pagination parameters
+  test('should return 504 if database operation times out', async () => {
+    mockGetMessageByCorrelationId.mockRejectedValueOnce(new Error('operation exceeded time limit'))
 
-  // test links response contents
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages/123e4567-e89b-12d3-a456-426614174000'
+    }
+    const response = await server.inject(options)
 
-  // test meta response contents
+    expect(mockGetMessageByCorrelationId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeContent: false, includeEvents: false })
+    expect(response.statusCode).toBe(504)
+    expect(JSON.parse(response.payload).message).toBe('Operation timed out')
+  })
+
+  test('should return 500 for other errors', async () => {
+    mockGetMessageByCorrelationId.mockRejectedValueOnce(new Error('Some other database error'))
+
+    const options = {
+      method: 'GET',
+      url: '/api/v1/messages/123e4567-e89b-12d3-a456-426614174000'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetMessageByCorrelationId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeContent: false, includeEvents: false })
+    expect(response.statusCode).toBe(500)
+    expect(JSON.parse(response.payload).message).toBe('An internal server error occurred')
+  })
 })

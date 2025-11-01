@@ -1,14 +1,16 @@
 import { getMongoDb } from '../common/helpers/mongodb.js'
+import { config } from '../config/config.js'
+
+const maxTimeMS = config.get('mongo.maxTimeMS')
 
 export async function getMessageByCorrelationId (correlationId, options = {}) {
   const { db, collections } = getMongoDb()
   const { includeContent = false, includeEvents = false } = options
-  const messageCollection = db.collection(collections.messages)
 
   const projection = buildProjection(includeContent, includeEvents)
-  const message = await messageCollection.findOne(
+  const message = await db.collection(collections.messages).findOne(
     { _id: correlationId },
-    { projection, readPreference: 'secondaryPreferred' }
+    { projection, readPreference: 'secondaryPreferred', maxTimeMS }
   )
 
   if (!message) {
@@ -22,9 +24,8 @@ export async function getMessages (filters = {}) {
   const { db, collections } = getMongoDb()
   const { crn, sbi, includeContent = false, includeEvents = false, page = 1, pageSize = 20 } = filters
 
-  const messageCollection = db.collection(collections.messages)
-
   const query = {}
+
   if (crn !== undefined) {
     query.crn = crn
   }
@@ -34,25 +35,11 @@ export async function getMessages (filters = {}) {
 
   const projection = buildProjection(includeContent, includeEvents)
 
-  const hasCrn = query.crn != null
-  const hasSbi = query.sbi != null
-
-  let hint
-  if (hasCrn && hasSbi) {
-    hint = 'messages_by_crn_sbi_created'
-  } else if (hasCrn) {
-    hint = 'messages_by_crn_created'
-  } else if (hasSbi) {
-    hint = 'messages_by_sbi_created'
-  } else {
-    hint = 'messages_by_created'
-  }
-
-  const cursor = messageCollection.find(query, {
+  const cursor = db.collection(collections.messages).find(query, {
     projection,
-    hint,
     sort: { created: -1, _id: -1 },
-    readPreference: 'secondaryPreferred'
+    readPreference: 'secondaryPreferred',
+    maxTimeMS
   })
     .skip((page - 1) * pageSize)
     .limit(pageSize)

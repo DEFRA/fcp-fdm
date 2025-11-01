@@ -13,6 +13,7 @@ import { requestTracing } from './common/helpers/request-tracing.js'
 import { setupProxy } from './common/helpers/proxy/setup-proxy.js'
 import { mongoDb } from './common/helpers/mongodb.js'
 import { auth } from './plugins/auth.js'
+import { mongoTimeout } from './plugins/mongo-timeout.js'
 
 async function createServer () {
   setupProxy()
@@ -53,7 +54,8 @@ async function createServer () {
     pulse,
     mongoDb,
     ...swagger,
-    router
+    router,
+    mongoTimeout
   ])
 
   return server
