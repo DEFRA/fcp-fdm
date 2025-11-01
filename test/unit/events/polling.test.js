@@ -87,7 +87,7 @@ describe('Polling', () => {
 
       await pollingModule.pollForEvents()
 
-      expect(mockLogError).toHaveBeenCalledWith(testError, 'Error polling for event messages')
+      expect(mockLogError).toHaveBeenCalledWith(testError)
       expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
     })
 

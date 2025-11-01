@@ -56,7 +56,8 @@ export async function pollForEvents () {
       currentBackOff = Math.min(MAX_BACK_OFF, currentBackOff * 2)
     }
   } catch (err) {
-    logger.error(err, 'Error polling for event messages')
+    logger.info('Error polling for event messages')
+    logger.error(err)
     currentBackOff = MAX_BACK_OFF
   } finally {
     inFlight = false
