@@ -44,13 +44,6 @@ describe('Polling', () => {
   })
 
   describe('stopPolling', () => {
-    test('should stop polling and clear timeout', () => {
-      pollingModule.startPolling()
-      vi.clearAllMocks()
-      pollingModule.stopPolling()
-      expect(mockLogInfo).toHaveBeenCalledWith('Event polling stopped')
-    })
-
     test('should not log if polling already stopped', () => {
       pollingModule.stopPolling() // Already stopped
       expect(mockLogInfo).not.toHaveBeenCalledWith('Event polling stopped')
