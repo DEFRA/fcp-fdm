@@ -5,15 +5,15 @@ const logger = createLogger()
 
 const DEFAULT_BACK_OFF = 1000
 const MAX_BACK_OFF = 32000
-const MIN_BACK_OFF = 5
+const MIN_BACK_OFF = 100
 
 let currentBackOff = DEFAULT_BACK_OFF
 
 // Jitter function to add randomness to back-off intervals to avoid thundering herd problem
-const JITTER_FACTOR = 0.2 // Jitter range ±20%
+const JITTER_FACTOR = 0.2 // Jitter range ±10%
 const jitter = ms => Math.round(ms * (1 + JITTER_FACTOR * (Math.random() - 0.5)))
 
-let inFlight = false
+let processing = false
 let pollTimeout = null
 let enabled = false
 
@@ -43,11 +43,11 @@ export function stopPolling () {
 }
 
 export async function pollForEvents () {
-  if (inFlight || !enabled) {
+  if (processing || !enabled) {
     return
   }
 
-  inFlight = true
+  processing = true
 
   try {
     const hadEvents = await consumeEvents()
@@ -58,11 +58,11 @@ export async function pollForEvents () {
       currentBackOff = Math.min(MAX_BACK_OFF, currentBackOff * 2)
     }
   } catch (err) {
-    logger.info('Error polling for event messages')
+    logger.error('Error polling for event messages')
     logger.error(err)
     currentBackOff = MAX_BACK_OFF
   } finally {
-    inFlight = false
+    processing = false
 
     if (enabled) {
       if (pollTimeout) {
@@ -70,8 +70,7 @@ export async function pollForEvents () {
         pollTimeout = null
       }
 
-      const delay = currentBackOff === MIN_BACK_OFF ? MIN_BACK_OFF : jitter(currentBackOff)
-      pollTimeout = setTimeout(pollForEvents, delay)
+      pollTimeout = setTimeout(pollForEvents, jitter(currentBackOff))
     }
   }
 }

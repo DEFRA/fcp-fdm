@@ -94,7 +94,11 @@ describe('Polling', () => {
       await pollingModule.pollForEvents()
 
       expect(mockConsumeEvents).toHaveBeenCalled()
-      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, 5) // MIN_BACK_OFF
+      // Should be MIN_BACK_OFF (100ms) with jitter (±10%), so 90-110ms range
+      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
+      const timeoutValue = setTimeoutSpy.mock.calls[0][1]
+      expect(timeoutValue).toBeGreaterThanOrEqual(90)
+      expect(timeoutValue).toBeLessThanOrEqual(110)
     })
 
     test('should schedule next poll with backoff when enabled and returns false', async () => {
@@ -105,8 +109,10 @@ describe('Polling', () => {
 
       expect(mockConsumeEvents).toHaveBeenCalled()
       expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
-      // Should be > MIN_BACK_OFF due to backoff
-      expect(setTimeoutSpy.mock.calls[0][1]).toBeGreaterThan(5)
+      // Should be doubled from DEFAULT_BACK_OFF (1000ms -> 2000ms) with jitter, so ~1800-2200ms range
+      const timeoutValue = setTimeoutSpy.mock.calls[0][1]
+      expect(timeoutValue).toBeGreaterThanOrEqual(1800)
+      expect(timeoutValue).toBeLessThanOrEqual(2200)
     })
 
     test('should log error and schedule retry when enabled and consumption throws error', async () => {
@@ -167,7 +173,11 @@ describe('Polling', () => {
       await pollingModule.pollForEvents()
 
       expect(clearTimeoutSpy).toHaveBeenCalledWith(123) // Mock timeout ID
-      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, 5) // MIN_BACK_OFF
+      // Should be MIN_BACK_OFF (100ms) with jitter (±10%), so 90-110ms range
+      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
+      const timeoutValue = setTimeoutSpy.mock.calls[0][1]
+      expect(timeoutValue).toBeGreaterThanOrEqual(90)
+      expect(timeoutValue).toBeLessThanOrEqual(110)
     })
 
     test('should not clear timeout on first poll when none exists', async () => {
@@ -179,7 +189,11 @@ describe('Polling', () => {
 
       // On first poll, no existing timeout to clear
       expect(clearTimeoutSpy).not.toHaveBeenCalled()
-      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, 5) // MIN_BACK_OFF
+      // Should be MIN_BACK_OFF (100ms) with jitter (±10%), so 90-110ms range
+      expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
+      const timeoutValue = setTimeoutSpy.mock.calls[0][1]
+      expect(timeoutValue).toBeGreaterThanOrEqual(90)
+      expect(timeoutValue).toBeLessThanOrEqual(110)
     })
   })
 })
