@@ -5,7 +5,7 @@ const logger = createLogger()
 
 const DEFAULT_BACK_OFF = 1000
 const MAX_BACK_OFF = 32000
-const MIN_BACK_OFF = 10
+const MIN_BACK_OFF = 5
 
 let currentBackOff = DEFAULT_BACK_OFF
 

@@ -94,11 +94,11 @@ describe('Polling', () => {
       await pollingModule.pollForEvents()
 
       expect(mockConsumeEvents).toHaveBeenCalled()
-      // Should be MIN_BACK_OFF (10ms) with jitter (±10%), so 9-11ms range
+      // Should be MIN_BACK_OFF (5ms) with jitter (±10%), so 4-6ms range
       expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
       const timeoutValue = setTimeoutSpy.mock.calls[0][1]
-      expect(timeoutValue).toBeGreaterThanOrEqual(9)
-      expect(timeoutValue).toBeLessThanOrEqual(11)
+      expect(timeoutValue).toBeGreaterThanOrEqual(4)
+      expect(timeoutValue).toBeLessThanOrEqual(6)
     })
 
     test('should schedule next poll with backoff when enabled and returns false', async () => {
@@ -173,11 +173,11 @@ describe('Polling', () => {
       await pollingModule.pollForEvents()
 
       expect(clearTimeoutSpy).toHaveBeenCalledWith(123) // Mock timeout ID
-      // Should be MIN_BACK_OFF (10ms) with jitter (±10%), so 9-11ms range
+      // Should be MIN_BACK_OFF (5ms) with jitter (±10%), so 4-6ms range
       expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
       const timeoutValue = setTimeoutSpy.mock.calls[0][1]
-      expect(timeoutValue).toBeGreaterThanOrEqual(9)
-      expect(timeoutValue).toBeLessThanOrEqual(11)
+      expect(timeoutValue).toBeGreaterThanOrEqual(4)
+      expect(timeoutValue).toBeLessThanOrEqual(6)
     })
 
     test('should not clear timeout on first poll when none exists', async () => {
@@ -189,11 +189,11 @@ describe('Polling', () => {
 
       // On first poll, no existing timeout to clear
       expect(clearTimeoutSpy).not.toHaveBeenCalled()
-      // Should be MIN_BACK_OFF (10ms) with jitter (±10%), so 9-11ms range
+      // Should be MIN_BACK_OFF (5ms) with jitter (±10%), so 4-6ms range
       expect(setTimeoutSpy).toHaveBeenCalledWith(pollingModule.pollForEvents, expect.any(Number))
       const timeoutValue = setTimeoutSpy.mock.calls[0][1]
-      expect(timeoutValue).toBeGreaterThanOrEqual(9)
-      expect(timeoutValue).toBeLessThanOrEqual(11)
+      expect(timeoutValue).toBeGreaterThanOrEqual(4)
+      expect(timeoutValue).toBeLessThanOrEqual(6)
     })
   })
 })
