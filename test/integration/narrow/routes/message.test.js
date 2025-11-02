@@ -4,7 +4,8 @@ import { describe, test, beforeEach, afterEach, vi, expect } from 'vitest'
 const { HTTP_STATUS_OK, HTTP_STATUS_NOT_FOUND } = httpConstants
 
 vi.mock('../../../../src/events/polling.js', () => ({
-  pollForEvents: vi.fn()
+  startPolling: vi.fn(),
+  stopPolling: vi.fn()
 }))
 
 const mockGetMessages = vi.fn()
