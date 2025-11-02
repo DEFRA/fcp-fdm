@@ -1,15 +1,12 @@
 import { MongoClient } from 'mongodb'
 import { config } from '../../config/config.js'
 
-const EVENT_COLLECTION = 'events'
-const MESSAGE_COLLECTION = 'messages'
+const EVENT_COLLECTION_NAME = 'events'
+const MESSAGE_COLLECTION_NAME = 'messages'
 
-const mongoDbCollections = {
-  events: EVENT_COLLECTION,
-  messages: MESSAGE_COLLECTION
+const mongo = {
+  collections: {}
 }
-
-const mongo = {}
 
 export const mongoDb = {
   plugin: {
@@ -41,6 +38,10 @@ export async function createMongoDbConnection (options) {
     })
     mongo.db = mongo.client.db(options.databaseName)
     mongo.databaseName = options.databaseName
+    mongo.collections = {
+      events: mongo.db.collection(EVENT_COLLECTION_NAME),
+      messages: mongo.db.collection(MESSAGE_COLLECTION_NAME)
+    }
 
     await createIndexes(mongo.db)
     await configureGlobalTtlIndexes(mongo.db)
@@ -52,24 +53,24 @@ export async function closeMongoDbConnection () {
 }
 
 export function getMongoDb () {
-  return { client: mongo.client, db: mongo.db, collections: mongoDbCollections }
+  return { client: mongo.client, db: mongo.db, collections: mongo.collections }
 }
 
 async function createIndexes (db) {
-  await db.collection(EVENT_COLLECTION).createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
-  await db.collection(EVENT_COLLECTION).createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
-  await db.collection(MESSAGE_COLLECTION).createIndex({ created: -1, _id: -1 }, { name: 'messages_by_created' })
-  await db.collection(MESSAGE_COLLECTION).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_created' })
-  await db.collection(MESSAGE_COLLECTION).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_sbi_created' })
-  await db.collection(MESSAGE_COLLECTION).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_sbi_created' })
+  await db.collection(EVENT_COLLECTION_NAME).createIndex({ type: 1, received: -1 }, { name: 'events_type_by_received' })
+  await db.collection(EVENT_COLLECTION_NAME).createIndex({ type: 1, time: -1 }, { name: 'events_type_by_time' })
+  await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ created: -1, _id: -1 }, { name: 'messages_by_created' })
+  await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_created' })
+  await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_sbi_created' })
+  await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_sbi_created' })
 }
 
 async function configureGlobalTtlIndexes (db) {
   const globalTtl = config.get('data.globalTtl')
 
   if (globalTtl) {
-    await db.collection(EVENT_COLLECTION).createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
-    await db.collection(MESSAGE_COLLECTION).createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(EVENT_COLLECTION_NAME).createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
   } else {
     await removeTtlIndexes(db)
   }
@@ -78,8 +79,8 @@ async function configureGlobalTtlIndexes (db) {
 async function removeTtlIndexes (db) {
   const collections = await db.listCollections().toArray()
   const ttlIndexesToRemove = [
-    { collection: EVENT_COLLECTION, indexName: 'events_ttl' },
-    { collection: MESSAGE_COLLECTION, indexName: 'messages_ttl' }
+    { collection: EVENT_COLLECTION_NAME, indexName: 'events_ttl' },
+    { collection: MESSAGE_COLLECTION_NAME, indexName: 'messages_ttl' }
   ]
 
   for (const { collection, indexName } of ttlIndexesToRemove) {

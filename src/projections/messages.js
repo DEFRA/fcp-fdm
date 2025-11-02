@@ -4,11 +4,13 @@ import { config } from '../config/config.js'
 const maxTimeMS = config.get('mongo.maxTimeMS')
 
 export async function getMessageByCorrelationId (correlationId, options = {}) {
-  const { db, collections } = getMongoDb()
+  const { collections } = getMongoDb()
+  const { messages: messageCollection } = collections
+
   const { includeContent = false, includeEvents = false } = options
 
   const projection = buildProjection(includeContent, includeEvents)
-  const message = await db.collection(collections.messages).findOne(
+  const message = await messageCollection.findOne(
     { _id: correlationId },
     { projection, readPreference: 'secondaryPreferred', maxTimeMS }
   )
@@ -21,7 +23,9 @@ export async function getMessageByCorrelationId (correlationId, options = {}) {
 }
 
 export async function getMessages (filters = {}) {
-  const { db, collections } = getMongoDb()
+  const { collections } = getMongoDb()
+  const { messages: messageCollection } = collections
+
   const { crn, sbi, includeContent = false, includeEvents = false, page = 1, pageSize = 20 } = filters
 
   const query = {}
@@ -35,7 +39,7 @@ export async function getMessages (filters = {}) {
 
   const projection = buildProjection(includeContent, includeEvents)
 
-  const cursor = db.collection(collections.messages).find(query, {
+  const cursor = messageCollection.find(query, {
     projection,
     sort: { created: -1, _id: -1 },
     readPreference: 'secondaryPreferred',

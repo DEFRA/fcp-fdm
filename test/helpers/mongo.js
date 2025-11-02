@@ -1,5 +1,5 @@
-export async function clearAllCollections (db, collections) {
-  for (const collection of Object.keys(collections)) {
-    await db.collection(collection).deleteMany({})
+export async function clearAllCollections (collections) {
+  for (const collection of Object.values(collections)) {
+    await collection.deleteMany({})
   }
 }
