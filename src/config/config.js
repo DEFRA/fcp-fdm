@@ -153,6 +153,24 @@ const config = convict({
         default: null,
         nullable: true,
         env: 'MONGO_READ_PREFERENCE'
+      },
+      minPoolSize: {
+        doc: 'Minimum connection pool size for MongoDB',
+        format: Number,
+        default: 1,
+        env: 'MONGO_MIN_POOL_SIZE'
+      },
+      maxPoolSize: {
+        doc: 'Maximum connection pool size for MongoDB',
+        format: Number,
+        default: 5,
+        env: 'MONGO_MAX_POOL_SIZE'
+      },
+      maxIdleTimeMS: {
+        doc: 'The maximum number of milliseconds that a connection can remain idle in the pool before being closed',
+        format: Number,
+        default: 30000,
+        env: 'MONGO_MAX_IDLE_TIME_MS'
       }
     }
   },

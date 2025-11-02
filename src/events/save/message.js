@@ -10,13 +10,13 @@ const maxTimeMS = config.get('mongo.maxTimeMS')
 const logger = createLogger()
 
 export async function save (event) {
-  const { db, collections } = getMongoDb()
+  const { collections } = getMongoDb()
   const { events: eventCollection, messages: messageCollection } = collections
 
   const now = new Date()
   const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: now }
 
-  const result = await db.collection(eventCollection).updateOne(
+  const result = await eventCollection.updateOne(
     { _id: eventEntity._id },
     { $setOnInsert: eventEntity },
     { upsert: true, maxTimeMS }
@@ -27,10 +27,10 @@ export async function save (event) {
     return
   }
 
-  await upsertMessage(event, eventEntity, db, messageCollection, now)
+  await upsertMessage(event, eventEntity, messageCollection, now)
 }
 
-async function upsertMessage (event, eventEntity, db, messageCollection, now) {
+async function upsertMessage (event, eventEntity, messageCollection, now) {
   const { correlationId, recipient, crn, sbi } = event.data
   const { subject, body } = event.data.content || {}
 
@@ -46,7 +46,7 @@ async function upsertMessage (event, eventEntity, db, messageCollection, now) {
     received: eventEntity.received
   }
 
-  await db.collection(messageCollection).updateOne(
+  await messageCollection.updateOne(
     { _id: correlationId },
     [
       {

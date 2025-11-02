@@ -8,7 +8,6 @@ import { eventTypePrefixes } from '../../../../../src/events/types.js'
 
 const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
 
-let db
 let collections
 
 describe('save', () => {
@@ -16,12 +15,11 @@ describe('save', () => {
     await createMongoDbConnection(config.get('mongo'))
 
     const mongoDb = getMongoDb()
-    db = mongoDb.db
     collections = mongoDb.collections
   })
 
   beforeEach(async () => {
-    await clearAllCollections(db, collections)
+    await clearAllCollections(collections)
   })
 
   afterAll(async () => {
@@ -33,7 +31,7 @@ describe('save', () => {
 
     await save(event)
 
-    const savedEvent = await db.collection(collections.events).findOne({ _id: `${event.source}:${event.id}` })
+    const savedEvent = await collections.events.findOne({ _id: `${event.source}:${event.id}` })
 
     expect(savedEvent).toBeDefined()
     expect(savedEvent.id).toBe(event.id)
@@ -44,7 +42,7 @@ describe('save', () => {
 
     await save(event)
 
-    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const savedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(savedMessage).toBeDefined()
     expect(savedMessage.recipient).toBe(event.data.recipient)
@@ -58,7 +56,7 @@ describe('save', () => {
 
     await save(event)
 
-    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const savedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(savedMessage).toBeDefined()
     expect(savedMessage.status).toBe(expectedStatus)
@@ -87,7 +85,7 @@ describe('save', () => {
 
     const expectedStatus = secondEvent.type.replace(`${MESSAGE_EVENT_PREFIX}`, '')
 
-    const updatedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const updatedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(updatedMessage).toBeDefined()
     expect(updatedMessage.recipient).toBe(event.data.recipient)
@@ -116,7 +114,7 @@ describe('save', () => {
 
     const expectedStatus = event.type.replace(`${MESSAGE_EVENT_PREFIX}`, '')
 
-    const updatedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const updatedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(updatedMessage).toBeDefined()
     expect(updatedMessage.recipient).toBe(event.data.recipient)
@@ -133,10 +131,10 @@ describe('save', () => {
     // Attempt to save duplicate event
     await save(event)
 
-    const eventsCount = await db.collection(collections.events).countDocuments({ _id: `${event.source}:${event.id}` })
+    const eventsCount = await collections.events.countDocuments({ _id: `${event.source}:${event.id}` })
     expect(eventsCount).toBe(1)
 
-    const messagesCount = await db.collection(collections.messages).countDocuments({ _id: event.data.correlationId })
+    const messagesCount = await collections.messages.countDocuments({ _id: event.data.correlationId })
     expect(messagesCount).toBe(1)
   })
 
@@ -157,7 +155,7 @@ describe('save', () => {
 
     await save(updateEvent)
 
-    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const savedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(savedMessage).toBeDefined()
     expect(savedMessage.subject).toBe(updateEvent.data.content.subject)
@@ -179,7 +177,7 @@ describe('save', () => {
 
     await save(updateEvent)
 
-    const savedMessage = await db.collection(collections.messages).findOne({ _id: event.data.correlationId })
+    const savedMessage = await collections.messages.findOne({ _id: event.data.correlationId })
 
     expect(savedMessage).toBeDefined()
     expect(savedMessage.crn).toBe(updateEvent.data.crn)

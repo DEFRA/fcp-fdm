@@ -93,20 +93,18 @@ const createFullMessage = (message) => ({
   events: message.events.map(({ _id, ...event }) => event) // Remove _id from events
 })
 
-let db
 let collections
 
 beforeAll(async () => {
   await createMongoDbConnection(config.get('mongo'))
 
   const mongoDb = getMongoDb()
-  db = mongoDb.db
   collections = mongoDb.collections
 })
 
 beforeEach(async () => {
-  await clearAllCollections(db, collections)
-  await db.collection(collections.messages).insertMany(testMessages)
+  await clearAllCollections(collections)
+  await collections.messages.insertMany(testMessages)
 })
 
 afterAll(async () => {
