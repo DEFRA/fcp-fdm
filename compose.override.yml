@@ -25,6 +25,12 @@ services:
     networks:
       - fcp-fdm
 
+  fcp-fdm-event-publisher-stub:
+    ports:
+      - '3002:3002'
+    networks:
+      - fcp-fdm
+
 networks:
   fcp-fdm:
     driver: bridge
