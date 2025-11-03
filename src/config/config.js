@@ -157,7 +157,7 @@ const config = convict({
       minPoolSize: {
         doc: 'Minimum connection pool size for MongoDB',
         format: Number,
-        default: 0,
+        default: 1,
         env: 'MONGO_MIN_POOL_SIZE'
       },
       maxPoolSize: {
