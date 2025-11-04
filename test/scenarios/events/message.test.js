@@ -40,15 +40,16 @@ describe('message event scenarios', () => {
     expect(savedMessages[0].events.length).toBe(3)
   })
 
-  test('should process a validation failure scenario', async () => {
+  test('should process a validation failure scenario and not save validation failure event', async () => {
     await processScenarioEvents(getScenario('streams.validationFailure'))
 
+    // validation failure events may not be traceable to a message, so they are not saved
     const savedEvents = await collections.events.find({}).toArray()
-    expect(savedEvents.length).toBe(2)
+    expect(savedEvents.length).toBe(1)
 
     const savedMessages = await collections.messages.find({}).toArray()
     expect(savedMessages).toHaveLength(1)
-    expect(savedMessages[0].events.length).toBe(2)
+    expect(savedMessages[0].events.length).toBe(1)
   })
 
   test('should process a provider failure scenario', async () => {

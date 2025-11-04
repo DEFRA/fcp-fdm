@@ -32,8 +32,6 @@ export const validationFailure = {
   datacontenttype: 'application/json',
   time: '2023-10-17T14:48:01.000Z',
   data: {
-    correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
-    recipient: 'invalid-email',
     statusDetails: {
       status: 'validation-failure',
       errors: [

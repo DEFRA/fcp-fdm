@@ -1,7 +1,9 @@
+import cloudEventsSchema from './schemas/cloud-event.js'
 import messageSchema from './schemas/message.js'
 
 const validators = {
-  message: messageSchema
+  message: messageSchema,
+  messageRejected: cloudEventsSchema
 }
 
 export async function validateEvent (event, eventType) {
