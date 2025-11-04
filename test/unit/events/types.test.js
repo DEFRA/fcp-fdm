@@ -2,10 +2,15 @@ import { describe, test, expect } from 'vitest'
 
 import { getEventType, eventTypes } from '../../../src/events/types'
 
-const { MESSAGE_EVENT } = eventTypes
+const { MESSAGE_EVENT, MESSAGE_EVENT_REJECTED } = eventTypes
 
 describe('getEventType', () => {
-  test('should return correct message event type if event relates to Single Front Door Comms', () => {
+  test('should return message rejected event type for validation failure events', () => {
+    const eventType = getEventType('uk.gov.fcp.sfd.notification.failure.validation')
+    expect(eventType).toBe(MESSAGE_EVENT_REJECTED)
+  })
+
+  test('should return message event type if event relates to Single Front Door Comms', () => {
     const eventType = getEventType('uk.gov.fcp.sfd.notification.event')
     expect(eventType).toBe(MESSAGE_EVENT)
   })
