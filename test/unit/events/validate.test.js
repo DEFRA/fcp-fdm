@@ -25,7 +25,7 @@ describe('validateEvent', () => {
 
   test('should validate all event payload properties against schema allowing unknown properties', async () => {
     await validateEvent(testEvent, testEventType)
-    expect(mockSchemaValidate).toHaveBeenCalledWith(testEvent, { abortEarly: false, allowUnknown: true })
+    expect(mockSchemaValidate).toHaveBeenCalledWith(testEvent, { abortEarly: false, allowUnknown: true, stripUnknown: true })
   })
 
   test('should throw error if event validation fails', async () => {
