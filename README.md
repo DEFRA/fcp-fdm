@@ -511,6 +511,8 @@ The FDM service can be configured using the following environment variables:
 | `MONGO_DATABASE` | MongoDB database name | `fcp-fdm` | No |
 | `MONGO_RETRY_WRITES` | Enable MongoDB write retries | `null` | No |
 | `MONGO_READ_PREFERENCE` | MongoDB read preference | `null` | No |
+| `DATA_GLOBAL_TTL` | Global TTL for data in seconds | `null` | No |
+| `DATA_ENABLED` | Enable/disable data persistence | `true`| No |
 
 ### Logging
 
@@ -528,7 +530,6 @@ The FDM service can be configured using the following environment variables:
 | `ENABLE_SECURE_CONTEXT` | Enable secure context | `true` (prod), `false` (dev) | No |
 | `ENABLE_METRICS` | Enable metrics reporting | `true` (prod), `false` (dev) | No |
 | `TRACING_HEADER` | CDP tracing header name | `x-cdp-request-id` | No |
-| `DATA_GLOBAL_TTL` | Global TTL for data in seconds | `null` | No |
 
 ### Authentication
 

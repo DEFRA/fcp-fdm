@@ -202,6 +202,12 @@ const config = convict({
     }
   },
   data: {
+    enabled: {
+      doc: 'Whether to persist data from consumed events',
+      format: Boolean,
+      default: true,
+      env: 'DATA_ENABLED'
+    },
     globalTtl: {
       doc: 'Globally override TTL for all data in seconds',
       format: Number,
