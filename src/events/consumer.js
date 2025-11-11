@@ -7,8 +7,17 @@ const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws'
 
 const logger = createLogger()
 
+const agentSettings = {
+  maxSockets: 10,
+  maxFreeSockets: 5,
+}
+
 const sqsClient = new SQSClient({
   region,
+  requestHandler: {
+    httpsAgent: agentSettings,
+    httpAgent: agentSettings
+  },
   ...(endpoint && {
     endpoint,
     credentials: { accessKeyId, secretAccessKey }
