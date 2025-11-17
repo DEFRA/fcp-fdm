@@ -45,7 +45,7 @@ FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These ev
   - [Logging](#logging)
   - [Security And Performance](#security-and-performance)
   - [Authentication](#authentication-1)
-- [Using Fdm In Your Docker Compose](#using-fdm-in-your-docker-compose)
+- [Using FDM In Your Docker Compose](#using-fdm-in-your-docker-compose)
   - [Dependencies](#dependencies)
   - [Minimum Setup](#minimum-setup)
   - [Localstack Initialization Script](#localstack-initialization-script)
@@ -189,12 +189,10 @@ The event processing follows this logical flow through the codebase:
    - Extensible for new event type prefixes
 
 6. **Validation Layer** (`src/events/validate.js`)
-   - Dynamic schema loading based on event type
    - Uses Joi validation with CloudEvent compliance
    - Allows unknown properties for forward compatibility
 
 7. **Save Layer** (`src/events/save.js`)
-   - Dynamic import pattern: `./save/${eventType}.js`
    - Type-specific save logic for different event categories
    - Currently implements `message` event saving
 
@@ -267,81 +265,13 @@ To add support for new inbound event types, follow these steps:
 
 Add the new event type prefix to `src/events/types.js`:
 
-```javascript
-// Add new event type constant
-const NEW_EVENT_TYPE = 'newevent'
-
-// Add prefix mapping
-export function getEventType (type) {
-  if (type.startsWith(MESSAGE_EVENT_PREFIX)) {
-    return MESSAGE_EVENT
-  } else if (type.startsWith(NEW_EVENT_PREFIX)) {
-    return NEW_EVENT_TYPE
-  } else {
-    throw new Error(`Unknown event type: ${type}`)
-  }
-}
-
-// Define the prefix pattern
-const NEW_EVENT_PREFIX = 'uk.gov.fcp.your.event.prefix'
-```
-
 ### 2. Create Event Schema
 
 Create a new schema file at `src/events/schemas/newevent.js`:
 
-```javascript
-import Joi from 'joi'
-import { cloudEvent } from './cloud-event.js'
-
-export default cloudEvent.keys({
-  data: Joi.object({
-    // Define your event-specific data requirements
-    correlationId: Joi.string().required(),
-    yourField: Joi.string().required()
-    // Add other required/optional fields
-  }).required()
-})
-```
-
 ### 3. Create Save Handler
 
 Create a save handler at `src/events/save/newevent.js`:
-
-```javascript
-import { getMongoDb } from '../../common/helpers/mongodb.js'
-import { createLogger } from '../../common/helpers/logging/logger.js'
-
-const logger = createLogger()
-
-export async function save (event) {
-  const { db, collections } = getMongoDb()
-  
-  // Implement your save logic
-  // Store in events collection
-  // Update any aggregation collections
-  
-  logger.info(`Saved ${event.type} event. ID: ${event.id}`)
-}
-```
-
-### 4. Naming Convention
-
-The dynamic import system requires strict naming conventions:
-
-- **Event Type**: Must be a valid JavaScript identifier (no hyphens, spaces)
-- **Schema File**: `src/events/schemas/${eventType}.js`
-- **Save Handler**: `src/events/save/${eventType}.js`
-- **Export Name**: `save` function in save handler, `default` export for schema
-
-### 5. Add Test Coverage
-
-Create comprehensive tests following the existing patterns:
-
-- **Unit Tests**: `test/unit/events/schemas/newevent.test.js`
-- **Integration Tests**: `test/integration/local/events/save/newevent.test.js`
-- **Mock Data**: `test/mocks/newevents.js`
-- **Scenarios**: `test/events/newevent/scenarios.js`
 
 ### Sending Test Events
 
