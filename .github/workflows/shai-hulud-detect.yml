@@ -42,9 +42,8 @@ jobs:
           # If ignore file exists at repo root, filter output
           if [ -f .shai-hulud-ignore ]; then
             echo "Applying .shai-hulud-ignore filters"
-            # Build regex alternation of paths, including optional /project/ prefix
-            patterns=$(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore | sed 's#^#/project/#')
-            combined=$(printf "%s\n" $(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore) "$patterns" | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
+            # Build regex alternation of relative paths; we match anywhere in Found in: lines
+            combined=$(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
 
             # Drop whole blocks containing a matching Found in: line
             awk -v re="$combined" 'BEGIN{RS="\n\n"; ORS="\n\n"} { if ($0 ~ /Found in:/ && $0 ~ re) next; print $0 }' scan_output.txt > scan_filtered.txt
