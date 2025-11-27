@@ -40,8 +40,8 @@ jobs:
           scan_exit_code=$?
           set -e
           
-          # Filter out ignored paths if .shai-hulud-ignore exists
-          if [ -f project/.shai-hulud-ignore ]; then
+          # Filter out ignored paths if .shai-hulud-ignore exists (repo root)
+          if [ -f .shai-hulud-ignore ]; then
             echo "Filtering scan results based on .shai-hulud-ignore..."
             
             # Read ignore patterns and normalize them
@@ -52,7 +52,7 @@ jobs:
               # Escape special regex characters and match with or without /project/ prefix
               escaped_pattern=$(echo "$pattern" | sed 's/[.\/*]/\\&/g')
               ignore_patterns+=("$escaped_pattern")
-            done < project/.shai-hulud-ignore
+            done < .shai-hulud-ignore
             
             # Filter the output
             filtered_output=$(cat scan_output.txt)
@@ -61,15 +61,22 @@ jobs:
               filtered_output=$(echo "$filtered_output" | grep -v "$pattern" || true)
             done
             
-            # Check if any real issues remain after filtering
-            if echo "$filtered_output" | grep -q "High Risk Issues: [1-9]"; then
-              echo "$filtered_output"
+            # Recalculate summary based on remaining sections
+            high_count=$(echo "$filtered_output" | grep -c "🚨 HIGH RISK:" || true)
+            med_count=$(echo "$filtered_output" | grep -c "⚠️  MEDIUM RISK:" || true)
+            crit_count=$(echo "$filtered_output" | grep -c "Total Critical Issues:" | awk '{print $4}' || echo 0)
+
+            # Update summary lines if present
+            filtered_output=$(echo "$filtered_output" | sed -E "s/(High Risk Issues: )([0-9]+)/\1$high_count/")
+            filtered_output=$(echo "$filtered_output" | sed -E "s/(Medium Risk Issues: )([0-9]+)/\1$med_count/")
+
+            echo "$filtered_output"
+            # Exit code based on counts
+            if [ "$high_count" -gt 0 ]; then
               exit 1
-            elif echo "$filtered_output" | grep -q "Medium Risk Issues: [1-9]"; then
-              echo "$filtered_output"
+            elif [ "$med_count" -gt 0 ]; then
               exit 2
             else
-              echo "$filtered_output"
               exit 0
             fi
           else
