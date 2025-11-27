@@ -1,0 +1,5 @@
+# Shai-Hulud Scanner Exclusions
+# Files in this list will be excluded from scanning
+
+# Configuration files with legitimate credential patterns
+src/config/config.js

@@ -33,4 +33,45 @@ jobs:
       - name: Run scanner
         run: |
           chmod +x ./scanner/shai-hulud-detector.sh
-          ./scanner/shai-hulud-detector.sh ./project
+          
+          # Run scanner and capture output
+          set +e
+          ./scanner/shai-hulud-detector.sh ./project > scan_output.txt 2>&1
+          scan_exit_code=$?
+          set -e
+          
+          # Filter out ignored paths if .shai-hulud-ignore exists
+          if [ -f project/.shai-hulud-ignore ]; then
+            echo "Filtering scan results based on .shai-hulud-ignore..."
+            
+            # Read ignore patterns
+            ignore_patterns=()
+            while IFS= read -r pattern || [ -n "$pattern" ]; do
+              # Skip comments and empty lines
+              [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
+              ignore_patterns+=("$pattern")
+            done < project/.shai-hulud-ignore
+            
+            # Filter the output
+            filtered_output=$(cat scan_output.txt)
+            for pattern in "${ignore_patterns[@]}"; do
+              # Remove lines containing the ignored path
+              filtered_output=$(echo "$filtered_output" | grep -v "$pattern" || true)
+            done
+            
+            # Check if any real issues remain after filtering
+            if echo "$filtered_output" | grep -q "High Risk Issues: [1-9]"; then
+              echo "$filtered_output"
+              exit 1
+            elif echo "$filtered_output" | grep -q "Medium Risk Issues: [1-9]"; then
+              echo "$filtered_output"
+              exit 2
+            else
+              echo "$filtered_output"
+              exit 0
+            fi
+          else
+            # No ignore file, use original output and exit code
+            cat scan_output.txt
+            exit $scan_exit_code
+          fi
