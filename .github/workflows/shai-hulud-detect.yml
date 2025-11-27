@@ -44,18 +44,20 @@ jobs:
           if [ -f project/.shai-hulud-ignore ]; then
             echo "Filtering scan results based on .shai-hulud-ignore..."
             
-            # Read ignore patterns
+            # Read ignore patterns and normalize them
             ignore_patterns=()
             while IFS= read -r pattern || [ -n "$pattern" ]; do
               # Skip comments and empty lines
               [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
-              ignore_patterns+=("$pattern")
+              # Escape special regex characters and match with or without /project/ prefix
+              escaped_pattern=$(echo "$pattern" | sed 's/[.\/*]/\\&/g')
+              ignore_patterns+=("$escaped_pattern")
             done < project/.shai-hulud-ignore
             
             # Filter the output
             filtered_output=$(cat scan_output.txt)
             for pattern in "${ignore_patterns[@]}"; do
-              # Remove lines containing the ignored path
+              # Remove lines containing the ignored path (with or without /project/ prefix)
               filtered_output=$(echo "$filtered_output" | grep -v "$pattern" || true)
             done
             
