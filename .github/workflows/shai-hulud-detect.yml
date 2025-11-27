@@ -33,58 +33,27 @@ jobs:
       - name: Run scanner
         run: |
           chmod +x ./scanner/shai-hulud-detector.sh
-          
-          # Run scanner and capture output
+          # Run scanner but don't fail this step; we'll handle exit code after filtering
           set +e
           ./scanner/shai-hulud-detector.sh ./project > scan_output.txt 2>&1
           scan_exit_code=$?
           set -e
-          
-          # Filter out ignored paths if .shai-hulud-ignore exists (repo root)
+
+          # If ignore file exists at repo root, filter output
           if [ -f .shai-hulud-ignore ]; then
-            echo "Filtering scan results based on .shai-hulud-ignore..."
-            
-            # Read ignore patterns and normalize them
-            ignore_patterns=()
-            while IFS= read -r pattern || [ -n "$pattern" ]; do
-              # Skip comments and empty lines
-              [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
-              # Build patterns that match absolute runner path prefixes
-              # Example output line contains: .../project/<pattern>
-              absolute_pattern="/project/$pattern"
-              ignore_patterns+=("$pattern" "${absolute_pattern}")
-            done < .shai-hulud-ignore
-            
-            # Build a single regex alternation from ignore patterns
-            regex=$(printf "%s\n" "${ignore_patterns[@]}" | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
+            echo "Applying .shai-hulud-ignore filters"
+            # Build regex alternation of paths, including optional /project/ prefix
+            patterns=$(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore | sed 's#^#/project/#')
+            combined=$(printf "%s\n" $(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore) "$patterns" | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
 
-            # Remove entire risk blocks that reference ignored paths in 'Found in:' lines
-            filtered_output=$(awk -v re="$regex" '
-              BEGIN { RS="\n\n"; ORS="\n\n" }
-              {
-                # Drop block if it contains a Found in: line with a path matching re
-                if ($0 ~ /Found in:/ && $0 ~ re) {
-                  next;
-                }
-                print $0;
-              }
-            ' scan_output.txt)
-            
-            # Recalculate summary based on remaining sections
-            high_count=$(echo "$filtered_output" | grep -c "HIGH RISK:" || true)
-            med_count=$(echo "$filtered_output" | grep -c "MEDIUM RISK:" || true)
-            # If summary lines exist, update them; otherwise append a summary
+            # Drop whole blocks containing a matching Found in: line
+            awk -v re="$combined" 'BEGIN{RS="\n\n"; ORS="\n\n"} { if ($0 ~ /Found in:/ && $0 ~ re) next; print $0 }' scan_output.txt > scan_filtered.txt
 
-            # Update summary lines if present
-            if echo "$filtered_output" | grep -q "High Risk Issues:"; then
-              filtered_output=$(echo "$filtered_output" | sed -E "s/(High Risk Issues: )([0-9]+)/\1$high_count/")
-              filtered_output=$(echo "$filtered_output" | sed -E "s/(Medium Risk Issues: )([0-9]+)/\1$med_count/")
-            else
-              filtered_output=$(printf "%s\n==============================================\n🔍 SUMMARY:\n   High Risk Issues: %s\n   Medium Risk Issues: %s\n==============================================\n" "$filtered_output" "$high_count" "$med_count")
-            fi
+            # Recompute counts from filtered output
+            high_count=$(grep -c "HIGH RISK:" scan_filtered.txt || true)
+            med_count=$(grep -c "MEDIUM RISK:" scan_filtered.txt || true)
 
-            echo "$filtered_output"
-            # Exit code based on counts
+            cat scan_filtered.txt
             if [ "$high_count" -gt 0 ]; then
               exit 1
             elif [ "$med_count" -gt 0 ]; then
@@ -93,7 +62,6 @@ jobs:
               exit 0
             fi
           else
-            # No ignore file, use original output and exit code
             cat scan_output.txt
             exit $scan_exit_code
           fi
