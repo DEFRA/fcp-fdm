@@ -42,11 +42,11 @@ jobs:
           # If ignore file exists at repo root, filter output
           if [ -f .shai-hulud-ignore ]; then
             echo "Applying .shai-hulud-ignore filters"
-            # Build regex alternation of relative paths; we match anywhere in Found in: lines
-            combined=$(grep -vE '^\s*#|^\s*$' .shai-hulud-ignore | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
-
-            # Drop whole blocks containing a matching Found in: line
-            awk -v re="$combined" 'BEGIN{RS="\n\n"; ORS="\n\n"} { if ($0 ~ /Found in:/ && $0 ~ re) next; print $0 }' scan_output.txt > scan_filtered.txt
+            # Drop whole blocks containing a matching Found in: line (literal substring match)
+            awk 'BEGIN{RS="\n\n"; ORS="\n\n"} \
+              NR==FNR{ if ($0 ~ /^\s*#/ || $0 ~ /^\s*$/) next; pats[++n]=$0; next } \
+              { if ($0 ~ /Found in:/) { drop=0; for (i=1;i<=n;i++){ if (index($0, pats[i])>0) { drop=1; break } } if (drop) next } print $0 }' \
+              .shai-hulud-ignore scan_output.txt > scan_filtered.txt
 
             # Recompute counts from filtered output
             high_count=$(grep -c "HIGH RISK:" scan_filtered.txt || true)
