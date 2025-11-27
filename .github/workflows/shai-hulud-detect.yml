@@ -49,26 +49,39 @@ jobs:
             while IFS= read -r pattern || [ -n "$pattern" ]; do
               # Skip comments and empty lines
               [[ "$pattern" =~ ^#.*$ || -z "$pattern" ]] && continue
-              # Escape special regex characters and match with or without /project/ prefix
-              escaped_pattern=$(echo "$pattern" | sed 's/[.\/*]/\\&/g')
-              ignore_patterns+=("$escaped_pattern")
+              # Build patterns that match absolute runner path prefixes
+              # Example output line contains: .../project/<pattern>
+              absolute_pattern="/project/$pattern"
+              ignore_patterns+=("$pattern" "${absolute_pattern}")
             done < .shai-hulud-ignore
             
-            # Filter the output
-            filtered_output=$(cat scan_output.txt)
-            for pattern in "${ignore_patterns[@]}"; do
-              # Remove lines containing the ignored path (with or without /project/ prefix)
-              filtered_output=$(echo "$filtered_output" | grep -v "$pattern" || true)
-            done
+            # Build a single regex alternation from ignore patterns
+            regex=$(printf "%s\n" "${ignore_patterns[@]}" | sed 's/[^^$.*+?{}()|[\]\\]/\\&/g' | paste -sd '|' -)
+
+            # Remove entire risk blocks that reference ignored paths in 'Found in:' lines
+            filtered_output=$(awk -v re="$regex" '
+              BEGIN { RS="\n\n"; ORS="\n\n" }
+              {
+                # Drop block if it contains a Found in: line with a path matching re
+                if ($0 ~ /Found in:/ && $0 ~ re) {
+                  next;
+                }
+                print $0;
+              }
+            ' scan_output.txt)
             
             # Recalculate summary based on remaining sections
-            high_count=$(echo "$filtered_output" | grep -c "🚨 HIGH RISK:" || true)
-            med_count=$(echo "$filtered_output" | grep -c "⚠️  MEDIUM RISK:" || true)
-            crit_count=$(echo "$filtered_output" | grep -c "Total Critical Issues:" | awk '{print $4}' || echo 0)
+            high_count=$(echo "$filtered_output" | grep -c "HIGH RISK:" || true)
+            med_count=$(echo "$filtered_output" | grep -c "MEDIUM RISK:" || true)
+            # If summary lines exist, update them; otherwise append a summary
 
             # Update summary lines if present
-            filtered_output=$(echo "$filtered_output" | sed -E "s/(High Risk Issues: )([0-9]+)/\1$high_count/")
-            filtered_output=$(echo "$filtered_output" | sed -E "s/(Medium Risk Issues: )([0-9]+)/\1$med_count/")
+            if echo "$filtered_output" | grep -q "High Risk Issues:"; then
+              filtered_output=$(echo "$filtered_output" | sed -E "s/(High Risk Issues: )([0-9]+)/\1$high_count/")
+              filtered_output=$(echo "$filtered_output" | sed -E "s/(Medium Risk Issues: )([0-9]+)/\1$med_count/")
+            else
+              filtered_output=$(printf "%s\n==============================================\n🔍 SUMMARY:\n   High Risk Issues: %s\n   Medium Risk Issues: %s\n==============================================\n" "$filtered_output" "$high_count" "$med_count")
+            fi
 
             echo "$filtered_output"
             # Exit code based on counts
