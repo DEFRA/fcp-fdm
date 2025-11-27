@@ -4,6 +4,7 @@
 [![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=code_smells)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
 [![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=duplicated_lines_density)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
+[![shai-hulud-detect](https://github.com/DEFRA/fcp-fdm/actions/workflows/shai-hulud-detect.yml/badge.svg)](https://github.com/DEFRA/fcp-fdm/actions/workflows/shai-hulud-detect.yml)
 
 # Farming Data Model (FDM)
 
