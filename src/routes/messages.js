@@ -7,7 +7,7 @@ const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 const api = [{
   method: 'GET',
-  path: '/api/v1/messages',
+  path: '/messages',
   options: {
     description: 'Get all messages',
     notes: 'Messages can be filtered by SBI or CRN',
@@ -39,7 +39,7 @@ const api = [{
   }
 }, {
   method: 'GET',
-  path: '/api/v1/messages/{correlationId}',
+  path: '/messages/{correlationId}',
   options: {
     description: 'Get message by correlationId',
     notes: 'Returns a message for a given correlationId, optionally including content and event history',
