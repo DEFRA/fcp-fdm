@@ -24,7 +24,7 @@ export const messageRequest = {
   }
 }
 
-export const validationFailure = {
+export const messageValidationFailure = {
   id: '550e8400-e29b-41d4-a716-446655440002',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -44,7 +44,7 @@ export const validationFailure = {
   }
 }
 
-export const statusSending = {
+export const messageSending = {
   id: '550e8400-e29b-41d4-a716-446655440003',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -60,7 +60,7 @@ export const statusSending = {
   }
 }
 
-export const statusDelivered = {
+export const messageDelivered = {
   id: '550e8400-e29b-41d4-a716-446655440004',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -76,7 +76,7 @@ export const statusDelivered = {
   }
 }
 
-export const statusProviderFailure = {
+export const messageProviderFailure = {
   id: '550e8400-e29b-41d4-a716-446655440005',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -92,7 +92,7 @@ export const statusProviderFailure = {
   }
 }
 
-export const statusInternalFailure = {
+export const messageInternalFailure = {
   id: '550e8400-e29b-41d4-a716-446655440006',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -141,7 +141,7 @@ export const messageRetryRequest = {
   }
 }
 
-export const statusRetryExpired = {
+export const messageRetryExpired = {
   id: '550e8400-e29b-41d4-a716-446655440008',
   source: 'fcp-sfd-comms',
   specversion: '1.0',

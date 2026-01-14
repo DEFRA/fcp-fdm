@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../../src/config/config.js'
-import { messageRequest, validationFailure, statusSending, statusDelivered, statusProviderFailure, statusInternalFailure, messageRetryRequest, statusRetryExpired } from '../../../../mocks/events.js'
+import { messageRequest, messageValidationFailure, messageSending, messageDelivered, messageProviderFailure, messageInternalFailure, messageRetryRequest, messageRetryExpired } from '../../../../mocks/events.js'
 import { save } from '../../../../../src/events/save/message.js'
 import { clearAllCollections } from '../../../../helpers/mongo.js'
 import { eventTypePrefixes } from '../../../../../src/events/types.js'
@@ -10,13 +10,13 @@ const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
 
 const messageEvents = {
   messageRequest,
-  validationFailure,
-  statusSending,
-  statusDelivered,
-  statusProviderFailure,
-  statusInternalFailure,
+  messageValidationFailure,
+  messageSending,
+  messageDelivered,
+  messageProviderFailure,
+  messageInternalFailure,
   messageRetryRequest,
-  statusRetryExpired
+  messageRetryExpired
 }
 
 let collections
@@ -154,9 +154,9 @@ describe('save', () => {
     await save(event)
 
     const updateEvent = {
-      ...messageEvents.statusDelivered,
+      ...messageEvents.messageDelivered,
       data: {
-        ...messageEvents.statusDelivered.data,
+        ...messageEvents.messageDelivered.data,
         content: {
           subject: 'Message Subject',
           body: 'Message Body'
@@ -178,9 +178,9 @@ describe('save', () => {
     await save(event)
 
     const updateEvent = {
-      ...messageEvents.statusDelivered,
+      ...messageEvents.messageDelivered,
       data: {
-        ...messageEvents.statusDelivered.data,
+        ...messageEvents.messageDelivered.data,
         crn: 1234567890,
         sbi: 987654321,
       }

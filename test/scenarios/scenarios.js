@@ -3,13 +3,13 @@ import * as events from '../mocks/events.js'
 export const singleEvents = {
   // Message events
   messageRequest: [events.messageRequest],
-  validationFailure: [events.validationFailure],
-  statusSending: [events.statusSending],
-  statusDelivered: [events.statusDelivered],
-  statusProviderFailure: [events.statusProviderFailure],
-  statusInternalFailure: [events.statusInternalFailure],
+  messageValidationFailure: [events.messageValidationFailure],
+  messageSending: [events.messageSending],
+  messageDelivered: [events.messageDelivered],
+  messageProviderFailure: [events.messageProviderFailure],
+  messageInternalFailure: [events.messageInternalFailure],
   messageRetryRequest: [events.messageRetryRequest],
-  statusRetryExpired: [events.statusRetryExpired],
+  messageRetryExpired: [events.messageRetryExpired],
 
   // Document events
   documentUploaded: [events.documentUpload],
@@ -26,8 +26,8 @@ export const completeStreams = {
    */
   successful: [
     events.messageRequest,
-    events.statusSending,
-    events.statusDelivered
+    events.messageSending,
+    events.messageDelivered
   ],
 
   /**
@@ -35,7 +35,7 @@ export const completeStreams = {
    */
   validationFailure: [
     events.messageRequest,
-    events.validationFailure
+    events.messageValidationFailure
   ],
 
   /**
@@ -43,8 +43,8 @@ export const completeStreams = {
    */
   providerFailure: [
     events.messageRequest,
-    events.statusSending,
-    events.statusProviderFailure
+    events.messageSending,
+    events.messageProviderFailure
   ],
 
   /**
@@ -52,7 +52,7 @@ export const completeStreams = {
    */
   internalFailure: [
     events.messageRequest,
-    events.statusInternalFailure
+    events.messageInternalFailure
   ],
 
   /**
@@ -60,10 +60,10 @@ export const completeStreams = {
    */
   retrySuccess: [
     events.messageRequest,
-    events.statusInternalFailure,
+    events.messageInternalFailure,
     events.messageRetryRequest,
-    events.statusSending,
-    events.statusDelivered
+    events.messageSending,
+    events.messageDelivered
   ],
 
   /**
@@ -71,10 +71,10 @@ export const completeStreams = {
    */
   retryFailure: [
     events.messageRequest,
-    events.statusInternalFailure,
+    events.messageInternalFailure,
     events.messageRetryRequest,
-    { ...events.statusInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
-    events.statusRetryExpired
+    { ...events.messageInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
+    events.messageRetryExpired
   ],
 
   /**
