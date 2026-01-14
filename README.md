@@ -198,12 +198,12 @@ The event processing follows this logical flow through the codebase:
 
 ## Event Types and Scenarios
 
-### Message Events
-
-The service currently processes message events from the SFD Comms service:
-
 > **📋 Detailed Event Schemas**  
 > Complete event schemas, examples, and validation rules are available in the AsyncAPI specification: [`docs/asyncapi.yml`](./docs/asyncapi.yml)
+
+### Message Events
+
+The service processes message events from the SFD Comms service:
 
 | Event Type | Description | Schema |
 |------------|-------------|---------|
@@ -216,6 +216,22 @@ The service currently processes message events from the SFD Comms service:
 | `uk.gov.fcp.sfd.notification.retry` | Retry request | Requires `correlationId`, `recipient`, full personalisation data |
 | `uk.gov.fcp.sfd.notification.retry.expired` | Retry expired | Requires `correlationId`, `recipient` |
 
+### Document Events
+
+The service processes document events from the SFD Object Processor service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.document.uploaded` | Document uploaded | Requires `correlationId`, `crn`, `sbi`, `file` (with `fileId`, `fileName`, `contentType`, `url`) |
+
+### CRM Events
+
+The service processes CRM case events from the FCP CRM service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.crm.case.created` | CRM case created | Requires `correlationId`, `crn`, `sbi`, `caseId`, `caseType` |
+| `uk.gov.fcp.sfd.crm.case.updated` | CRM case updated | Requires `correlationId`, `crn`, `sbi`, `caseId`, `caseType` |
 
 ## Retry Logic and Dead Letter Queue
 

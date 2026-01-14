@@ -43,7 +43,8 @@ export async function createMongoDbConnection (options) {
     mongo.collections = {
       events: mongo.db.collection(EVENT_COLLECTION_NAME),
       messages: mongo.db.collection(MESSAGE_COLLECTION_NAME),
-      documents: mongo.db.collection(DOCUMENT_COLLECTION_NAME)
+      documents: mongo.db.collection(DOCUMENT_COLLECTION_NAME),
+      crm: mongo.db.collection(CRM_COLLECTION_NAME)
     }
 
     await createIndexes(mongo.db)

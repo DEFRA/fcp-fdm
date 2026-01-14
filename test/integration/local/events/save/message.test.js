@@ -1,12 +1,23 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../../src/config/config.js'
-import * as messageEvents from '../../../../mocks/events.js'
+import { messageRequest, validationFailure, statusSending, statusDelivered, statusProviderFailure, statusInternalFailure, messageRetryRequest, statusRetryExpired } from '../../../../mocks/events.js'
 import { save } from '../../../../../src/events/save/message.js'
 import { clearAllCollections } from '../../../../helpers/mongo.js'
 import { eventTypePrefixes } from '../../../../../src/events/types.js'
 
 const { MESSAGE_EVENT_PREFIX } = eventTypePrefixes
+
+const messageEvents = {
+  messageRequest,
+  validationFailure,
+  statusSending,
+  statusDelivered,
+  statusProviderFailure,
+  statusInternalFailure,
+  messageRetryRequest,
+  statusRetryExpired
+}
 
 let collections
 
