@@ -93,7 +93,7 @@ async function removeTtlIndexes (db) {
   const collections = await db.listCollections().toArray()
   const ttlIndexesToRemove = [
     { collection: EVENT_COLLECTION_NAME, indexName: 'events_ttl' },
-    { collection: MESSAGE_COLLECTION_NAME, indexName: 'messages_ttl' }
+    { collection: MESSAGE_COLLECTION_NAME, indexName: 'messages_ttl' },
     { collection: DOCUMENT_COLLECTION_NAME, indexName: 'documents_ttl' },
     { collection: CRM_COLLECTION_NAME, indexName: 'crm_ttl' }
   ]
