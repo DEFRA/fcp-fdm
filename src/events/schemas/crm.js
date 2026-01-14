@@ -1,7 +1,7 @@
 import Joi from 'joi'
 import cloudEvent from './cloud-event.js'
 
-const message = cloudEvent.keys({
+const crm = cloudEvent.keys({
   data: Joi.object({
     correlationId: Joi.string().required(),
     crn: Joi.number().required(),
@@ -11,4 +11,4 @@ const message = cloudEvent.keys({
   }).required()
 })
 
-export default message
+export default crm
