@@ -298,12 +298,14 @@ To support local development, Node.js scripts are provided for sending test even
 node ./scripts/send-events.js
 
 # Send a specific scenario
-node ./scripts/send-events.js streams.successful
+node ./scripts/send-events.js streams.messageSuccessful
 node ./scripts/send-events.js single.messageRequest
+node ./scripts/send-events.js single.documentUploaded
+node ./scripts/send-events.js streams.documentUploadedAndDeleted
 
 # Available scenario types:
-# - single.*: Individual event types
-# - streams.*: Complete event flow scenarios
+# - single.*: Individual event types (messageRequest, documentUploaded, crmCaseCreated, etc.)
+# - streams.*: Complete event flow scenarios (messageSuccessful, documentUploadedAndDeleted, etc.)
 ```
 
 #### Sending Test Events in CDP Environments

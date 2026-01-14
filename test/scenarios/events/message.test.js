@@ -30,7 +30,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process a successful message stream scenario', async () => {
-    await processScenarioEvents(getScenario('streams.successful'))
+    await processScenarioEvents(getScenario('streams.messageSuccessful'))
 
     const savedEvents = await collections.events.find({}).toArray()
     expect(savedEvents.length).toBe(3)
@@ -41,7 +41,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process a validation failure scenario and not save validation failure event', async () => {
-    await processScenarioEvents(getScenario('streams.validationFailure'))
+    await processScenarioEvents(getScenario('streams.messageValidationFailure'))
 
     // validation failure events may not be traceable to a message, so they are not saved
     const savedEvents = await collections.events.find({}).toArray()
@@ -53,7 +53,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process a provider failure scenario', async () => {
-    await processScenarioEvents(getScenario('streams.providerFailure'))
+    await processScenarioEvents(getScenario('streams.messageProviderFailure'))
 
     const savedEvents = await collections.events.find({}).toArray()
     expect(savedEvents.length).toBe(3)
@@ -64,7 +64,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process an internal failure scenario', async () => {
-    await processScenarioEvents(getScenario('streams.internalFailure'))
+    await processScenarioEvents(getScenario('streams.messageInternalFailure'))
 
     const savedEvents = await collections.events.find({}).toArray()
     expect(savedEvents.length).toBe(2)
@@ -75,7 +75,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process a retry success scenario', async () => {
-    await processScenarioEvents(getScenario('streams.retrySuccess'))
+    await processScenarioEvents(getScenario('streams.messageRetrySuccess'))
 
     const savedEvents = await collections.events.find({}).toArray()
     expect(savedEvents.length).toBe(5)
@@ -86,7 +86,7 @@ describe('message event scenarios', () => {
   })
 
   test('should process a retry failure scenario', async () => {
-    await processScenarioEvents(getScenario('streams.retryFailure'))
+    await processScenarioEvents(getScenario('streams.messageRetryFailure'))
 
     const savedEvents = await collections.events.find({}).toArray()
 

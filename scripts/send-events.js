@@ -30,9 +30,10 @@ async function main () {
     console.log('Usage:')
     console.log('  node send-events.js <scenario-path>')
     console.log('Examples:')
-    console.log('  node send-events.js streams.successful')
+    console.log('  node send-events.js streams.messageSuccessful')
     console.log('  node send-events.js single.messageRequest')
-    console.log('  node send-events.js variations.multipleCorrelations')
+    console.log('  node send-events.js single.documentUploaded')
+    console.log('  node send-events.js streams.documentUploadedAndDeleted')
     return
   }
 

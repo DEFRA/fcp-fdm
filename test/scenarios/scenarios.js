@@ -24,7 +24,7 @@ export const completeStreams = {
   /**
    * Message Happy Path: Message request → Sending → Delivered
    */
-  successful: [
+  messageSuccessful: [
     events.messageRequest,
     events.messageSending,
     events.messageDelivered
@@ -33,7 +33,7 @@ export const completeStreams = {
   /**
    * Message Validation Failure Path: Message request fails validation immediately
    */
-  validationFailure: [
+  messageValidationFailure: [
     events.messageRequest,
     events.messageValidationFailure
   ],
@@ -41,7 +41,7 @@ export const completeStreams = {
   /**
    * Message Provider Failure Path: Message request → Sending → Provider failure
    */
-  providerFailure: [
+  messageProviderFailure: [
     events.messageRequest,
     events.messageSending,
     events.messageProviderFailure
@@ -50,7 +50,7 @@ export const completeStreams = {
   /**
    * Message Internal Failure Path: Message request → Internal failure
    */
-  internalFailure: [
+  messageInternalFailure: [
     events.messageRequest,
     events.messageInternalFailure
   ],
@@ -58,7 +58,7 @@ export const completeStreams = {
   /**
    * Message Retry Success Path: Message request → Internal failure → Retry → Sending → Delivered
    */
-  retrySuccess: [
+  messageRetrySuccess: [
     events.messageRequest,
     events.messageInternalFailure,
     events.messageRetryRequest,
@@ -69,7 +69,7 @@ export const completeStreams = {
   /**
    * Message Retry Failure Path: Message request → Failure → Retry → Failure → Retry expired
    */
-  retryFailure: [
+  messageRetryFailure: [
     events.messageRequest,
     events.messageInternalFailure,
     events.messageRetryRequest,
