@@ -182,7 +182,7 @@ describe('GET /api/v1/documents/{fileId}', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false })
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false, includeCrm: false })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(response.payload).equals(JSON.stringify({ data: { document: 'document1' } }))
   })
@@ -196,7 +196,7 @@ describe('GET /api/v1/documents/{fileId}', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174999', { includeEvents: false })
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174999', { includeEvents: false, includeCrm: false })
     expect(response.statusCode).toBe(HTTP_STATUS_NOT_FOUND)
     expect(response.payload).equals(JSON.stringify({ error: 'Document not found with fileId: 123e4567-e89b-12d3-a456-426614174999' }))
   })
@@ -208,7 +208,31 @@ describe('GET /api/v1/documents/{fileId}', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: true })
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: true, includeCrm: false })
+    expect(response.statusCode).toBe(HTTP_STATUS_OK)
+    expect(response.payload).equals(JSON.stringify({ data: { document: 'document1' } }))
+  })
+
+  test('should include CRM cases if requested', async () => {
+    const options = {
+      method: 'GET',
+      url: '/api/v1/documents/123e4567-e89b-12d3-a456-426614174000?includeCrm=true'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false, includeCrm: true })
+    expect(response.statusCode).toBe(HTTP_STATUS_OK)
+    expect(response.payload).equals(JSON.stringify({ data: { document: 'document1' } }))
+  })
+
+  test('should include both events and CRM cases if both requested', async () => {
+    const options = {
+      method: 'GET',
+      url: '/api/v1/documents/123e4567-e89b-12d3-a456-426614174000?includeEvents=true&includeCrm=true'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: true, includeCrm: true })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(response.payload).equals(JSON.stringify({ data: { document: 'document1' } }))
   })
@@ -222,7 +246,7 @@ describe('GET /api/v1/documents/{fileId}', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false })
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false, includeCrm: false })
     expect(response.statusCode).toBe(504)
     expect(JSON.parse(response.payload).message).toBe('Operation timed out')
   })
@@ -236,7 +260,7 @@ describe('GET /api/v1/documents/{fileId}', () => {
     }
     const response = await server.inject(options)
 
-    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false })
+    expect(mockGetDocumentByFileId).toHaveBeenCalledWith('123e4567-e89b-12d3-a456-426614174000', { includeEvents: false, includeCrm: false })
     expect(response.statusCode).toBe(500)
     expect(JSON.parse(response.payload).message).toBe('An internal server error occurred')
   })

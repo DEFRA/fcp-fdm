@@ -5,9 +5,9 @@ const maxTimeMS = config.get('mongo.maxTimeMS')
 
 export async function getDocumentByFileId (fileId, options = {}) {
   const { collections } = getMongoDb()
-  const { documents: documentCollection } = collections
+  const { documents: documentCollection, crm: crmCollection } = collections
 
-  const { includeEvents = false } = options
+  const { includeEvents = false, includeCrm = false } = options
 
   const projection = buildProjection(includeEvents)
   const document = await documentCollection.findOne(
@@ -19,7 +19,18 @@ export async function getDocumentByFileId (fileId, options = {}) {
     return null
   }
 
-  return transformDocument(document, includeEvents)
+  const transformedDocument = transformDocument(document, includeEvents)
+
+  if (includeCrm) {
+    const crmCases = await crmCollection.find(
+      { fileId },
+      { readPreference: 'secondaryPreferred', maxTimeMS }
+    ).toArray()
+
+    transformedDocument.crmCases = crmCases.map(({ _id, events, ...crmCase }) => crmCase)
+  }
+
+  return transformedDocument
 }
 
 export async function getDocuments (filters = {}) {

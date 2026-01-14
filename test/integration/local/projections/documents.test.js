@@ -9,6 +9,9 @@ const FILE_ID_2 = '00000000-0000-0000-0000-000000000002'
 const FILE_ID_3 = '00000000-0000-0000-0000-000000000003'
 const FILE_ID_4 = '00000000-0000-0000-0000-000000000004'
 
+const CASE_ID_1 = '00000000-0000-0000-0000-000000000101'
+const CASE_ID_2 = '00000000-0000-0000-0000-000000000102'
+
 const testDocuments = [{
   _id: '507f1f77bcf86cd799439011',
   fileId: FILE_ID_1,
@@ -59,6 +62,34 @@ const testDocuments = [{
   }]
 }]
 
+const testCrmCases = [{
+  _id: '507f1f77bcf86cd799439021',
+  caseId: CASE_ID_1,
+  fileId: FILE_ID_1, // Linked to document 1
+  crn: 1234567890,
+  sbi: 987654321,
+  status: 'open',
+  created: new Date('2024-01-01T10:10:00Z'),
+  lastUpdated: new Date('2024-01-01T10:15:00Z'),
+  events: [{
+    _id: `source1:${CASE_ID_1}`,
+    type: 'uk.gov.fcp.sfd.crm.case.created'
+  }]
+}, {
+  _id: '507f1f77bcf86cd799439022',
+  caseId: CASE_ID_2,
+  fileId: FILE_ID_1, // Also linked to document 1 (multiple cases for same document)
+  crn: 1234567890,
+  sbi: 987654321,
+  status: 'in-progress',
+  created: new Date('2024-01-01T10:20:00Z'),
+  lastUpdated: new Date('2024-01-01T10:25:00Z'),
+  events: [{
+    _id: `source1:${CASE_ID_2}`,
+    type: 'uk.gov.fcp.sfd.crm.case.updated'
+  }]
+}]
+
 const createBaseDocument = (document) => ({
   fileId: document.fileId,
   crn: document.crn,
@@ -85,6 +116,7 @@ beforeAll(async () => {
 beforeEach(async () => {
   await clearAllCollections(collections)
   await collections.documents.insertMany(testDocuments)
+  await collections.crm.insertMany(testCrmCases)
 })
 
 afterAll(async () => {
@@ -223,5 +255,60 @@ describe('getDocumentByFileId', () => {
   test('should handle options with false values correctly', async () => {
     const document = await getDocumentByFileId(FILE_ID_1, { includeEvents: false })
     expect(document).toEqual(createBaseDocument(testDocuments[0]))
+  })
+
+  test('should include CRM cases when includeCrm is true', async () => {
+    const document = await getDocumentByFileId(FILE_ID_1, { includeCrm: true })
+
+    expect(document).toEqual(expect.objectContaining(createBaseDocument(testDocuments[0])))
+    expect(document.crmCases).toHaveLength(2)
+    expect(document.crmCases).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        caseId: CASE_ID_1,
+        fileId: FILE_ID_1,
+        status: 'open'
+      }),
+      expect.objectContaining({
+        caseId: CASE_ID_2,
+        fileId: FILE_ID_1,
+        status: 'in-progress'
+      })
+    ]))
+    // Ensure MongoDB _id is not included in CRM cases
+    document.crmCases.forEach(crmCase => {
+      expect(crmCase._id).toBeUndefined()
+    })
+  })
+
+  test('should exclude events from CRM cases when includeCrm is true', async () => {
+    const document = await getDocumentByFileId(FILE_ID_1, { includeCrm: true })
+
+    expect(document.crmCases).toHaveLength(2)
+    // Ensure events array is not included in CRM cases
+    document.crmCases.forEach(crmCase => {
+      expect(crmCase.events).toBeUndefined()
+    })
+  })
+
+  test('should return empty crmCases array when includeCrm is true but no cases exist', async () => {
+    const document = await getDocumentByFileId(FILE_ID_2, { includeCrm: true })
+
+    expect(document).toEqual(expect.objectContaining(createBaseDocument(testDocuments[1])))
+    expect(document.crmCases).toEqual([])
+  })
+
+  test('should not include crmCases when includeCrm is false', async () => {
+    const document = await getDocumentByFileId(FILE_ID_1, { includeCrm: false })
+
+    expect(document).toEqual(createBaseDocument(testDocuments[0]))
+    expect(document.crmCases).toBeUndefined()
+  })
+
+  test('should include both events and CRM cases when both options are true', async () => {
+    const document = await getDocumentByFileId(FILE_ID_1, { includeEvents: true, includeCrm: true })
+
+    expect(document).toEqual(expect.objectContaining(createDocumentWithEvents(testDocuments[0])))
+    expect(document.crmCases).toHaveLength(2)
+    expect(document.events).toHaveLength(1)
   })
 })

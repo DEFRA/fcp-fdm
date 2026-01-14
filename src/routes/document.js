@@ -48,15 +48,16 @@ const api = [{
         fileId: Joi.string().guid().required().description('The file ID of the document')
       },
       query: {
-        includeEvents: Joi.boolean().default(false).description('Whether to include the event history')
+        includeEvents: Joi.boolean().default(false).description('Whether to include the event history'),
+        includeCrm: Joi.boolean().default(false).description('Whether to include related CRM cases')
       }
     }
   },
   handler: async (request, h) => {
     const { fileId } = request.params
-    const { includeEvents } = request.query
+    const { includeEvents, includeCrm } = request.query
 
-    const document = await getDocumentByFileId(fileId, { includeEvents })
+    const document = await getDocumentByFileId(fileId, { includeEvents, includeCrm })
 
     if (!document) {
       return h.response({ error: `Document not found with fileId: ${fileId}` }).code(HTTP_STATUS_NOT_FOUND)

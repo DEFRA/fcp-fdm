@@ -465,8 +465,8 @@ paths:
         - Documents
       summary: Get document by file ID
       description: |
-        Retrieve a specific document by its file ID. Event history can be optionally 
-        included in the response.
+        Retrieve a specific document by its file ID. Event history and related CRM cases 
+        can be optionally included in the response.
         
         **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
         with appropriate security group membership.
@@ -531,6 +531,32 @@ paths:
                           - type: "uk.gov.fcp.sfd.document.received"
                           - type: "uk.gov.fcp.sfd.document.processing"
                           - type: "uk.gov.fcp.sfd.document.validated"
+                withCrmCases:
+                  summary: Document with related CRM cases
+                  value:
+                    data:
+                      document:
+                        fileId: "550e8400-e29b-41d4-a716-446655440000"
+                        crn: 1234567890
+                        sbi: 987654321
+                        status: "validated"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                        crmCases:
+                          - caseId: "650e8400-e29b-41d4-a716-446655440000"
+                            fileId: "550e8400-e29b-41d4-a716-446655440000"
+                            crn: 1234567890
+                            sbi: 987654321
+                            status: "open"
+                            created: "2024-01-01T10:10:00.000Z"
+                            lastUpdated: "2024-01-01T10:15:00.000Z"
+                          - caseId: "750e8400-e29b-41d4-a716-446655440000"
+                            fileId: "550e8400-e29b-41d4-a716-446655440000"
+                            crn: 1234567890
+                            sbi: 987654321
+                            status: "in-progress"
+                            created: "2024-01-01T10:20:00.000Z"
+                            lastUpdated: "2024-01-01T10:25:00.000Z"
         '401':
           description: Unauthorized - Invalid or missing JWT token
           content:
@@ -1018,6 +1044,11 @@ components:
           description: Event history for this document (included when includeEvents=true)
           items:
             $ref: '#/components/schemas/Event'
+        crmCases:
+          type: array
+          description: Related CRM cases for this document (included when includeCrm=true)
+          items:
+            $ref: '#/components/schemas/CrmCase'
       required:
         - fileId
         - crn
