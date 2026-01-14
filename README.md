@@ -333,7 +333,7 @@ Replace `<account-id>` with CDP environment account ID.
 
 ## API Endpoints
 
-Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml)  
+Complete OpenAPI specification available at: [`docs/openapi.yml`](./docs/openapi.yml).
 
 Interactive API documentation can be found at [http://localhost:3000/documentation](http://localhost:3000/documentation) when running the application in development mode.
 
