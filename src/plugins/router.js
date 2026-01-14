@@ -1,5 +1,7 @@
 import { health } from '../routes/health.js'
 import { messages } from '../routes/messages.js'
+import { documents } from '../routes/document.js'
+import { crm } from '../routes/crm.js'
 
 const router = {
   plugin: {
@@ -8,7 +10,9 @@ const router = {
       server.route(
         [].concat(
           health,
-          messages
+          messages,
+          documents,
+          crm
         )
       )
     }

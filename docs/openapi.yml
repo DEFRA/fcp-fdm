@@ -1,10 +1,9 @@
 openapi: 3.1.0
 info:
-  title: FCP Farming Data Model (FDM) - REST API
-  version: 1.0.0
+  title: FCP Farming Data Model (FDM)
+  version: 1.1.0
   description: |
-    The Farming Data Model (FDM) REST API provides access to aggregated farming and 
-    countryside programme data collected from various FCP services.
+    The Farming Data Model (FDM) REST API provides access to aggregated farming data collected from various FCP services.
   license:
     name: Open Government Licence v3.0
     url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
@@ -12,6 +11,16 @@ info:
 servers:
   - url: http://localhost:3000
     description: Local development server
+  - url: https://fcp-fdm.dev.cdp-int.defra.cloud
+    description: CDP Development environment
+  - url: https://fcp-fdm.test.cdp-int.defra.cloud
+    description: CDP Test environment
+  - url: https://fcp-fdm.perf-test.cdp-int.defra.cloud
+    description: CDP Performance Test environment
+  - url: https://fcp-fdm.ext-test.cdp-int.defra.cloud
+    description: CDP External Test environment
+  - url: https://fcp-fdm.prod.cdp-int.defra.cloud
+    description: CDP Production environment
 
 security:
   - BearerAuth: []
@@ -334,6 +343,457 @@ paths:
                   value:
                     error: "Message not found with correlationId: 550e8400-e29b-41d4-a716-446655440000"
 
+  /api/v1/documents:
+    get:
+      tags:
+        - Documents
+      summary: Get all documents
+      description: |
+        Retrieve all documents with optional filtering by CRN (Customer Reference Number) 
+        or SBI (Single Business Identifier). Event history can be optionally included.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getDocuments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: crn
+          in: query
+          description: Filter documents by Customer Reference Number
+          required: false
+          schema:
+            type: integer
+            example: 1234567890
+        - name: sbi
+          in: query
+          description: Filter documents by Single Business Identifier
+          required: false
+          schema:
+            type: integer
+            example: 987654321
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          description: Page number for paginated results (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 2
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 10
+      responses:
+        '200':
+          description: Successfully retrieved documents
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDocumentsResponse'
+              examples:
+                basic:
+                  summary: Basic paginated documents response
+                  value:
+                    data:
+                      documents:
+                        - fileId: "550e8400-e29b-41d4-a716-446655440000"
+                          crn: 1234567890
+                          sbi: 987654321
+                          status: "validated"
+                          created: "2024-01-01T10:00:00.000Z"
+                          lastUpdated: "2024-01-01T10:05:00.000Z"
+                    links:
+                      self: "/api/v1/documents?page=1&pageSize=20"
+                      next: "/api/v1/documents?page=2&pageSize=20"
+                      prev: null
+                    meta:
+                      page: 1
+                      pageSize: 20
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+
+  /api/v1/documents/{fileId}:
+    get:
+      tags:
+        - Documents
+      summary: Get document by file ID
+      description: |
+        Retrieve a specific document by its file ID. Event history can be optionally 
+        included in the response.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getDocumentByFileId
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: fileId
+          in: path
+          description: The file ID of the document (UUID format)
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully retrieved document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DocumentResponse'
+              examples:
+                basic:
+                  summary: Basic document without events
+                  value:
+                    data:
+                      document:
+                        fileId: "550e8400-e29b-41d4-a716-446655440000"
+                        crn: 1234567890
+                        sbi: 987654321
+                        status: "validated"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                withEvents:
+                  summary: Document with event history
+                  value:
+                    data:
+                      document:
+                        fileId: "550e8400-e29b-41d4-a716-446655440000"
+                        crn: 1234567890
+                        sbi: 987654321
+                        status: "validated"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                        events:
+                          - type: "uk.gov.fcp.sfd.document.received"
+                          - type: "uk.gov.fcp.sfd.document.processing"
+                          - type: "uk.gov.fcp.sfd.document.validated"
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Document not found
+                  value:
+                    error: "Document not found with fileId: 550e8400-e29b-41d4-a716-446655440000"
+
+  /api/v1/crm:
+    get:
+      tags:
+        - CRM
+      summary: Get all CRM cases
+      description: |
+        Retrieve all CRM cases with optional filtering by CRN (Customer Reference Number) 
+        or SBI (Single Business Identifier). Event history can be optionally included.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getCrmCases
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: crn
+          in: query
+          description: Filter CRM cases by Customer Reference Number
+          required: false
+          schema:
+            type: integer
+            example: 1234567890
+        - name: sbi
+          in: query
+          description: Filter CRM cases by Single Business Identifier
+          required: false
+          schema:
+            type: integer
+            example: 987654321
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          description: Page number for paginated results (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 2
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 10
+      responses:
+        '200':
+          description: Successfully retrieved CRM cases
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCrmCasesResponse'
+              examples:
+                basic:
+                  summary: Basic paginated CRM cases response
+                  value:
+                    data:
+                      crmCases:
+                        - caseId: "550e8400-e29b-41d4-a716-446655440000"
+                          crn: 1234567890
+                          sbi: 987654321
+                          status: "open"
+                          created: "2024-01-01T10:00:00.000Z"
+                          lastUpdated: "2024-01-01T10:05:00.000Z"
+                    links:
+                      self: "/api/v1/crm?page=1&pageSize=20"
+                      next: "/api/v1/crm?page=2&pageSize=20"
+                      prev: null
+                    meta:
+                      page: 1
+                      pageSize: 20
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+
+  /api/v1/crm/{caseId}:
+    get:
+      tags:
+        - CRM
+      summary: Get CRM case by case ID
+      description: |
+        Retrieve a specific CRM case by its case ID. Event history can be optionally 
+        included in the response.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getCrmByCaseId
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: caseId
+          in: path
+          description: The case ID of the CRM case (UUID format)
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully retrieved CRM case
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CrmCaseResponse'
+              examples:
+                basic:
+                  summary: Basic CRM case without events
+                  value:
+                    data:
+                      crmCase:
+                        caseId: "550e8400-e29b-41d4-a716-446655440000"
+                        crn: 1234567890
+                        sbi: 987654321
+                        status: "open"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                withEvents:
+                  summary: CRM case with event history
+                  value:
+                    data:
+                      crmCase:
+                        caseId: "550e8400-e29b-41d4-a716-446655440000"
+                        crn: 1234567890
+                        sbi: 987654321
+                        status: "open"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                        events:
+                          - type: "uk.gov.fcp.sfd.crm.case.created"
+                          - type: "uk.gov.fcp.sfd.crm.case.updated"
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+        '404':
+          description: CRM case not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: CRM case not found
+                  value:
+                    error: "CRM case not found with caseId: 550e8400-e29b-41d4-a716-446655440000"
+
 tags:
   - name: Health
     description: Service health and monitoring endpoints
@@ -341,6 +801,10 @@ tags:
     description: API documentation and exploration
   - name: Messages
     description: Message data access and querying endpoints
+  - name: Documents
+    description: Document data access and querying endpoints
+  - name: CRM
+    description: CRM case data access and querying endpoints
 
 components:
   schemas:
@@ -511,6 +975,232 @@ components:
               $ref: '#/components/schemas/Message'
           required:
             - message
+      required:
+        - data
+
+    Document:
+      type: object
+      properties:
+        fileId:
+          type: string
+          format: uuid
+          description: Unique file identifier for the document
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        crn:
+          type: integer
+          description: Customer Reference Number
+          example: 1234567890
+        sbi:
+          type: integer
+          description: Single Business Identifier
+          example: 987654321
+        status:
+          type: string
+          description: Current status of the document
+          enum:
+            - "received"
+            - "processing"
+            - "validated"
+            - "rejected"
+          example: "validated"
+        created:
+          type: string
+          format: date-time
+          description: When the document was first created
+          example: "2024-01-01T10:00:00.000Z"
+        lastUpdated:
+          type: string
+          format: date-time
+          description: When the document was last updated
+          example: "2024-01-01T10:05:00.000Z"
+        events:
+          type: array
+          description: Event history for this document (included when includeEvents=true)
+          items:
+            $ref: '#/components/schemas/Event'
+      required:
+        - fileId
+        - crn
+        - sbi
+        - status
+        - created
+        - lastUpdated
+
+    PaginatedDocumentsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            documents:
+              type: array
+              items:
+                $ref: '#/components/schemas/Document'
+          required:
+            - documents
+        links:
+          type: object
+          description: Pagination links for navigation
+          properties:
+            self:
+              type: string
+              format: uri
+              description: Link to the current page
+            next:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the next page, if available
+            prev:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the previous page, if available
+          required:
+            - self
+        meta:
+          type: object
+          description: Pagination metadata
+          properties:
+            page:
+              type: integer
+              description: Current page number
+            pageSize:
+              type: integer
+              description: Number of items per page
+          required:
+            - page
+            - pageSize
+      required:
+        - data
+        - links
+        - meta
+
+    DocumentResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            document:
+              $ref: '#/components/schemas/Document'
+          required:
+            - document
+      required:
+        - data
+
+    CrmCase:
+      type: object
+      properties:
+        caseId:
+          type: string
+          format: uuid
+          description: Unique case identifier for the CRM case
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        crn:
+          type: integer
+          description: Customer Reference Number
+          example: 1234567890
+        sbi:
+          type: integer
+          description: Single Business Identifier
+          example: 987654321
+        status:
+          type: string
+          description: Current status of the CRM case
+          enum:
+            - "open"
+            - "in-progress"
+            - "resolved"
+            - "closed"
+          example: "open"
+        created:
+          type: string
+          format: date-time
+          description: When the CRM case was first created
+          example: "2024-01-01T10:00:00.000Z"
+        lastUpdated:
+          type: string
+          format: date-time
+          description: When the CRM case was last updated
+          example: "2024-01-01T10:05:00.000Z"
+        events:
+          type: array
+          description: Event history for this CRM case (included when includeEvents=true)
+          items:
+            $ref: '#/components/schemas/Event'
+      required:
+        - caseId
+        - crn
+        - sbi
+        - status
+        - created
+        - lastUpdated
+
+    PaginatedCrmCasesResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            crmCases:
+              type: array
+              items:
+                $ref: '#/components/schemas/CrmCase'
+          required:
+            - crmCases
+        links:
+          type: object
+          description: Pagination links for navigation
+          properties:
+            self:
+              type: string
+              format: uri
+              description: Link to the current page
+            next:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the next page, if available
+            prev:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the previous page, if available
+          required:
+            - self
+        meta:
+          type: object
+          description: Pagination metadata
+          properties:
+            page:
+              type: integer
+              description: Current page number
+            pageSize:
+              type: integer
+              description: Number of items per page
+          required:
+            - page
+            - pageSize
+      required:
+        - data
+        - links
+        - meta
+
+    CrmCaseResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            crmCase:
+              $ref: '#/components/schemas/CrmCase'
+          required:
+            - crmCase
       required:
         - data
 
