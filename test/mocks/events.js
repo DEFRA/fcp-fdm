@@ -24,7 +24,7 @@ export const messageRequest = {
   }
 }
 
-export const validationFailure = {
+export const messageValidationFailure = {
   id: '550e8400-e29b-41d4-a716-446655440002',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -44,7 +44,7 @@ export const validationFailure = {
   }
 }
 
-export const statusSending = {
+export const messageSending = {
   id: '550e8400-e29b-41d4-a716-446655440003',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -60,7 +60,7 @@ export const statusSending = {
   }
 }
 
-export const statusDelivered = {
+export const messageDelivered = {
   id: '550e8400-e29b-41d4-a716-446655440004',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -76,7 +76,7 @@ export const statusDelivered = {
   }
 }
 
-export const statusProviderFailure = {
+export const messageProviderFailure = {
   id: '550e8400-e29b-41d4-a716-446655440005',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -92,7 +92,7 @@ export const statusProviderFailure = {
   }
 }
 
-export const statusInternalFailure = {
+export const messageInternalFailure = {
   id: '550e8400-e29b-41d4-a716-446655440006',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -141,7 +141,7 @@ export const messageRetryRequest = {
   }
 }
 
-export const statusRetryExpired = {
+export const messageRetryExpired = {
   id: '550e8400-e29b-41d4-a716-446655440008',
   source: 'fcp-sfd-comms',
   specversion: '1.0',
@@ -151,5 +151,79 @@ export const statusRetryExpired = {
   data: {
     correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
     recipient: 'farmer@example.com'
+  }
+}
+
+export const documentUpload = {
+  id: '650e8400-e29b-41d4-a716-446655440001',
+  source: 'fcp-sfd-object-processor',
+  specversion: '1.0',
+  type: 'uk.gov.fcp.sfd.document.uploaded',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:48:01.000Z',
+  data: {
+    correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
+    crn: 1234567890,
+    sbi: 123456789,
+    file: {
+      fileId: 'file-123',
+      fileName: 'document.pdf',
+      contentType: 'application/pdf',
+      url: 'https://example.com/document.pdf'
+    }
+  }
+}
+
+export const documentDeleted = {
+  id: '650e8400-e29b-41d4-a716-446655440002',
+  source: 'fcp-sfd-object-processor',
+  specversion: '1.0',
+  type: 'uk.gov.fcp.sfd.document.deleted',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:50:01.000Z',
+  data: {
+    correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
+    crn: 1234567890,
+    sbi: 123456789,
+    file: {
+      fileId: 'file-123',
+      fileName: 'document.pdf',
+      contentType: 'application/pdf',
+      url: 'https://example.com/document.pdf'
+    }
+  }
+}
+
+export const crmCaseCreated = {
+  id: '750e8400-e29b-41d4-a716-446655440001',
+  source: 'fcp-sfd-crm',
+  specversion: '1.0',
+  type: 'uk.gov.fcp.sfd.crm.case.created',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:48:01.000Z',
+  data: {
+    correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
+    crn: 1234567890,
+    sbi: 123456789,
+    caseId: 'case-123',
+    caseType: 'DOCUMENT_UPLOAD',
+    fileId: 'file-123'
+  }
+}
+
+export const crmCaseUpdated = {
+  id: '750e8400-e29b-41d4-a716-446655440002',
+  source: 'fcp-sfd-crm',
+  specversion: '1.0',
+  type: 'uk.gov.fcp.sfd.crm.case.updated',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:50:01.000Z',
+  data: {
+    correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
+    crn: 1234567890,
+    sbi: 123456789,
+    caseId: 'case-123',
+    caseType: 'DOCUMENT_UPLOAD',
+    fileId: 'file-123'
   }
 }

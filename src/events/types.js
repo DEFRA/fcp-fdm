@@ -7,6 +7,14 @@ export function getEventType (type) {
     return MESSAGE_EVENT
   }
 
+  if (type.startsWith(DOCUMENT_EVENT_PREFIX)) {
+    return DOCUMENT_EVENT
+  }
+
+  if (type.startsWith(CRM_EVENT_PREFIX)) {
+    return CRM_EVENT
+  }
+
   throw new Error(`Unknown event type: ${type}`)
 }
 
@@ -16,12 +24,22 @@ const MESSAGE_EVENT_REJECTED = 'messageRejected'
 const MESSAGE_EVENT_PREFIX = 'uk.gov.fcp.sfd.notification.'
 const MESSAGE_EVENT = 'message'
 
+const DOCUMENT_EVENT_PREFIX = 'uk.gov.fcp.sfd.document.'
+const DOCUMENT_EVENT = 'document'
+
+const CRM_EVENT_PREFIX = 'uk.gov.fcp.sfd.crm.'
+const CRM_EVENT = 'crm'
+
 export const eventTypes = {
   MESSAGE_EVENT,
-  MESSAGE_EVENT_REJECTED
+  MESSAGE_EVENT_REJECTED,
+  DOCUMENT_EVENT,
+  CRM_EVENT
 }
 
 export const eventTypePrefixes = {
   MESSAGE_EVENT_PREFIX,
-  MESSAGE_EVENT_REJECTED_PREFIX
+  MESSAGE_EVENT_REJECTED_PREFIX,
+  DOCUMENT_EVENT_PREFIX,
+  CRM_EVENT_PREFIX
 }

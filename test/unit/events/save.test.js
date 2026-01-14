@@ -7,6 +7,14 @@ vi.mock('../../../src/events/save/message.js', () => ({
   save: mockSave
 }))
 
+vi.mock('../../../src/events/save/document.js', () => ({
+  save: mockSave
+}))
+
+vi.mock('../../../src/events/save/crm.js', () => ({
+  save: mockSave
+}))
+
 vi.mock('../../../src/events/save/no-save.js', () => ({
   save: mockNoSave
 }))

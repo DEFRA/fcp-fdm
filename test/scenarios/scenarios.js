@@ -1,71 +1,96 @@
 import * as events from '../mocks/events.js'
 
 export const singleEvents = {
+  // Message events
   messageRequest: [events.messageRequest],
-  validationFailure: [events.validationFailure],
-  statusSending: [events.statusSending],
-  statusDelivered: [events.statusDelivered],
-  statusProviderFailure: [events.statusProviderFailure],
-  statusInternalFailure: [events.statusInternalFailure],
+  messageValidationFailure: [events.messageValidationFailure],
+  messageSending: [events.messageSending],
+  messageDelivered: [events.messageDelivered],
+  messageProviderFailure: [events.messageProviderFailure],
+  messageInternalFailure: [events.messageInternalFailure],
   messageRetryRequest: [events.messageRetryRequest],
-  statusRetryExpired: [events.statusRetryExpired]
+  messageRetryExpired: [events.messageRetryExpired],
+
+  // Document events
+  documentUploaded: [events.documentUpload],
+  documentDeleted: [events.documentDeleted],
+
+  // CRM events
+  crmCaseCreated: [events.crmCaseCreated],
+  crmCaseUpdated: [events.crmCaseUpdated]
 }
 
 export const completeStreams = {
   /**
-   * Happy Path: Message request → Sending → Delivered
+   * Message Happy Path: Message request → Sending → Delivered
    */
-  successful: [
+  messageSuccessful: [
     events.messageRequest,
-    events.statusSending,
-    events.statusDelivered
+    events.messageSending,
+    events.messageDelivered
   ],
 
   /**
-   * Validation Failure Path: Message request fails validation immediately
+   * Message Validation Failure Path: Message request fails validation immediately
    */
-  validationFailure: [
+  messageValidationFailure: [
     events.messageRequest,
-    events.validationFailure
+    events.messageValidationFailure
   ],
 
   /**
-   * Provider Failure Path: Message request → Sending → Provider failure
+   * Message Provider Failure Path: Message request → Sending → Provider failure
    */
-  providerFailure: [
+  messageProviderFailure: [
     events.messageRequest,
-    events.statusSending,
-    events.statusProviderFailure
+    events.messageSending,
+    events.messageProviderFailure
   ],
 
   /**
-   * Internal Failure Path: Message request → Internal failure
+   * Message Internal Failure Path: Message request → Internal failure
    */
-  internalFailure: [
+  messageInternalFailure: [
     events.messageRequest,
-    events.statusInternalFailure
+    events.messageInternalFailure
   ],
 
   /**
-   * Retry Success Path: Message request → Internal failure → Retry → Sending → Delivered
+   * Message Retry Success Path: Message request → Internal failure → Retry → Sending → Delivered
    */
-  retrySuccess: [
+  messageRetrySuccess: [
     events.messageRequest,
-    events.statusInternalFailure,
+    events.messageInternalFailure,
     events.messageRetryRequest,
-    events.statusSending,
-    events.statusDelivered
+    events.messageSending,
+    events.messageDelivered
   ],
 
   /**
-   * Retry Failure Path: Message request → Failure → Retry → Failure → Retry expired
+   * Message Retry Failure Path: Message request → Failure → Retry → Failure → Retry expired
    */
-  retryFailure: [
+  messageRetryFailure: [
     events.messageRequest,
-    events.statusInternalFailure,
+    events.messageInternalFailure,
     events.messageRetryRequest,
-    { ...events.statusInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
-    events.statusRetryExpired
+    { ...events.messageInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
+    events.messageRetryExpired
+  ],
+
+  /**
+   * Document uploaded and deleted
+   */
+  documentUploadedAndDeleted: [
+    events.documentUpload,
+    events.documentDeleted
+  ],
+
+  /**
+   * CRM case created and updated
+   */
+  crmCaseCreatedAndUpdated: [
+    events.crmCaseCreated,
+    events.crmCaseUpdated
   ]
 }
 

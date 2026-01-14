@@ -3,6 +3,8 @@ import { config } from '../../config/config.js'
 
 const EVENT_COLLECTION_NAME = 'events'
 const MESSAGE_COLLECTION_NAME = 'messages'
+const DOCUMENT_COLLECTION_NAME = 'documents'
+const CRM_COLLECTION_NAME = 'crm'
 
 const mongo = {
   collections: {}
@@ -40,7 +42,9 @@ export async function createMongoDbConnection (options) {
     mongo.databaseName = options.databaseName
     mongo.collections = {
       events: mongo.db.collection(EVENT_COLLECTION_NAME),
-      messages: mongo.db.collection(MESSAGE_COLLECTION_NAME)
+      messages: mongo.db.collection(MESSAGE_COLLECTION_NAME),
+      documents: mongo.db.collection(DOCUMENT_COLLECTION_NAME),
+      crm: mongo.db.collection(CRM_COLLECTION_NAME)
     }
 
     await createIndexes(mongo.db)
@@ -63,6 +67,14 @@ async function createIndexes (db) {
   await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_created' })
   await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_sbi_created' })
   await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'messages_by_crn_sbi_created' })
+  await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ created: -1, _id: -1 }, { name: 'documents_by_created' })
+  await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'documents_by_crn_created' })
+  await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'documents_by_sbi_created' })
+  await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'documents_by_crn_sbi_created' })
+  await db.collection(CRM_COLLECTION_NAME).createIndex({ created: -1, _id: -1 }, { name: 'crm_by_created' })
+  await db.collection(CRM_COLLECTION_NAME).createIndex({ crn: 1, created: -1, _id: -1 }, { name: 'crm_by_crn_created' })
+  await db.collection(CRM_COLLECTION_NAME).createIndex({ sbi: 1, created: -1, _id: -1 }, { name: 'crm_by_sbi_created' })
+  await db.collection(CRM_COLLECTION_NAME).createIndex({ crn: 1, sbi: 1, created: -1, _id: -1 }, { name: 'crm_by_crn_sbi_created' })
 }
 
 async function configureGlobalTtlIndexes (db) {
@@ -71,6 +83,8 @@ async function configureGlobalTtlIndexes (db) {
   if (globalTtl) {
     await db.collection(EVENT_COLLECTION_NAME).createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
     await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'documents_ttl', expireAfterSeconds: globalTtl })
+    await db.collection(CRM_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'crm_ttl', expireAfterSeconds: globalTtl })
   } else {
     await removeTtlIndexes(db)
   }
@@ -80,7 +94,9 @@ async function removeTtlIndexes (db) {
   const collections = await db.listCollections().toArray()
   const ttlIndexesToRemove = [
     { collection: EVENT_COLLECTION_NAME, indexName: 'events_ttl' },
-    { collection: MESSAGE_COLLECTION_NAME, indexName: 'messages_ttl' }
+    { collection: MESSAGE_COLLECTION_NAME, indexName: 'messages_ttl' },
+    { collection: DOCUMENT_COLLECTION_NAME, indexName: 'documents_ttl' },
+    { collection: CRM_COLLECTION_NAME, indexName: 'crm_ttl' }
   ]
 
   for (const { collection, indexName } of ttlIndexesToRemove) {

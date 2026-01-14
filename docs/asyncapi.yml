@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.1.0
+  version: 1.2.0
   description: |
     The FDM service consumes events from FCP services via AWS SQS to build
     a farming data model to support data exchange via the Data Access Layer (DAL).
@@ -88,6 +88,10 @@ channels:
     messages:
       commsEvent:
         $ref: '#/components/messages/CommsEvent'
+      documentEvent:
+        $ref: '#/components/messages/DocumentEvent'
+      crmEvent:
+        $ref: '#/components/messages/CRMEvent'
 
 operations:
   receiveEvents:
@@ -99,6 +103,8 @@ operations:
       Consumes events from the SQS queue. Events are validated, persisted and aggregated.
     messages:
       - $ref: '#/channels/eventQueue/messages/commsEvent'
+      - $ref: '#/channels/eventQueue/messages/documentEvent'
+      - $ref: '#/channels/eventQueue/messages/crmEvent'
 
 components:
   messages:
@@ -140,6 +146,96 @@ components:
               content:
                 subject: "Your application update"
                 body: "Your application has been received"
+
+    DocumentEvent:
+      name: DocumentEvent
+      title: Document Event
+      summary: CloudEvent for document lifecycle events from fcp-sfd-object-processor
+      description: |
+        Document events from the Single Front Door Object Processor service.
+        
+        These events follow the CloudEvents 1.0 specification and track the lifecycle
+        of documents including uploaded and deleted states.
+        
+        **Processing:**
+        - Events are validated for required CloudEvents fields and document-specific data
+        - Aggregated by `correlationId` and `fileId` to track document lifecycle across multiple events
+        
+        **Event Types:** All events with type prefix `uk.gov.fcp.sfd.document.*`
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/DocumentEventPayload'
+      examples:
+        - name: uploadedEvent
+          summary: Document uploaded event
+          payload:
+            specversion: "1.0"
+            type: "uk.gov.fcp.sfd.document.uploaded"
+            source: "fcp-sfd-object-processor"
+            id: "650e8400-e29b-41d4-a716-446655440001"
+            time: "2026-01-13T14:48:01Z"
+            subject: "Document upload"
+            datacontenttype: "application/json"
+            data:
+              correlationId: "89389915-7275-457a-b8ca-8bf206b2e67b"
+              crn: 1234567890
+              sbi: 123456789
+              file:
+                fileId: "file-123"
+                fileName: "document.pdf"
+                contentType: "application/pdf"
+                url: "https://example.com/document.pdf"
+    CRMEvent:
+      name: CRMEvent
+      title: CRM Event
+      summary: CloudEvent for CRM case lifecycle events from fcp-sfd-crm
+      description: |
+        CRM events from the FCP CRM service.
+        
+        These events follow the CloudEvents 1.0 specification and track the lifecycle
+        of CRM cases including created and updated states.
+        
+        **Processing:**
+        - Events are validated for required CloudEvents fields and CRM-specific data
+        - Aggregated by `correlationId` and `caseId` to track CRM case lifecycle across multiple events
+        
+        **Event Types:** All events with type prefix `uk.gov.fcp.sfd.crm.*`
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/CRMEventPayload'
+      examples:
+        - name: caseCreatedEvent
+          summary: CRM case created event
+          payload:
+            specversion: "1.0"
+            type: "uk.gov.fcp.sfd.crm.case.created"
+            source: "fcp-sfd-crm"
+            id: "750e8400-e29b-41d4-a716-446655440001"
+            time: "2026-01-13T14:48:01Z"
+            subject: "CRM case created"
+            datacontenttype: "application/json"
+            data:
+              correlationId: "99389915-7275-457a-b8ca-8bf206b2e67b"
+              crn: 1234567890
+              sbi: 123456789
+              caseId: "case-123"
+              caseType: "DOCUMENT_UPLOAD"
+        - name: caseUpdatedEvent
+          summary: CRM case updated event
+          payload:
+            specversion: "1.0"
+            type: "uk.gov.fcp.sfd.crm.case.updated"
+            source: "fcp-sfd-crm"
+            id: "750e8400-e29b-41d4-a716-446655440002"
+            time: "2026-01-13T14:50:01Z"
+            subject: "CRM case updated"
+            datacontenttype: "application/json"
+            data:
+              correlationId: "99389915-7275-457a-b8ca-8bf206b2e67b"
+              crn: 1234567890
+              sbi: 123456789
+              caseId: "case-123"
+              caseType: "DOCUMENT_UPLOAD"
 
   schemas:
     CommsEventPayload:
@@ -225,3 +321,178 @@ components:
             body:
               type: string
               description: Message body
+
+    DocumentEventPayload:
+      description: CloudEvent envelope for document events
+      type: object
+      required:
+        - specversion
+        - type
+        - source
+        - id
+        - time
+        - data
+      properties:
+        specversion:
+          type: string
+          const: "1.0"
+          description: CloudEvents specification version
+        type:
+          type: string
+          pattern: "^uk\\.gov\\.fcp\\.sfd\\.document\\."
+          description: Event type identifier
+          examples:
+            - "uk.gov.fcp.sfd.document.uploaded"
+            - "uk.gov.fcp.sfd.document.deleted"
+        source:
+          type: string
+          description: Source service identifier
+          examples:
+            - "fcp-sfd-object-processor"
+        id:
+          type: string
+          format: uuid
+          description: Unique event identifier
+        time:
+          type: string
+          format: date-time
+          description: Event timestamp (ISO 8601)
+        subject:
+          type: string
+          description: Event subject/context
+        datacontenttype:
+          type: string
+          description: Content type of the data payload
+          default: "application/json"
+        data:
+          $ref: '#/components/schemas/DocumentEventData'
+
+    DocumentEventData:
+      description: Document event data - all fields are required
+      type: object
+      required:
+        - correlationId
+        - crn
+        - sbi
+        - file
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for aggregating related document events
+        crn:
+          type: integer
+          description: Customer Reference Number
+          minimum: 1050000000
+          maximum: 9999999999
+        sbi:
+          type: integer
+          description: Single Business Identifier
+          minimum: 105000000
+          maximum: 999999999
+        file:
+          type: object
+          description: File details
+          required:
+            - fileId
+            - fileName
+            - contentType
+            - url
+          properties:
+            fileId:
+              type: string
+              description: Unique file identifier
+            fileName:
+              type: string
+              description: Original file name
+            contentType:
+              type: string
+              description: MIME type of the file
+              examples:
+                - "application/pdf"
+                - "image/jpeg"
+                - "application/msword"
+            url:
+              type: string
+              format: uri
+              description: URL to access the file
+
+    CRMEventPayload:
+      description: CloudEvent envelope for CRM events
+      type: object
+      required:
+        - specversion
+        - type
+        - source
+        - id
+        - time
+        - data
+      properties:
+        specversion:
+          type: string
+          const: "1.0"
+          description: CloudEvents specification version
+        type:
+          type: string
+          pattern: "^uk\\.gov\\.fcp\\.sfd\\.crm\\."
+          description: Event type identifier
+          examples:
+            - "uk.gov.fcp.sfd.crm.case.created"
+            - "uk.gov.fcp.sfd.crm.case.updated"
+        source:
+          type: string
+          description: Source service identifier
+          examples:
+            - "fcp-sfd-crm"
+        id:
+          type: string
+          format: uuid
+          description: Unique event identifier
+        time:
+          type: string
+          format: date-time
+          description: Event timestamp (ISO 8601)
+        subject:
+          type: string
+          description: Event subject/context
+        datacontenttype:
+          type: string
+          description: Content type of the data payload
+          default: "application/json"
+        data:
+          $ref: '#/components/schemas/CRMEventData'
+
+    CRMEventData:
+      description: CRM event data - all fields are required
+      type: object
+      required:
+        - correlationId
+        - crn
+        - sbi
+        - caseId
+        - caseType
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for aggregating related CRM events
+        crn:
+          type: integer
+          description: Customer Reference Number
+          minimum: 1050000000
+          maximum: 9999999999
+        sbi:
+          type: integer
+          description: Single Business Identifier
+          minimum: 105000000
+          maximum: 999999999
+        caseId:
+          type: string
+          description: Unique CRM case identifier
+        caseType:
+          type: string
+          description: Type of CRM case
+          examples:
+            - "DOCUMENT_UPLOAD"
+            - "QUERY"
+            - "COMPLAINT"
