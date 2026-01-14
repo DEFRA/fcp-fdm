@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.2.0
+  version: 1.2.1
   description: |
     The FDM service consumes events from FCP services via AWS SQS to build
     a farming data model to support data exchange via the Data Access Layer (DAL).
@@ -86,8 +86,8 @@ channels:
     address: fcp_fdm_events
     description: SQS queue for consuming events from all FCP services
     messages:
-      commsEvent:
-        $ref: '#/components/messages/CommsEvent'
+      messageEvent:
+        $ref: '#/components/messages/MessageEvent'
       documentEvent:
         $ref: '#/components/messages/DocumentEvent'
       crmEvent:
@@ -102,31 +102,31 @@ operations:
     description: |
       Consumes events from the SQS queue. Events are validated, persisted and aggregated.
     messages:
-      - $ref: '#/channels/eventQueue/messages/commsEvent'
+      - $ref: '#/channels/eventQueue/messages/messageEvent'
       - $ref: '#/channels/eventQueue/messages/documentEvent'
       - $ref: '#/channels/eventQueue/messages/crmEvent'
 
 components:
   messages:
-    CommsEvent:
-      name: CommsEvent
-      title: Comms Event
-      summary: CloudEvent for comms lifecycle events from fcp-sfd-comms
+    MessageEvent:
+      name: MessageEvent
+      title: Message Event
+      summary: CloudEvent for message lifecycle events from fcp-sfd-comms
       description: |
-        Comms events from the Single Front Door Comms service.
+        Message events from the Single Front Door Comms service.
         
         These events follow the CloudEvents 1.0 specification and track the lifecycle
         of communications including received, sending, delivered, retry, failure,
         and retry.expired states.
         
         **Processing:**
-        - Events are validated for required CloudEvents fields and comms-specific data
-        - Aggregated by `correlationId` to track comms lifecycle across multiple events
+        - Events are validated for required CloudEvents fields and message-specific data
+        - Aggregated by `correlationId` to track message lifecycle across multiple events
         
         **Event Types:** All events with type prefix `uk.gov.fcp.sfd.notification.*`
       contentType: application/json
       payload:
-        $ref: '#/components/schemas/CommsEventPayload'
+        $ref: '#/components/schemas/MessageEventPayload'
       examples:
         - name: receivedEvent
           summary: Message received event
@@ -238,8 +238,8 @@ components:
               caseType: "DOCUMENT_UPLOAD"
 
   schemas:
-    CommsEventPayload:
-      description: CloudEvent envelope for comms events
+    MessageEventPayload:
+      description: CloudEvent envelope for message events
       type: object
       required:
         - specversion
@@ -285,10 +285,10 @@ components:
           description: Content type of the data payload
           default: "application/json"
         data:
-          $ref: '#/components/schemas/CommsEventData'
+          $ref: '#/components/schemas/MessageEventData'
 
-    CommsEventData:
-      description: Comms event data - only correlationId and recipient are required
+    MessageEventData:
+      description: Message event data - only correlationId and recipient are required
       type: object
       required:
         - correlationId
@@ -297,7 +297,7 @@ components:
         correlationId:
           type: string
           format: uuid
-          description: Correlation ID for aggregating related comms events
+          description: Correlation ID for aggregating related message events
         recipient:
           type: string
           description: Message recipient (email, phone, or postal address)
