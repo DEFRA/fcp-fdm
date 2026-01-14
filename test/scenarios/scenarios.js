@@ -1,6 +1,7 @@
 import * as events from '../mocks/events.js'
 
 export const singleEvents = {
+  // Message events
   messageRequest: [events.messageRequest],
   validationFailure: [events.validationFailure],
   statusSending: [events.statusSending],
@@ -8,12 +9,20 @@ export const singleEvents = {
   statusProviderFailure: [events.statusProviderFailure],
   statusInternalFailure: [events.statusInternalFailure],
   messageRetryRequest: [events.messageRetryRequest],
-  statusRetryExpired: [events.statusRetryExpired]
+  statusRetryExpired: [events.statusRetryExpired],
+
+  // Document events
+  documentUploaded: [events.documentUpload],
+  documentDeleted: [events.documentDeleted],
+
+  // CRM events
+  crmCaseCreated: [events.crmCaseCreated],
+  crmCaseUpdated: [events.crmCaseUpdated]
 }
 
 export const completeStreams = {
   /**
-   * Happy Path: Message request → Sending → Delivered
+   * Message Happy Path: Message request → Sending → Delivered
    */
   successful: [
     events.messageRequest,
@@ -22,7 +31,7 @@ export const completeStreams = {
   ],
 
   /**
-   * Validation Failure Path: Message request fails validation immediately
+   * Message Validation Failure Path: Message request fails validation immediately
    */
   validationFailure: [
     events.messageRequest,
@@ -30,7 +39,7 @@ export const completeStreams = {
   ],
 
   /**
-   * Provider Failure Path: Message request → Sending → Provider failure
+   * Message Provider Failure Path: Message request → Sending → Provider failure
    */
   providerFailure: [
     events.messageRequest,
@@ -39,7 +48,7 @@ export const completeStreams = {
   ],
 
   /**
-   * Internal Failure Path: Message request → Internal failure
+   * Message Internal Failure Path: Message request → Internal failure
    */
   internalFailure: [
     events.messageRequest,
@@ -47,7 +56,7 @@ export const completeStreams = {
   ],
 
   /**
-   * Retry Success Path: Message request → Internal failure → Retry → Sending → Delivered
+   * Message Retry Success Path: Message request → Internal failure → Retry → Sending → Delivered
    */
   retrySuccess: [
     events.messageRequest,
@@ -58,7 +67,7 @@ export const completeStreams = {
   ],
 
   /**
-   * Retry Failure Path: Message request → Failure → Retry → Failure → Retry expired
+   * Message Retry Failure Path: Message request → Failure → Retry → Failure → Retry expired
    */
   retryFailure: [
     events.messageRequest,
@@ -66,6 +75,22 @@ export const completeStreams = {
     events.messageRetryRequest,
     { ...events.statusInternalFailure, id: '550e8400-e29b-41d4-a716-446655440099', time: '2023-10-17T14:52:00.000Z' },
     events.statusRetryExpired
+  ],
+
+  /**
+   * Document uploaded and deleted
+   */
+  documentUploadedAndDeleted: [
+    events.documentUpload,
+    events.documentDeleted
+  ],
+
+  /**
+   * CRM case created and updated
+   */
+  crmCaseCreatedAndUpdated: [
+    events.crmCaseCreated,
+    events.crmCaseUpdated
   ]
 }
 
