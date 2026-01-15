@@ -188,4 +188,143 @@ describe('save', () => {
     expect(savedCrm.caseId).toBe(event.data.caseId)
     expect(savedCrm.caseType).toBe(event.data.caseType)
   })
+
+  test('should extract and store fileIds from onlineSubmissionActivities on insert', async () => {
+    const event = {
+      ...crmCaseCreated,
+      data: {
+        ...crmCaseCreated.data,
+        onlineSubmissionActivities: [
+          { id: 'ols-1', fileId: 'file-001', time: '2023-10-17T14:48:00.000Z' },
+          { id: 'ols-2', fileId: 'file-002', time: '2023-10-17T14:48:01.000Z' }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const savedCrm = await collections.crm.findOne({
+      _id: `${event.data.correlationId}:${event.data.caseId}`
+    })
+
+    expect(savedCrm).toBeDefined()
+    expect(savedCrm.fileIds).toEqual(['file-001', 'file-002'])
+  })
+
+  test('should merge new fileIds on update without duplicates', async () => {
+    const event = {
+      ...crmCaseCreated,
+      data: {
+        ...crmCaseCreated.data,
+        onlineSubmissionActivities: [
+          { id: 'ols-1', fileId: 'file-001', time: '2023-10-17T14:48:00.000Z' },
+          { id: 'ols-2', fileId: 'file-002', time: '2023-10-17T14:48:01.000Z' }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const updateEvent = {
+      ...event,
+      id: `${event.id}-update`,
+      time: new Date(new Date(event.time).getTime() + 1000).toISOString(),
+      data: {
+        ...event.data,
+        onlineSubmissionActivities: [
+          { id: 'ols-2', fileId: 'file-002', time: '2023-10-17T14:48:01.000Z' }, // Duplicate
+          { id: 'ols-3', fileId: 'file-003', time: '2023-10-17T14:48:02.000Z' }  // New
+        ]
+      }
+    }
+
+    await save(updateEvent)
+
+    const savedCrm = await collections.crm.findOne({
+      _id: `${event.data.correlationId}:${event.data.caseId}`
+    })
+
+    expect(savedCrm).toBeDefined()
+    expect(savedCrm.fileIds).toHaveLength(3)
+    expect(savedCrm.fileIds).toEqual(expect.arrayContaining(['file-001', 'file-002', 'file-003']))
+  })
+
+  test('should initialize empty fileIds array when no onlineSubmissionActivities', async () => {
+    const event = {
+      ...crmCaseCreated,
+      data: {
+        correlationId: crmCaseCreated.data.correlationId,
+        crn: crmCaseCreated.data.crn,
+        sbi: crmCaseCreated.data.sbi,
+        caseId: crmCaseCreated.data.caseId,
+        caseType: crmCaseCreated.data.caseType
+        // No onlineSubmissionActivities
+      }
+    }
+
+    await save(event)
+
+    const savedCrm = await collections.crm.findOne({
+      _id: `${event.data.correlationId}:${event.data.caseId}`
+    })
+
+    expect(savedCrm).toBeDefined()
+    expect(savedCrm.fileIds).toEqual([])
+  })
+
+  test('should filter out activities without fileId', async () => {
+    const event = {
+      ...crmCaseCreated,
+      data: {
+        ...crmCaseCreated.data,
+        onlineSubmissionActivities: [
+          { id: 'ols-1', fileId: 'file-001', time: '2023-10-17T14:48:00.000Z' },
+          { id: 'ols-2', time: '2023-10-17T14:48:01.000Z' }, // No fileId
+          { id: 'ols-3', fileId: 'file-003', time: '2023-10-17T14:48:02.000Z' }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const savedCrm = await collections.crm.findOne({
+      _id: `${event.data.correlationId}:${event.data.caseId}`
+    })
+
+    expect(savedCrm).toBeDefined()
+    expect(savedCrm.fileIds).toEqual(['file-001', 'file-003'])
+  })
+
+  test('should preserve existing fileIds when update has no new fileIds', async () => {
+    const event = {
+      ...crmCaseCreated,
+      data: {
+        ...crmCaseCreated.data,
+        onlineSubmissionActivities: [
+          { id: 'ols-1', fileId: 'file-001', time: '2023-10-17T14:48:00.000Z' }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const updateEvent = {
+      ...event,
+      id: `${event.id}-update`,
+      time: new Date(new Date(event.time).getTime() + 1000).toISOString(),
+      data: {
+        ...event.data,
+        onlineSubmissionActivities: [] // No new fileIds
+      }
+    }
+
+    await save(updateEvent)
+
+    const savedCrm = await collections.crm.findOne({
+      _id: `${event.data.correlationId}:${event.data.caseId}`
+    })
+
+    expect(savedCrm).toBeDefined()
+    expect(savedCrm.fileIds).toEqual(['file-001'])
+  })
 })

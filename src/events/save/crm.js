@@ -31,9 +31,15 @@ export async function save (event) {
 }
 
 async function upsertDocument (event, eventEntity, crmCollection, now) {
-  const { correlationId, caseId } = event.data
+  const { correlationId, caseId, onlineSubmissionActivities } = event.data
 
   const status = extractStatus(event.type)
+
+  const incomingFileIds = onlineSubmissionActivities
+    ? onlineSubmissionActivities
+      .filter(activity => activity.fileId)
+      .map(activity => activity.fileId)
+    : []
 
   const eventSummary = {
     _id: eventEntity._id,
@@ -51,6 +57,7 @@ async function upsertDocument (event, eventEntity, crmCollection, now) {
       {
         $set: {
           _incomingTime: new Date(event.time || now),
+          _incomingFileIds: incomingFileIds,
           lastUpdated: now,
           created: { $ifNull: ['$created', now] },
           ...event.data
@@ -66,6 +73,14 @@ async function upsertDocument (event, eventEntity, crmCollection, now) {
               },
               then: '$events', // Event already exists, keep array as-is
               else: { $concatArrays: [{ $ifNull: ['$events', []] }, [eventSummary]] }
+            }
+          },
+          // Merge fileIds: combine existing with incoming, remove duplicates using $setUnion
+          fileIds: {
+            $cond: {
+              if: { $gt: [{ $size: '$_incomingFileIds' }, 0] },
+              then: { $setUnion: [{ $ifNull: ['$fileIds', []] }, '$_incomingFileIds'] },
+              else: { $ifNull: ['$fileIds', []] }
             }
           }
         }
@@ -90,7 +105,7 @@ async function upsertDocument (event, eventEntity, crmCollection, now) {
         }
       },
 
-      { $unset: ['_incomingTime', '_prevLastEventTime'] }
+      { $unset: ['_incomingTime', '_prevLastEventTime', '_incomingFileIds'] }
     ],
     { upsert: true, maxTimeMS }
   )
