@@ -1,5 +1,5 @@
 import { health } from '../routes/health.js'
-import { messages } from '../routes/messages.js'
+import { messages } from '../routes/message.js'
 import { documents } from '../routes/document.js'
 import { crm } from '../routes/crm.js'
 
