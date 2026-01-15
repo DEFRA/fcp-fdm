@@ -165,7 +165,6 @@ describe('saveCloudEvent', () => {
     // Wait a moment to ensure different timestamp if it were updated
     await new Promise(resolve => setTimeout(resolve, 10))
 
-    // Second save should not update (due to matchedCount > 0)
     const result2 = await saveCloudEvent(event)
     expect(result2).toBeUndefined()
 
