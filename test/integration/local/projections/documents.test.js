@@ -65,7 +65,7 @@ const testDocuments = [{
 const testCrmCases = [{
   _id: '507f1f77bcf86cd799439021',
   caseId: CASE_ID_1,
-  fileId: FILE_ID_1, // Linked to document 1
+  fileIds: [FILE_ID_1],
   crn: 1234567890,
   sbi: 987654321,
   status: 'open',
@@ -78,7 +78,7 @@ const testCrmCases = [{
 }, {
   _id: '507f1f77bcf86cd799439022',
   caseId: CASE_ID_2,
-  fileId: FILE_ID_1, // Also linked to document 1 (multiple cases for same document)
+  fileIds: [FILE_ID_1], // Changed from fileId to fileIds array (multiple cases for same document)
   crn: 1234567890,
   sbi: 987654321,
   status: 'in-progress',
@@ -265,12 +265,12 @@ describe('getDocumentByFileId', () => {
     expect(document.crmCases).toEqual(expect.arrayContaining([
       expect.objectContaining({
         caseId: CASE_ID_1,
-        fileId: FILE_ID_1,
+        fileIds: [FILE_ID_1],
         status: 'open'
       }),
       expect.objectContaining({
         caseId: CASE_ID_2,
-        fileId: FILE_ID_1,
+        fileIds: [FILE_ID_1],
         status: 'in-progress'
       })
     ]))
@@ -310,5 +310,31 @@ describe('getDocumentByFileId', () => {
     expect(document).toEqual(expect.objectContaining(createDocumentWithEvents(testDocuments[0])))
     expect(document.crmCases).toHaveLength(2)
     expect(document.events).toHaveLength(1)
+  })
+
+  test('should query CRM cases by fileIds array containing the fileId', async () => {
+    // Add a CRM case with multiple fileIds including FILE_ID_2
+    const multiFileCase = {
+      _id: '507f1f77bcf86cd799439023',
+      caseId: '00000000-0000-0000-0000-000000000103',
+      fileIds: [FILE_ID_2, FILE_ID_3], // Multiple fileIds
+      crn: 1234567890,
+      sbi: 987654322,
+      status: 'processing',
+      created: new Date('2024-01-01T10:30:00Z'),
+      lastUpdated: new Date('2024-01-01T10:35:00Z'),
+      events: []
+    }
+    await collections.crm.insertOne(multiFileCase)
+
+    const document = await getDocumentByFileId(FILE_ID_2, { includeCrm: true })
+
+    expect(document).toBeDefined()
+    expect(document.crmCases).toHaveLength(1)
+    expect(document.crmCases[0]).toEqual(expect.objectContaining({
+      caseId: multiFileCase.caseId,
+      fileIds: [FILE_ID_2, FILE_ID_3],
+      status: 'processing'
+    }))
   })
 })

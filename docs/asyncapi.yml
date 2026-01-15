@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.2.1
+  version: 1.2.2
   description: |
     The FDM service consumes events from FCP services via AWS SQS to build
     a farming data model to support data exchange via the Data Access Layer (DAL).
@@ -220,6 +220,10 @@ components:
               sbi: 123456789
               caseId: "case-123"
               caseType: "DOCUMENT_UPLOAD"
+              onlineSubmissionActivities:
+                - id: "ols-activity-001"
+                  fileId: "file-123"
+                  time: "2026-01-13T14:48:00Z"
         - name: caseUpdatedEvent
           summary: CRM case updated event
           payload:
@@ -236,6 +240,13 @@ components:
               sbi: 123456789
               caseId: "case-123"
               caseType: "DOCUMENT_UPLOAD"
+              onlineSubmissionActivities:
+                - id: "ols-activity-001"
+                  fileId: "file-123"
+                  time: "2026-01-13T14:48:00Z"
+                - id: "ols-activity-002"
+                  fileId: "file-456"
+                  time: "2026-01-13T14:49:00Z"
 
   schemas:
     MessageEventPayload:
@@ -463,7 +474,7 @@ components:
           $ref: '#/components/schemas/CRMEventData'
 
     CRMEventData:
-      description: CRM event data - all fields are required
+      description: CRM event data - all fields are required except onlineSubmissionActivities
       type: object
       required:
         - correlationId
@@ -496,3 +507,25 @@ components:
             - "DOCUMENT_UPLOAD"
             - "QUERY"
             - "COMPLAINT"
+        onlineSubmissionActivities:
+          type: array
+          description: List of OLS activities associated with the case
+          items:
+            type: object
+            required:
+              - id
+              - fileId
+              - time
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: Unique identifier of the OLS Activity created in association with the case
+              fileId:
+                type: string
+                format: uuid
+                description: Unique identifier of the file associated with the OLS activity
+              time:
+                type: string
+                format: date-time
+                description: Time OLS activity was created

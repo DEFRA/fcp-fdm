@@ -23,7 +23,7 @@ export async function getDocumentByFileId (fileId, options = {}) {
 
   if (includeCrm) {
     const crmCases = await crmCollection.find(
-      { fileId },
+      { fileIds: fileId },
       { readPreference: 'secondaryPreferred', maxTimeMS }
     ).toArray()
 

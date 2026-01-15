@@ -207,7 +207,13 @@ export const crmCaseCreated = {
     sbi: 123456789,
     caseId: 'case-123',
     caseType: 'DOCUMENT_UPLOAD',
-    fileId: 'file-123'
+    onlineSubmissionActivities: [
+      {
+        id: 'ols-activity-001',
+        fileId: 'file-001',
+        time: '2023-10-17T14:48:00.000Z'
+      }
+    ]
   }
 }
 
@@ -224,6 +230,12 @@ export const crmCaseUpdated = {
     sbi: 123456789,
     caseId: 'case-123',
     caseType: 'DOCUMENT_UPLOAD',
-    fileId: 'file-123'
+    onlineSubmissionActivities: [
+      {
+        id: 'ols-activity-001',
+        fileId: 'file-002',
+        time: '2023-10-17T14:48:00.000Z'
+      }
+    ]
   }
 }

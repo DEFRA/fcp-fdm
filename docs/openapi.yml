@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.1.0
+  version: 1.1.1
   description: |
     The Farming Data Model (FDM) REST API provides access to aggregated farming data collected from various FCP services.
   license:
@@ -1138,6 +1138,10 @@ components:
           type: integer
           description: Single Business Identifier
           example: 987654321
+        caseType:
+          type: string
+          description: Type of CRM case
+          example: "DOCUMENT_UPLOAD"
         status:
           type: string
           description: Current status of the CRM case
@@ -1147,6 +1151,31 @@ components:
             - "resolved"
             - "closed"
           example: "open"
+        fileIds:
+          type: array
+          description: Array of file IDs extracted from online submission activities for efficient querying
+          items:
+            type: string
+            format: uuid
+          example: ["file-123", "file-456"]
+        onlineSubmissionActivities:
+          type: array
+          description: List of online submission (OLS) activities associated with the case
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                format: uuid
+                description: Unique identifier of the OLS Activity
+              fileId:
+                type: string
+                format: uuid
+                description: Unique identifier of the file associated with the OLS activity
+              time:
+                type: string
+                format: date-time
+                description: Time OLS activity was created
         created:
           type: string
           format: date-time
