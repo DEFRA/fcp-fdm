@@ -68,7 +68,9 @@ The FDM service follows an event-driven architecture pattern with the following 
 ```mermaid
 graph TB
     subgraph "External Systems"
-        SFD[SFD Comms Service]
+        COMMS[SFD Comms]
+        DOC[SFD Object Processor]
+        CRM[FCP CRM]
         FUTURE[Future Event Sources]
     end
     
@@ -93,7 +95,9 @@ graph TB
         MESSAGES[messages collection]
     end
     
-    SFD -->|Publish Events| SNS
+    COMMS -->|Publish Events| SNS
+    DOC -->|Publish Events| SNS
+    CRM -->|Publish Events| SNS
     FUTURE -->|Publish Events| SNS
     SNS -->|Route to Queue| SQS
     SQS -->|Failed Messages| DLQ
