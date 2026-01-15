@@ -86,7 +86,7 @@ describe('getEventSummary', () => {
     expect(summary).not.toHaveProperty('datacontenttype')
   })
 
-  test('should handle event with undefined subject', () => {
+  test('should include subject property even when undefined', () => {
     const event = {
       _id: 'fcp-sfd-test:550e8400-e29b-41d4-a716-446655440001',
       id: '550e8400-e29b-41d4-a716-446655440001',
@@ -173,7 +173,7 @@ describe('getStatusFromTypeSuffix', () => {
     expect(status).toBe('Delivered')
   })
 
-  test('should handle eventType with partial prefix match', () => {
+  test('should return null when eventType only partially matches prefix', () => {
     const eventType = 'uk.gov.fcp.sfd.notificatio.delivered'
     const prefix = 'uk.gov.fcp.sfd.notification.'
 
@@ -218,7 +218,7 @@ describe('getStatusFromTypeSuffix', () => {
     expect(status).toBeNull()
   })
 
-  test('should handle single character status', () => {
+  test('should extract single character status correctly', () => {
     const eventType = 'prefix.a'
     const prefix = 'prefix.'
 
