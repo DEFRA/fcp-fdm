@@ -98,7 +98,7 @@ describe('saveCloudEvent', () => {
 
     // Attempt to save duplicate
     const secondResult = await saveCloudEvent(event)
-    expect(secondResult).toBeUndefined()
+    expect(secondResult).toBeNull()
 
     const eventsCount = await collections.events.countDocuments({ _id: `${event.source}:${event.id}` })
     expect(eventsCount).toBe(1)
@@ -164,7 +164,7 @@ describe('saveCloudEvent', () => {
 
     // Attempt to save duplicate - should return undefined
     const result2 = await saveCloudEvent(event)
-    expect(result2).toBeUndefined()
+    expect(result2).toBeNull()
 
     // Verify received timestamp wasn't updated
     const savedEvent = await collections.events.findOne({ _id: `${event.source}:${event.id}` })

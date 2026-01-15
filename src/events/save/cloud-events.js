@@ -21,7 +21,7 @@ export async function saveCloudEvent (event) {
 
   if (result.matchedCount > 0) {
     logger.warn(`Skipping duplicate event. ID: ${event.id}`)
-    return
+    return null
   }
 
   return eventEntity

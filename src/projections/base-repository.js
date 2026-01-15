@@ -102,7 +102,9 @@ export class BaseRepository {
    * @returns {Object|null} Transformed document or null
    */
   transformDocument (doc, options = {}) {
-    if (!doc) return null
+    if (!doc) {
+      return null
+    }
 
     const { _id, ...rest } = doc
     const transformed = { ...rest }
