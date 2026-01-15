@@ -34,7 +34,7 @@ export async function getDocumentByFileId (fileId, options = {}) {
       { readPreference: 'secondaryPreferred', maxTimeMS }
     ).toArray()
 
-    document.crmCases = crmCases.map(({ _id, events, ...crmCase }) => crmCase)
+    document.crmCases = crmCases.map(({ _id, events: _events, ...crmCase }) => crmCase)
   }
 
   return document
