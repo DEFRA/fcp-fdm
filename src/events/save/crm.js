@@ -1,39 +1,28 @@
 import { getMongoDb } from '../../common/helpers/mongodb.js'
-import { createLogger } from '../../common/helpers/logging/logger.js'
 import { eventTypePrefixes } from '../types.js'
 import { config } from '../../config/config.js'
+import { getEventSummary, getStatusFromTypeSuffix, saveCloudEvent } from './cloud-events.js'
 
 const { CRM_EVENT_PREFIX } = eventTypePrefixes
 
 const maxTimeMS = config.get('mongo.maxTimeMS')
 
-const logger = createLogger()
-
 export async function save (event) {
-  const { collections } = getMongoDb()
-  const { events: eventCollection, crm: crmCollection } = collections
+  const eventEntity = await saveCloudEvent(event)
 
-  const now = new Date()
-  const eventEntity = { _id: `${event.source}:${event.id}`, ...event, received: now }
-
-  const result = await eventCollection.updateOne(
-    { _id: eventEntity._id },
-    { $setOnInsert: eventEntity },
-    { upsert: true, maxTimeMS }
-  )
-
-  if (result.matchedCount > 0) {
-    logger.warn(`Skipping duplicate event. ID: ${event.id}`)
-    return
+  if (eventEntity) {
+    await upsertCrmCase(event, eventEntity)
   }
-
-  await upsertDocument(event, eventEntity, crmCollection, now)
 }
 
-async function upsertDocument (event, eventEntity, crmCollection, now) {
+async function upsertCrmCase (event, eventEntity) {
+  const { collections } = getMongoDb()
+  const { crm: crmCollection } = collections
+
   const { correlationId, caseId, onlineSubmissionActivities } = event.data
 
-  const status = extractStatus(event.type)
+  const status = getStatusFromTypeSuffix(event.type, CRM_EVENT_PREFIX)
+  const eventSummary = getEventSummary(eventEntity)
 
   const incomingFileIds = onlineSubmissionActivities
     ? onlineSubmissionActivities
@@ -41,25 +30,15 @@ async function upsertDocument (event, eventEntity, crmCollection, now) {
       .map(activity => activity.fileId)
     : []
 
-  const eventSummary = {
-    _id: eventEntity._id,
-    type: eventEntity.type,
-    source: eventEntity.source,
-    id: eventEntity.id,
-    time: eventEntity.time,
-    subject: eventEntity.subject,
-    received: eventEntity.received
-  }
-
   await crmCollection.updateOne(
     { _id: `${correlationId}:${caseId}` },
     [
       {
         $set: {
-          _incomingTime: new Date(event.time || now),
+          _incomingTime: new Date(event.time || eventEntity.received),
           _incomingFileIds: incomingFileIds,
-          lastUpdated: now,
-          created: { $ifNull: ['$created', now] },
+          lastUpdated: eventEntity.received,
+          created: { $ifNull: ['$created', eventEntity.received] },
           ...event.data
         }
       },
@@ -109,11 +88,4 @@ async function upsertDocument (event, eventEntity, crmCollection, now) {
     ],
     { upsert: true, maxTimeMS }
   )
-}
-
-function extractStatus (eventType) {
-  if (!eventType.startsWith(CRM_EVENT_PREFIX)) {
-    return null
-  }
-  return eventType.substring(CRM_EVENT_PREFIX.length)
 }
