@@ -1,73 +1,11 @@
+import { BaseRepository } from './base-repository.js'
 import { getMongoDb } from '../common/helpers/mongodb.js'
 import { config } from '../config/config.js'
 
 const maxTimeMS = config.get('mongo.maxTimeMS')
 
-export async function getDocumentByFileId (fileId, options = {}) {
-  const { collections } = getMongoDb()
-  const { documents: documentCollection, crm: crmCollection } = collections
-
-  const { includeEvents = false, includeCrm = false } = options
-
-  const projection = buildProjection(includeEvents)
-  const document = await documentCollection.findOne(
-    { fileId },
-    { projection, readPreference: 'secondaryPreferred', maxTimeMS }
-  )
-
-  if (!document) {
-    return null
-  }
-
-  const transformedDocument = transformDocument(document, includeEvents)
-
-  if (includeCrm) {
-    const crmCases = await crmCollection.find(
-      { fileIds: fileId },
-      { readPreference: 'secondaryPreferred', maxTimeMS }
-    ).toArray()
-
-    transformedDocument.crmCases = crmCases.map(({ _id, events, ...crmCase }) => crmCase)
-  }
-
-  return transformedDocument
-}
-
-export async function getDocuments (filters = {}) {
-  const { collections } = getMongoDb()
-  const { documents: documentCollection } = collections
-
-  const { crn, sbi, includeEvents = false, page = 1, pageSize = 20 } = filters
-
-  const query = {}
-
-  if (crn !== undefined) {
-    query.crn = crn
-  }
-  if (sbi !== undefined) {
-    query.sbi = sbi
-  }
-
-  const projection = buildProjection(includeEvents)
-
-  const cursor = documentCollection.find(query, {
-    projection,
-    sort: { created: -1, _id: -1 },
-    readPreference: 'secondaryPreferred',
-    maxTimeMS
-  })
-    .skip((page - 1) * pageSize)
-    .limit(pageSize)
-
-  const documents = await cursor.toArray()
-
-  return {
-    documents: documents.map(document => transformDocument(document, includeEvents))
-  }
-}
-
-function buildProjection (includeEvents = false) {
-  const projection = {
+const documentRepository = new BaseRepository('documents', {
+  baseProjectionFields: {
     _id: 1,
     fileId: 1,
     crn: 1,
@@ -76,23 +14,33 @@ function buildProjection (includeEvents = false) {
     created: 1,
     lastUpdated: 1
   }
+})
 
-  if (includeEvents) {
-    projection.events = 1
+export async function getDocumentByFileId (fileId, options = {}) {
+  const { includeEvents = false, includeCrm = false } = options
+
+  const document = await documentRepository.findOne({ fileId }, { includeEvents })
+
+  if (!document) {
+    return null
   }
 
-  return projection
+  if (includeCrm) {
+    const { collections } = getMongoDb()
+    const { crm: crmCollection } = collections
+
+    const crmCases = await crmCollection.find(
+      { fileIds: fileId },
+      { readPreference: 'secondaryPreferred', maxTimeMS }
+    ).toArray()
+
+    document.crmCases = crmCases.map(({ _id, events, ...crmCase }) => crmCase)
+  }
+
+  return document
 }
 
-function transformDocument (document, includeEvents = false) {
-  const { _id, ...rest } = document
-  const transformedDocument = {
-    ...rest
-  }
-
-  if (includeEvents && transformedDocument.events) {
-    transformedDocument.events = transformedDocument.events.map(({ _id: _mongoId, ...event }) => event)
-  }
-
-  return transformedDocument
+export async function getDocuments (filters = {}) {
+  const documents = await documentRepository.findMany(filters, { includeEvents: filters.includeEvents })
+  return { documents }
 }
