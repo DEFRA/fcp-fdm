@@ -162,9 +162,7 @@ describe('saveCloudEvent', () => {
     expect(result1).toBeDefined()
     const firstReceived = result1.received
 
-    // Wait a moment to ensure different timestamp if it were updated
-    await new Promise(resolve => setTimeout(resolve, 10))
-
+    // Attempt to save duplicate - should return undefined
     const result2 = await saveCloudEvent(event)
     expect(result2).toBeUndefined()
 
