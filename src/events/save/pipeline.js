@@ -24,6 +24,7 @@ import { getEventSummary, getStatusFromTypeSuffix } from './cloud-events.js'
  * @param {Object} [mappings.customEventSummary] - Override default event summary structure
  * @param {boolean} [mappings.skipEventTracking=false] - Skip event array tracking (stage 2)
  * @param {boolean} [mappings.skipStatusTracking=false] - Skip lastEventTime/status tracking (stage 3)
+ * @param {boolean} [mappings.updateOnlyWhenNewer=false] - Only update data fields if event is newer
  * @returns {Array} MongoDB aggregation pipeline stages
  */
 export function buildSavePipeline (event, eventEntity, mappings) {
@@ -33,7 +34,8 @@ export function buildSavePipeline (event, eventEntity, mappings) {
     unsetFields = [],
     customEventSummary,
     skipEventTracking = false,
-    skipStatusTracking = false
+    skipStatusTracking = false,
+    updateOnlyWhenNewer = false
   } = mappings
 
   const eventSummary = customEventSummary || getEventSummary(eventEntity)
@@ -42,13 +44,27 @@ export function buildSavePipeline (event, eventEntity, mappings) {
 
   const pipeline = []
 
+  const incomingTime = new Date(event.time || eventEntity.received)
+
+  // Conditionally wrap data fields if updateOnlyWhenNewer is enabled
+  const fieldsToUpdate = updateOnlyWhenNewer
+    ? Object.fromEntries(
+      Object.entries(dataFields).map(([key, value]) => [
+        key,
+        {
+          $cond: [{ $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] }, value, `$${key}`]
+        }
+      ])
+    )
+    : dataFields
+
   // Stage 1: Set incoming data, timestamps, and context-specific fields
   pipeline.push({
     $set: {
-      _incomingTime: new Date(event.time || eventEntity.received),
+      _incomingTime: incomingTime,
       lastUpdated: eventEntity.received,
       created: { $ifNull: ['$created', eventEntity.received] },
-      ...dataFields
+      ...fieldsToUpdate
     }
   })
 
@@ -71,18 +87,19 @@ export function buildSavePipeline (event, eventEntity, mappings) {
 
   // Stage 3: Update lastEventTime and conditionally update status if event is newer (optional)
   if (!skipStatusTracking) {
+    // Stage 3a: Capture previous lastEventTime before updating it
     pipeline.push({
       $set: {
-        _prevLastEventTime: { $ifNull: ['$lastEventTime', new Date(0)] },
+        _prevLastEventTime: { $ifNull: ['$lastEventTime', new Date(0)] }
+      }
+    },
+    {
+      $set: {
         lastEventTime: { $max: ['$lastEventTime', '$_incomingTime'] },
         ...(status
           ? {
               status: {
-                $cond: [
-                  { $gt: ['$_incomingTime', '$_prevLastEventTime'] },
-                  status,
-                  '$status'
-                ]
+                $cond: [{ $gt: ['$_incomingTime', '$_prevLastEventTime'] }, status, '$status']
               }
             }
           : {})

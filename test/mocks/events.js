@@ -239,3 +239,35 @@ export const crmCaseUpdated = {
     ]
   }
 }
+
+export const paymentProcessed = {
+  id: '850e8400-e29b-41d4-a716-446655440001',
+  source: 'ffc-pay-processing',
+  specversion: '1.0',
+  type: 'uk.gov.defra.ffc.pay.payment.processed',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:48:01.000Z',
+  data: {
+    correlationId: '19389915-7275-457a-b8ca-8bf206b2e67b',
+    frn: 1234567890,
+    sbi: 123456789,
+    schemeId: 1,
+    invoiceNumber: 'INV-2025-001'
+  }
+}
+
+export const paymentSubmitted = {
+  id: '850e8400-e29b-41d4-a716-446655440002',
+  source: 'ffc-pay-submission',
+  specversion: '1.0',
+  type: 'uk.gov.defra.ffc.pay.payment.submitted',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:50:01.000Z',
+  data: {
+    correlationId: '19389915-7275-457a-b8ca-8bf206b2e67b',
+    frn: 1234567890,
+    sbi: 123456789,
+    schemeId: 1,
+    invoiceNumber: 'INV-2025-001'
+  }
+}

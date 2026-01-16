@@ -15,6 +15,10 @@ vi.mock('../../../src/events/save/crm.js', () => ({
   save: mockSave
 }))
 
+vi.mock('../../../src/events/save/payment.js', () => ({
+  save: mockSave
+}))
+
 vi.mock('../../../src/events/save/no-save.js', () => ({
   save: mockNoSave
 }))
