@@ -17,7 +17,11 @@ export const singleEvents = {
 
   // CRM events
   crmCaseCreated: [events.crmCaseCreated],
-  crmCaseUpdated: [events.crmCaseUpdated]
+  crmCaseUpdated: [events.crmCaseUpdated],
+
+  // Payment events
+  paymentProcessed: [events.paymentProcessed],
+  paymentSubmitted: [events.paymentSubmitted]
 }
 
 export const completeStreams = {
@@ -91,6 +95,14 @@ export const completeStreams = {
   crmCaseCreatedAndUpdated: [
     events.crmCaseCreated,
     events.crmCaseUpdated
+  ],
+
+  /**
+   * Payment processed and submitted
+   */
+  paymentProcessedAndSubmitted: [
+    events.paymentProcessed,
+    events.paymentSubmitted
   ]
 }
 

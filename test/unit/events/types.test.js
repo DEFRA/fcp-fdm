@@ -6,7 +6,8 @@ const {
   MESSAGE_EVENT,
   MESSAGE_EVENT_REJECTED,
   DOCUMENT_EVENT,
-  CRM_EVENT
+  CRM_EVENT,
+  PAYMENT_EVENT
 } = eventTypes
 
 describe('getEventType', () => {
@@ -28,6 +29,11 @@ describe('getEventType', () => {
   test('should return crm event type if event relates to Single Front Door CRM events', () => {
     const eventType = getEventType('uk.gov.fcp.sfd.crm.event')
     expect(eventType).toBe(CRM_EVENT)
+  })
+
+  test('should return payment event type if event relates to Payment Hub payments', () => {
+    const eventType = getEventType('uk.gov.defra.ffc.pay.payment.event')
+    expect(eventType).toBe(PAYMENT_EVENT)
   })
 
   test('should throw error for unknown event types', () => {

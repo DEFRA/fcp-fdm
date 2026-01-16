@@ -2,12 +2,14 @@ import cloudEventsSchema from './schemas/cloud-event.js'
 import messageSchema from './schemas/message.js'
 import documentSchema from './schemas/document.js'
 import crmSchema from './schemas/crm.js'
+import paymentSchema from './schemas/payment.js'
 
 const validators = {
   message: messageSchema,
   messageRejected: cloudEventsSchema,
   document: documentSchema,
-  crm: crmSchema
+  crm: crmSchema,
+  payment: paymentSchema
 }
 
 export async function validateEvent (event, eventType) {

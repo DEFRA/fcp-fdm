@@ -1,7 +1,7 @@
 asyncapi: 3.0.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.2.2
+  version: 1.3.0
   description: |
     The FDM service consumes events from FCP services via AWS SQS to build
     a farming data model to support data exchange via the Data Access Layer (DAL).
@@ -92,6 +92,8 @@ channels:
         $ref: '#/components/messages/DocumentEvent'
       crmEvent:
         $ref: '#/components/messages/CRMEvent'
+      paymentEvent:
+        $ref: '#/components/messages/PaymentEvent'
 
 operations:
   receiveEvents:
@@ -105,6 +107,7 @@ operations:
       - $ref: '#/channels/eventQueue/messages/messageEvent'
       - $ref: '#/channels/eventQueue/messages/documentEvent'
       - $ref: '#/channels/eventQueue/messages/crmEvent'
+      - $ref: '#/channels/eventQueue/messages/paymentEvent'
 
 components:
   messages:
@@ -247,6 +250,40 @@ components:
                 - id: "ols-activity-002"
                   fileId: "file-456"
                   time: "2026-01-13T14:49:00Z"
+    PaymentEvent:
+      name: PaymentEvent
+      title: Payment Event
+      summary: CloudEvent for payment lifecycle events from Payment Hub
+      description: |
+        Payment events from the Payment Hub service.
+        
+        These events follow the CloudEvents 1.0 specification and track the lifecycle
+        of payments including initiated, processed, completed, failed, and refunded states.
+        
+        **Processing:**
+        - Events are validated for required CloudEvents fields and payment-specific data
+        - Aggregated by `correlationId` to track payment lifecycle across multiple events
+        
+        **Event Types:** All events with type prefix `uk.gov.defra.ffc.pay.payment.*`
+      contentType: application/json
+      payload:
+        $ref: '#/components/schemas/PaymentEventPayload'
+      examples:
+        - name: paymentEnrichedEvent
+          summary: Payment enriched event
+          payload:
+            specversion: "1.0"
+            type: "uk.gov.defra.ffc.pay.payment.enriched"
+            source: "ffc-pay-enrichment"
+            id: "123e4567-e89b-12d3-a456-426655440000"
+            time: "2020-01-01T12:00:00Z"
+            subject: "Payment request enriched"
+            datacontenttype: "text/json"
+            data:
+              frn: 1234567890
+              schemeId: 1
+              correlationId: "123e4567-e89b-12d3-a456-426655440000"
+              invoiceNumber: "S1234567S1234567V001"
 
   schemas:
     MessageEventPayload:
@@ -529,3 +566,79 @@ components:
                 type: string
                 format: date-time
                 description: Time OLS activity was created
+
+    PaymentEventPayload:
+      description: CloudEvent envelope for payment events
+      type: object
+      required:
+        - specversion
+        - type
+        - source
+        - id
+        - time
+        - data
+      properties:
+        specversion:
+          type: string
+          const: "1.0"
+          description: CloudEvents specification version
+        type:
+          type: string
+          pattern: "^uk\\.gov\\.defra\\.ffc\\.pay\\.payment\\."
+          description: Event type identifier
+          examples:
+            - "uk.gov.defra.ffc.pay.payment.enriched"
+            - "uk.gov.defra.ffc.pay.payment.processed"
+            - "uk.gov.defra.ffc.pay.payment.submitted"
+            - "uk.gov.defra.ffc.pay.payment.settled"
+        source:
+          type: string
+          description: Source service identifier
+          examples:
+            - "ffc-pay-enrichment"
+            - "ffc-pay-processing"
+        id:
+          type: string
+          format: uuid
+          description: Unique event identifier
+        time:
+          type: string
+          format: date-time
+          description: Event timestamp (ISO 8601)
+        subject:
+          type: string
+          description: Event subject/context
+        datacontenttype:
+          type: string
+          description: Content type of the data payload
+          default: "application/json"
+        data:
+          $ref: '#/components/schemas/PaymentEventData'
+
+    PaymentEventData:
+      description: Payment event data - all fields are required
+      type: object
+      required:
+        - frn
+        - schemeId
+        - correlationId
+        - invoiceNumber
+      properties:
+        frn:
+          type: integer
+          format: int64
+          description: Firm Reference Number
+          example: 1234567890
+        schemeId:
+          type: integer
+          format: int32
+          description: Scheme identifier
+          example: 1
+        correlationId:
+          type: string
+          format: uuid
+          description: Correlation ID for payment request chain
+        invoiceNumber:
+          type: string
+          description: Invoice number
+          example: "S1234567S1234567V001"

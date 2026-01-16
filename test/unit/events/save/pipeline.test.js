@@ -44,7 +44,7 @@ describe('buildSavePipeline', () => {
     getStatusFromTypeSuffix.mockReturnValue('created')
   })
 
-  test('should build complete 4-stage MongoDB aggregation pipeline', () => {
+  test('should build complete 5-stage MongoDB aggregation pipeline', () => {
     const mappings = {
       dataFields: { testField: 'test-value' },
       eventTypePrefix: 'uk.gov.fcp.sfd.test.'
@@ -52,11 +52,12 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline).toHaveLength(4)
-    expect(pipeline[0]).toHaveProperty('$set')
-    expect(pipeline[1]).toHaveProperty('$set')
-    expect(pipeline[2]).toHaveProperty('$set')
-    expect(pipeline[3]).toHaveProperty('$unset')
+    expect(pipeline).toHaveLength(5)
+    expect(pipeline[0]).toHaveProperty('$set') // Stage 1: Set data
+    expect(pipeline[1]).toHaveProperty('$set') // Stage 2: Events array
+    expect(pipeline[2]).toHaveProperty('$set') // Stage 3a: Capture _prevLastEventTime
+    expect(pipeline[3]).toHaveProperty('$set') // Stage 3b: Update lastEventTime and status
+    expect(pipeline[4]).toHaveProperty('$unset') // Stage 4: Cleanup
   })
 
   test('should set incoming time from event.time in stage 1', () => {
@@ -168,12 +169,12 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline[2].$set.status).toHaveProperty('$cond')
-    expect(pipeline[2].$set.status.$cond[0]).toEqual({
+    expect(pipeline[3].$set.status).toHaveProperty('$cond')
+    expect(pipeline[3].$set.status.$cond[0]).toEqual({
       $gt: ['$_incomingTime', '$_prevLastEventTime']
     })
-    expect(pipeline[2].$set.status.$cond[1]).toBe('created')
-    expect(pipeline[2].$set.status.$cond[2]).toBe('$status')
+    expect(pipeline[3].$set.status.$cond[1]).toBe('created')
+    expect(pipeline[3].$set.status.$cond[2]).toBe('$status')
   })
 
   test('should track most recent event time using $max to handle out-of-order events', () => {
@@ -184,7 +185,7 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline[2].$set.lastEventTime).toEqual({
+    expect(pipeline[3].$set.lastEventTime).toEqual({
       $max: ['$lastEventTime', '$_incomingTime']
     })
   })
@@ -197,8 +198,8 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline[3].$unset).toContain('_incomingTime')
-    expect(pipeline[3].$unset).toContain('_prevLastEventTime')
+    expect(pipeline[4].$unset).toContain('_incomingTime')
+    expect(pipeline[4].$unset).toContain('_prevLastEventTime')
   })
 
   test('should unset additional fields specified in unsetFields', () => {
@@ -210,10 +211,10 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline[3].$unset).toContain('_incomingTime')
-    expect(pipeline[3].$unset).toContain('_prevLastEventTime')
-    expect(pipeline[3].$unset).toContain('_customTemp')
-    expect(pipeline[3].$unset).toContain('_anotherTemp')
+    expect(pipeline[4].$unset).toContain('_incomingTime')
+    expect(pipeline[4].$unset).toContain('_prevLastEventTime')
+    expect(pipeline[4].$unset).toContain('_customTemp')
+    expect(pipeline[4].$unset).toContain('_anotherTemp')
   })
 
   test('should omit events array stage when skipEventTracking enabled', () => {
@@ -225,10 +226,11 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline).toHaveLength(3) // Stage 2 should be skipped
-    expect(pipeline[0]).toHaveProperty('$set')
-    expect(pipeline[1]).toHaveProperty('$set')
-    expect(pipeline[2]).toHaveProperty('$unset')
+    expect(pipeline).toHaveLength(4) // Stage 2 (events) should be skipped
+    expect(pipeline[0]).toHaveProperty('$set') // Stage 1: Data
+    expect(pipeline[1]).toHaveProperty('$set') // Stage 3a: _prevLastEventTime
+    expect(pipeline[2]).toHaveProperty('$set') // Stage 3b: lastEventTime/status
+    expect(pipeline[3]).toHaveProperty('$unset') // Stage 4: Cleanup
     expect(pipeline[1].$set).not.toHaveProperty('events')
   })
 
@@ -293,8 +295,8 @@ describe('buildSavePipeline', () => {
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
     expect(getStatusFromTypeSuffix).not.toHaveBeenCalled()
-    expect(pipeline[2].$set).not.toHaveProperty('status')
-    expect(pipeline[2].$set.lastEventTime).toBeDefined()
+    expect(pipeline[3].$set).not.toHaveProperty('status')
+    expect(pipeline[3].$set.lastEventTime).toBeDefined()
   })
 
   test('should gracefully handle event types that do not match expected prefix pattern', () => {
@@ -307,8 +309,8 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline[2].$set).not.toHaveProperty('status')
-    expect(pipeline[2].$set.lastEventTime).toBeDefined()
+    expect(pipeline[3].$set).not.toHaveProperty('status')
+    expect(pipeline[3].$set.lastEventTime).toBeDefined()
   })
 
   test('should fall back to received timestamp when event.time missing', () => {
@@ -337,7 +339,7 @@ describe('buildSavePipeline', () => {
     const customStage = { $set: { customField: 'custom' } }
     pipeline.splice(2, 0, customStage)
 
-    expect(pipeline).toHaveLength(5)
+    expect(pipeline).toHaveLength(6)
     expect(pipeline[2]).toEqual(customStage)
   })
 
@@ -360,9 +362,9 @@ describe('buildSavePipeline', () => {
 
     const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
 
-    expect(pipeline).toHaveLength(4)
+    expect(pipeline).toHaveLength(5)
     expect(pipeline[0].$set).toHaveProperty('_incomingTime')
-    expect(pipeline[3].$unset).toEqual(['_incomingTime', '_prevLastEventTime'])
+    expect(pipeline[4].$unset).toEqual(['_incomingTime', '_prevLastEventTime'])
   })
 
   test('should set _prevLastEventTime with $ifNull in stage 3', () => {
@@ -376,5 +378,179 @@ describe('buildSavePipeline', () => {
     expect(pipeline[2].$set._prevLastEventTime).toEqual({
       $ifNull: ['$lastEventTime', new Date(0)]
     })
+  })
+
+  test('should not wrap data fields in conditionals when updateOnlyWhenNewer is false', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'valueA',
+        fieldB: 'valueB'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: false
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    expect(pipeline[0].$set.fieldA).toBe('valueA')
+    expect(pipeline[0].$set.fieldB).toBe('valueB')
+    expect(pipeline[0].$set.fieldA).not.toHaveProperty('$cond')
+  })
+
+  test('should wrap data fields in conditionals when updateOnlyWhenNewer is true', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'valueA',
+        fieldB: 'valueB'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    expect(pipeline[0].$set.fieldA).toHaveProperty('$cond')
+    expect(pipeline[0].$set.fieldB).toHaveProperty('$cond')
+  })
+
+  test('should use correct conditional logic for updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {
+        amount: 1000,
+        status: 'paid'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+    const incomingTime = new Date(mockEvent.time)
+
+    // Check amount field
+    expect(pipeline[0].$set.amount).toEqual({
+      $cond: [
+        { $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] },
+        1000,
+        '$amount'
+      ]
+    })
+
+    // Check status field
+    expect(pipeline[0].$set.status).toEqual({
+      $cond: [
+        { $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] },
+        'paid',
+        '$status'
+      ]
+    })
+  })
+
+  test('should keep existing value when event is older with updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'newValue'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // Verify the conditional preserves existing value when condition is false
+    expect(pipeline[0].$set.fieldA.$cond[2]).toBe('$fieldA')
+  })
+
+  test('should update value when event is newer with updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'newValue'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // Verify the conditional uses new value when condition is true
+    expect(pipeline[0].$set.fieldA.$cond[1]).toBe('newValue')
+  })
+
+  test('should compare against epoch for first event with updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'valueA'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // Verify that it uses $ifNull with epoch date for comparison
+    expect(pipeline[0].$set.fieldA.$cond[0].$gt[1]).toEqual({
+      $ifNull: ['$lastEventTime', new Date(0)]
+    })
+  })
+
+  test('should handle multiple data fields with updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {
+        correlationId: 'test-id',
+        amount: 5000,
+        currency: 'GBP',
+        reference: 'REF123'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // All fields should have conditional logic
+    expect(pipeline[0].$set.correlationId).toHaveProperty('$cond')
+    expect(pipeline[0].$set.amount).toHaveProperty('$cond')
+    expect(pipeline[0].$set.currency).toHaveProperty('$cond')
+    expect(pipeline[0].$set.reference).toHaveProperty('$cond')
+
+    // Count the data fields (excluding timestamps)
+    const dataFieldKeys = Object.keys(pipeline[0].$set).filter(
+      key => !['_incomingTime', 'lastUpdated', 'created'].includes(key)
+    )
+    expect(dataFieldKeys).toHaveLength(4)
+  })
+
+  test('should not affect timestamp fields when updateOnlyWhenNewer is true', () => {
+    const mappings = {
+      dataFields: {
+        fieldA: 'valueA'
+      },
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // Timestamps should not be wrapped in conditionals
+    expect(pipeline[0].$set._incomingTime).toBeInstanceOf(Date)
+    expect(pipeline[0].$set.lastUpdated).toEqual(mockEventEntity.received)
+    expect(pipeline[0].$set.created).toEqual({
+      $ifNull: ['$created', mockEventEntity.received]
+    })
+  })
+
+  test('should work correctly with empty dataFields and updateOnlyWhenNewer', () => {
+    const mappings = {
+      dataFields: {},
+      eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+      updateOnlyWhenNewer: true
+    }
+
+    const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+    // Should only have timestamp fields
+    expect(pipeline[0].$set).toHaveProperty('_incomingTime')
+    expect(pipeline[0].$set).toHaveProperty('lastUpdated')
+    expect(pipeline[0].$set).toHaveProperty('created')
+    expect(Object.keys(pipeline[0].$set)).toHaveLength(3)
   })
 })
