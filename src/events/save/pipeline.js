@@ -52,11 +52,7 @@ export function buildSavePipeline (event, eventEntity, mappings) {
       Object.entries(dataFields).map(([key, value]) => [
         key,
         {
-          $cond: [
-            { $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] },
-            value,
-              `$${key}`
-          ]
+          $cond: [{ $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] }, value, `$${key}`]
         }
       ])
     )
@@ -96,20 +92,14 @@ export function buildSavePipeline (event, eventEntity, mappings) {
       $set: {
         _prevLastEventTime: { $ifNull: ['$lastEventTime', new Date(0)] }
       }
-    })
-
-    // Stage 3b: Update lastEventTime and status based on captured previous value
-    pipeline.push({
+    },
+    {
       $set: {
         lastEventTime: { $max: ['$lastEventTime', '$_incomingTime'] },
         ...(status
           ? {
               status: {
-                $cond: [
-                  { $gt: ['$_incomingTime', '$_prevLastEventTime'] },
-                  status,
-                  '$status'
-                ]
+                $cond: [{ $gt: ['$_incomingTime', '$_prevLastEventTime'] }, status, '$status']
               }
             }
           : {})
