@@ -83,8 +83,8 @@ function buildPaymentRequestsArray (dataFields, paymentRequestFields, context) {
     $cond: {
       // Check if paymentRequests array exists
       if: { $ne: [{ $type: '$paymentRequests' }, 'array'] },
-      // If not, create array with new payment request including time
-      then: [{ $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] }],
+      // If not, create array with new payment request including lastUpdated timestamp
+      then: [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }],
       // If it exists, check if invoiceNumber already exists in array
       else: {
         $let: {
@@ -102,11 +102,11 @@ function buildPaymentRequestsArray (dataFields, paymentRequestFields, context) {
               if: { $gte: ['$$existingIndex', 0] },
               // Update the existing item only if incoming event is newer
               then: updatePaymentRequestArray(paymentRequestFields, context),
-              // If invoice number doesn't exist, append to array with time
+              // If invoice number doesn't exist, append to array with lastUpdated timestamp
               else: {
                 $concatArrays: [
                   '$paymentRequests',
-                  [{ $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] }]
+                  [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }]
                 ]
               }
             }
@@ -131,10 +131,10 @@ function updatePaymentRequestArray (paymentRequestFields, context) {
               if: {
                 $gt: [
                   context.incomingTime,
-                  { $ifNull: [{ $arrayElemAt: ['$paymentRequests.time', '$$idx'] }, new Date(0)] }
+                  { $ifNull: [{ $arrayElemAt: ['$paymentRequests.lastUpdated', '$$idx'] }, new Date(0)] }
                 ]
               },
-              then: { $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] },
+              then: { $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] },
               else: { $arrayElemAt: ['$paymentRequests', '$$idx'] }
             }
           },

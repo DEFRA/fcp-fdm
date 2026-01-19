@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: FCP Farming Data Model (FDM)
-  version: 1.1.1
+  version: 1.2.0
   description: |
     The Farming Data Model (FDM) REST API provides access to aggregated farming data collected from various FCP services.
   license:
@@ -820,6 +820,299 @@ paths:
                   value:
                     error: "CRM case not found with caseId: 550e8400-e29b-41d4-a716-446655440000"
 
+  /api/v1/payments:
+    get:
+      tags:
+        - Payments
+      summary: Get all payments
+      description: |
+        Retrieve all payments with optional filtering by FRN (Farm Reference Number), 
+        SBI (Single Business Identifier), schemeId, scheme, vendor, or trader. 
+        Event history can be optionally included.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getPayments
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: frn
+          in: query
+          description: Filter payments by Farm Reference Number
+          required: false
+          schema:
+            type: integer
+            example: 1234567890
+        - name: sbi
+          in: query
+          description: Filter payments by Single Business Identifier
+          required: false
+          schema:
+            type: integer
+            example: 987654321
+        - name: schemeId
+          in: query
+          description: Filter payments by scheme ID
+          required: false
+          schema:
+            type: integer
+            example: 12345
+        - name: scheme
+          in: query
+          description: Filter payments by scheme
+          required: false
+          schema:
+            type: string
+            example: "BPS"
+        - name: vendor
+          in: query
+          description: Filter payments by vendor
+          required: false
+          schema:
+            type: string
+            example: "VENDOR-001"
+        - name: trader
+          in: query
+          description: Filter payments by trader
+          required: false
+          schema:
+            type: string
+            example: "TRADER-001"
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+        - name: page
+          in: query
+          description: Page number for paginated results (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+            example: 2
+        - name: pageSize
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+            example: 10
+      responses:
+        '200':
+          description: Successfully retrieved payments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPaymentsResponse'
+              examples:
+                basic:
+                  summary: Basic paginated payments response
+                  value:
+                    data:
+                      payments:
+                        - correlationId: "550e8400-e29b-41d4-a716-446655440000"
+                          frn: 1234567890
+                          sbi: 987654321
+                          schemeId: 12345
+                          vendor: "VENDOR-001"
+                          trader: "TRADER-001"
+                          invoiceNumber: "INV-2024-001"
+                          paymentRequests:
+                            - invoiceNumber: "INV-2024-001"
+                              value: 150000
+                              invoiceLines:
+                                - description: "Payment for scheme activity"
+                                  value: 150000
+                                  schemeCode: "80001"
+                                  fundCode: "DRD10"
+                              time: "2024-01-01T10:00:00.000Z"
+                          status: "processed"
+                          created: "2024-01-01T10:00:00.000Z"
+                          lastUpdated: "2024-01-01T10:05:00.000Z"
+                    links:
+                      self: "/api/v1/payments?page=1&pageSize=20"
+                      next: "/api/v1/payments?page=2&pageSize=20"
+                      prev: null
+                    meta:
+                      page: 1
+                      pageSize: 20
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+
+  /api/v1/payments/{correlationId}:
+    get:
+      tags:
+        - Payments
+      summary: Get payment by correlation ID
+      description: |
+        Retrieve a specific payment by its correlation ID. Event history can be optionally 
+        included in the response.
+        
+        **Authentication Required**: This endpoint requires a valid JWT Bearer token from Microsoft Entra ID 
+        with appropriate security group membership.
+      operationId: getPaymentByCorrelationId
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: Authorization
+          in: header
+          description: Bearer token for authentication
+          required: true
+          schema:
+            type: string
+            example: "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsIng1dCI6Ik..."
+          style: simple
+        - name: correlationId
+          in: path
+          description: The correlation ID of the payment (UUID format)
+          required: true
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440000"
+        - name: includeEvents
+          in: query
+          description: Whether to include the event history
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successfully retrieved payment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              examples:
+                basic:
+                  summary: Basic payment without events
+                  value:
+                    data:
+                      payment:
+                        correlationId: "550e8400-e29b-41d4-a716-446655440000"
+                        frn: 1234567890
+                        sbi: 987654321
+                        schemeId: 12345
+                        vendor: "VENDOR-001"
+                        trader: "TRADER-001"
+                        invoiceNumber: "INV-2024-001"
+                        paymentRequests:
+                          - invoiceNumber: "INV-2024-001"
+                            value: 150000
+                            invoiceLines:
+                              - description: "Payment for scheme activity"
+                                value: 150000
+                                schemeCode: "80001"
+                                fundCode: "DRD10"
+                            time: "2024-01-01T10:00:00.000Z"
+                        status: "processed"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                withEvents:
+                  summary: Payment with event history
+                  value:
+                    data:
+                      payment:
+                        correlationId: "550e8400-e29b-41d4-a716-446655440000"
+                        frn: 1234567890
+                        sbi: 987654321
+                        schemeId: 12345
+                        vendor: "VENDOR-001"
+                        trader: "TRADER-001"
+                        invoiceNumber: "INV-2024-001"
+                        paymentRequests:
+                          - invoiceNumber: "INV-2024-001"
+                            value: 150000
+                            invoiceLines:
+                              - description: "Payment for scheme activity"
+                                value: 150000
+                                schemeCode: "80001"
+                                fundCode: "DRD10"
+                            time: "2024-01-01T10:00:00.000Z"
+                        status: "processed"
+                        created: "2024-01-01T10:00:00.000Z"
+                        lastUpdated: "2024-01-01T10:05:00.000Z"
+                        events:
+                          - type: "uk.gov.fcp.payment.received"
+                          - type: "uk.gov.fcp.payment.processed"
+        '401':
+          description: Unauthorized - Invalid or missing JWT token
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                unauthorized:
+                  summary: Missing or invalid token
+                  value:
+                    statusCode: 401
+                    error: "Unauthorized"
+                    message: "Missing or invalid authentication token"
+        '403':
+          description: Forbidden - Valid token but insufficient permissions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                forbidden:
+                  summary: Insufficient permissions
+                  value:
+                    statusCode: 403
+                    error: "Forbidden"
+                    message: "User does not have required security group membership"
+        '404':
+          description: Payment not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: Payment not found
+                  value:
+                    error: "Payment not found with correlationId: 550e8400-e29b-41d4-a716-446655440000"
+
 tags:
   - name: Health
     description: Service health and monitoring endpoints
@@ -831,6 +1124,8 @@ tags:
     description: Document data access and querying endpoints
   - name: CRM
     description: CRM case data access and querying endpoints
+  - name: Payments
+    description: Payment data access and querying endpoints
 
 components:
   schemas:
@@ -1261,6 +1556,183 @@ components:
               $ref: '#/components/schemas/CrmCase'
           required:
             - crmCase
+      required:
+        - data
+
+    Payment:
+      type: object
+      properties:
+        correlationId:
+          type: string
+          format: uuid
+          description: Unique correlation identifier for the payment
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        frn:
+          type: integer
+          description: Farm Reference Number
+          example: 1234567890
+        sbi:
+          type: integer
+          description: Single Business Identifier
+          example: 987654321
+        schemeId:
+          type: integer
+          description: Scheme identifier
+          example: 12345
+        vendor:
+          type: string
+          description: Vendor identifier
+          example: "VENDOR-001"
+        trader:
+          type: string
+          description: Trader identifier
+          example: "TRADER-001"
+        invoiceNumber:
+          type: string
+          description: Invoice number for the payment
+          example: "INV-2024-001"
+        paymentRequests:
+          type: array
+          description: Array of payment requests associated with this payment, containing detailed invoice information
+          items:
+            type: object
+            properties:
+              invoiceNumber:
+                type: string
+                description: Invoice number for this payment request
+                example: "INV-2024-001"
+              value:
+                type: integer
+                description: Payment value in pence
+                example: 150000
+              invoiceLines:
+                type: array
+                description: Individual line items for the invoice
+                items:
+                  type: object
+                  properties:
+                    description:
+                      type: string
+                      description: Description of the invoice line item
+                      example: "Payment for scheme activity"
+                    value:
+                      type: integer
+                      description: Line item value in pence
+                      example: 150000
+                    schemeCode:
+                      type: string
+                      description: Code identifying the scheme
+                      example: "80001"
+                    fundCode:
+                      type: string
+                      description: Funding code
+                      example: "DRD10"
+                    convergence:
+                      type: boolean
+                      description: Whether this is a convergence payment
+                      example: false
+                    deliveryBody:
+                      type: string
+                      description: Delivery body code
+                      example: "RP00"
+                    marketingYear:
+                      type: integer
+                      description: Marketing year for the payment
+                      example: 2024
+              time:
+                type: string
+                format: date-time
+                description: When this payment request was received
+                example: "2024-01-01T10:00:00.000Z"
+        status:
+          type: string
+          description: Current status of the payment
+          example: "processed"
+        created:
+          type: string
+          format: date-time
+          description: When the payment was first created
+          example: "2024-01-01T10:00:00.000Z"
+        lastUpdated:
+          type: string
+          format: date-time
+          description: When the payment was last updated
+          example: "2024-01-01T10:05:00.000Z"
+        events:
+          type: array
+          description: Event history for this payment (included when includeEvents=true)
+          items:
+            $ref: '#/components/schemas/Event'
+      required:
+        - correlationId
+        - schemeId
+        - invoiceNumber
+        - status
+        - created
+        - lastUpdated
+
+    PaginatedPaymentsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            payments:
+              type: array
+              items:
+                $ref: '#/components/schemas/Payment'
+          required:
+            - payments
+        links:
+          type: object
+          description: Pagination links for navigation
+          properties:
+            self:
+              type: string
+              format: uri
+              description: Link to the current page
+            next:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the next page, if available
+            prev:
+              type:
+                - string
+                - 'null'
+              format: uri
+              description: Link to the previous page, if available
+          required:
+            - self
+        meta:
+          type: object
+          description: Pagination metadata
+          properties:
+            page:
+              type: integer
+              description: Current page number
+            pageSize:
+              type: integer
+              description: Number of items per page
+          required:
+            - page
+            - pageSize
+      required:
+        - data
+        - links
+        - meta
+
+    PaymentResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            payment:
+              $ref: '#/components/schemas/Payment'
+          required:
+            - payment
       required:
         - data
 

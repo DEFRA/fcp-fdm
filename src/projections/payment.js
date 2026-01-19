@@ -12,6 +12,7 @@ class PaymentRepository extends BaseRepository {
         vendor: 1,
         trader: 1,
         invoiceNumber: 1,
+        paymentRequests: 1,
         status: 1,
         created: 1,
         lastUpdated: 1

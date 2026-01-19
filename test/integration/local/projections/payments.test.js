@@ -18,6 +18,11 @@ const testPayments = [{
   vendor: 'VENDOR-A',
   trader: 'TRADER-X',
   invoiceNumber: 'INV-001',
+  paymentRequests: [{
+    invoiceNumber: 'INV-001',
+    value: 100000,
+    time: new Date('2024-01-01T10:00:00Z')
+  }],
   status: 'pending',
   created: new Date('2024-01-01T10:00:00Z'),
   lastUpdated: new Date('2024-01-01T10:05:00Z'),
@@ -34,6 +39,15 @@ const testPayments = [{
   vendor: 'VENDOR-B',
   trader: 'TRADER-X', // Same trader
   invoiceNumber: 'INV-002',
+  paymentRequests: [{
+    invoiceNumber: 'INV-002',
+    value: 200000,
+    invoiceLines: [{
+      description: 'Payment line 1',
+      value: 200000
+    }],
+    time: new Date('2024-01-01T11:00:00Z')
+  }],
   status: 'processing',
   created: new Date('2024-01-01T11:00:00Z'),
   lastUpdated: new Date('2024-01-01T11:05:00Z'),
@@ -50,6 +64,11 @@ const testPayments = [{
   vendor: 'VENDOR-A', // Same vendor as payment 1
   trader: 'TRADER-Y',
   invoiceNumber: 'INV-003',
+  paymentRequests: [{
+    invoiceNumber: 'INV-003',
+    value: 300000,
+    time: new Date('2024-01-01T12:00:00Z')
+  }],
   status: 'completed',
   created: new Date('2024-01-01T12:00:00Z'),
   lastUpdated: new Date('2024-01-01T12:05:00Z'),
@@ -66,6 +85,15 @@ const testPayments = [{
   vendor: 'VENDOR-B', // Same vendor as payment 2
   trader: 'TRADER-Y', // Same trader as payment 3
   invoiceNumber: 'INV-004',
+  paymentRequests: [{
+    invoiceNumber: 'INV-004-A',
+    value: 150000,
+    time: new Date('2024-01-01T13:00:00Z')
+  }, {
+    invoiceNumber: 'INV-004-B',
+    value: 250000,
+    time: new Date('2024-01-01T13:02:00Z')
+  }],
   status: 'failed',
   created: new Date('2024-01-01T13:00:00Z'),
   lastUpdated: new Date('2024-01-01T13:05:00Z'),
@@ -83,6 +111,7 @@ const createBasePayment = (payment) => ({
   vendor: payment.vendor,
   trader: payment.trader,
   invoiceNumber: payment.invoiceNumber,
+  paymentRequests: payment.paymentRequests,
   status: payment.status,
   created: payment.created,
   lastUpdated: payment.lastUpdated
@@ -342,5 +371,35 @@ describe('getPaymentByCorrelationId', () => {
       invoiceNumber: 'INV-003',
       status: 'completed'
     })
+  })
+
+  test('should include paymentRequests array in payment response', async () => {
+    const payment = await getPaymentByCorrelationId(CORRELATION_ID_1)
+    expect(payment.paymentRequests).toBeDefined()
+    expect(payment.paymentRequests).toHaveLength(1)
+    expect(payment.paymentRequests[0]).toMatchObject({
+      invoiceNumber: 'INV-001',
+      value: 100000
+    })
+  })
+
+  test('should include paymentRequests with invoice lines when present', async () => {
+    const payment = await getPaymentByCorrelationId(CORRELATION_ID_2)
+    expect(payment.paymentRequests).toBeDefined()
+    expect(payment.paymentRequests).toHaveLength(1)
+    expect(payment.paymentRequests[0].invoiceLines).toBeDefined()
+    expect(payment.paymentRequests[0].invoiceLines).toHaveLength(1)
+    expect(payment.paymentRequests[0].invoiceLines[0]).toMatchObject({
+      description: 'Payment line 1',
+      value: 200000
+    })
+  })
+
+  test('should include multiple paymentRequests when present', async () => {
+    const payment = await getPaymentByCorrelationId(CORRELATION_ID_4)
+    expect(payment.paymentRequests).toBeDefined()
+    expect(payment.paymentRequests).toHaveLength(2)
+    expect(payment.paymentRequests[0].invoiceNumber).toBe('INV-004-A')
+    expect(payment.paymentRequests[1].invoiceNumber).toBe('INV-004-B')
   })
 })
