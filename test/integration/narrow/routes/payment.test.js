@@ -83,6 +83,18 @@ describe('GET /api/v1/payments', () => {
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
   })
 
+  test('should filter payments by scheme if requested', async () => {
+    const options = {
+      method: 'GET',
+      url: '/api/v1/payments?scheme=SFI'
+    }
+    const response = await server.inject(options)
+
+    expect(mockGetPayments).toHaveBeenCalledWith({ scheme: 'SFI', includeEvents: false, page: 1, pageSize: 20 })
+    expect(response.statusCode).toBe(HTTP_STATUS_OK)
+    expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
+  })
+
   test('should filter payments by vendor if requested', async () => {
     const options = {
       method: 'GET',

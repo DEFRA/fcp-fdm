@@ -25,19 +25,23 @@ class PaymentRepository extends BaseRepository {
    * @param {number} [filters.frn] - Farm Reference Number
    * @param {number} [filters.sbi] - Single Business Identifier
    * @param {number} [filters.schemeId] - Scheme identifier
+   * @param {string} [filters.scheme] - Scheme name
    * @param {string} [filters.vendor] - Vendor identifier
    * @param {string} [filters.trader] - Trader identifier
    * @returns {Object} MongoDB query object
    */
   buildQuery (filters = {}) {
     const query = super.buildQuery(filters)
-    const { schemeId, vendor, trader, frn } = filters
+    const { schemeId, scheme, vendor, trader, frn } = filters
 
     if (frn !== undefined) {
       query.frn = frn
     }
     if (schemeId !== undefined) {
       query.schemeId = schemeId
+    }
+    if (scheme !== undefined) {
+      query.scheme = scheme
     }
     if (vendor !== undefined) {
       query.vendor = vendor

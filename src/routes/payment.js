@@ -10,13 +10,14 @@ const api = [{
   path: '/api/v1/payments',
   options: {
     description: 'Get all payments',
-    notes: 'Payments can be filtered by FRN, SBI, schemeId, vendor, or trader',
+    notes: 'Payments can be filtered by FRN, SBI, schemeId, scheme, vendor, or trader',
     tags: ['api', 'payments'],
     validate: {
       query: {
         frn: Joi.number().optional().description('Filter payments by FRN'),
         sbi: Joi.number().optional().description('Filter payments by SBI'),
         schemeId: Joi.number().optional().description('Filter payments by scheme ID'),
+        scheme: Joi.string().optional().description('Filter payments by scheme'),
         vendor: Joi.string().optional().description('Filter payments by vendor'),
         trader: Joi.string().optional().description('Filter payments by trader'),
         includeEvents: Joi.boolean().default(false).description('Whether to include the event history'),

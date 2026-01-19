@@ -145,6 +145,25 @@ function updatePaymentRequestArray (paymentRequestFields, context) {
   }
 }
 
+const SCHEME_NAMES = {
+  1: 'SFI',
+  2: 'SFI Pilot',
+  3: 'Lump Sums',
+  4: 'Vet Visits',
+  5: 'CS',
+  6: 'BPS',
+  7: 'FDMR',
+  8: 'Manual',
+  9: 'ES',
+  10: 'FC',
+  11: 'IMPS',
+  12: 'SFI23',
+  13: 'Delinked',
+  14: 'Expanded SFI Offer',
+  15: 'COHT Revenue',
+  16: 'COHT Capital'
+}
+
 const TOP_LEVEL_FIELD_NAMES = [
   'frn',
   'sbi',
@@ -164,6 +183,11 @@ function extractTopLevelFields (dataFields) {
     if (dataFields[field] !== undefined) {
       extracted[field] = dataFields[field]
     }
+  }
+
+  // Add scheme property based on schemeId
+  if (dataFields.schemeId !== undefined) {
+    extracted.scheme = SCHEME_NAMES[dataFields.schemeId]
   }
 
   return extracted

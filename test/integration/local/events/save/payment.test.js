@@ -606,4 +606,41 @@ describe('save', () => {
     expect(payment.paymentRequests[2].invoiceNumber).toBe('INV-2025-502')
     expect(payment.paymentRequests[2].value).toBe(300)
   })
+
+  test.each([
+    [1, 'SFI'],
+    [2, 'SFI Pilot'],
+    [3, 'Lump Sums'],
+    [4, 'Vet Visits'],
+    [5, 'CS'],
+    [6, 'BPS'],
+    [7, 'FDMR'],
+    [8, 'Manual'],
+    [9, 'ES'],
+    [10, 'FC'],
+    [11, 'IMPS'],
+    [12, 'SFI23'],
+    [13, 'Delinked'],
+    [14, 'Expanded SFI Offer'],
+    [15, 'COHT Revenue'],
+    [16, 'COHT Capital']
+  ])('should save scheme name "%s" as "%s" based on schemeId', async (schemeId, expectedSchemeName) => {
+    const event = {
+      ...paymentProcessed,
+      data: {
+        ...paymentProcessed.data,
+        correlationId: `scheme-test-${schemeId}`,
+        schemeId,
+        invoiceNumber: `INV-SCHEME-${schemeId}`
+      }
+    }
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.schemeId).toBe(schemeId)
+    expect(savedPayment.scheme).toBe(expectedSchemeName)
+  })
 })

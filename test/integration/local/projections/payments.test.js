@@ -14,6 +14,7 @@ const testPayments = [{
   frn: 1234567890,
   sbi: 987654321,
   schemeId: 1,
+  scheme: 'SFI',
   vendor: 'VENDOR-A',
   trader: 'TRADER-X',
   invoiceNumber: 'INV-001',
@@ -29,6 +30,7 @@ const testPayments = [{
   frn: 1234567890, // Same FRN as payment 1
   sbi: 987654322,  // Different SBI
   schemeId: 1,     // Same scheme
+  scheme: 'SFI',   // Same scheme name
   vendor: 'VENDOR-B',
   trader: 'TRADER-X', // Same trader
   invoiceNumber: 'INV-002',
@@ -44,6 +46,7 @@ const testPayments = [{
   frn: 1234567891, // Different FRN
   sbi: 987654321,  // Same SBI as payment 1
   schemeId: 2,     // Different scheme
+  scheme: 'CS',    // Different scheme name
   vendor: 'VENDOR-A', // Same vendor as payment 1
   trader: 'TRADER-Y',
   invoiceNumber: 'INV-003',
@@ -59,6 +62,7 @@ const testPayments = [{
   frn: 1234567891, // Same FRN as payment 3
   sbi: 987654323,  // Different SBI from all others
   schemeId: 2,     // Same scheme as payment 3
+  scheme: 'CS',    // Same scheme name as payment 3
   vendor: 'VENDOR-B', // Same vendor as payment 2
   trader: 'TRADER-Y', // Same trader as payment 3
   invoiceNumber: 'INV-004',
@@ -158,6 +162,22 @@ describe('getPayments', () => {
     const schemeId = 2
     const expectedPayments = testPayments.filter(payment => payment.schemeId === schemeId)
     const { payments } = await getPayments({ schemeId })
+    expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
+    expect(payments).toHaveLength(2)
+  })
+
+  test('should filter payments by scheme if requested - multiple results', async () => {
+    const scheme = 'SFI'
+    const expectedPayments = testPayments.filter(payment => payment.scheme === scheme)
+    const { payments } = await getPayments({ scheme })
+    expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
+    expect(payments).toHaveLength(2)
+  })
+
+  test('should filter payments by scheme if requested - single result', async () => {
+    const scheme = 'CS'
+    const expectedPayments = testPayments.filter(payment => payment.scheme === scheme)
+    const { payments } = await getPayments({ scheme })
     expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
     expect(payments).toHaveLength(2)
   })
