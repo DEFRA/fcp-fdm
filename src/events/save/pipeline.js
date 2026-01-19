@@ -25,6 +25,10 @@ import { getEventSummary, getStatusFromTypeSuffix } from './cloud-events.js'
  * @param {boolean} [mappings.skipEventTracking=false] - Skip event array tracking (stage 2)
  * @param {boolean} [mappings.skipStatusTracking=false] - Skip lastEventTime/status tracking (stage 3)
  * @param {boolean} [mappings.updateOnlyWhenNewer=false] - Only update data fields if event is newer
+ * @param {Function} [mappings.beforeEventTracking] - Custom stages to inject before event tracking (receives pipeline, context)
+ * @param {Function} [mappings.afterEventTracking] - Custom stages to inject after event tracking (receives pipeline, context)
+ * @param {Function} [mappings.beforeStatusTracking] - Custom stages to inject before status tracking (receives pipeline, context)
+ * @param {Function} [mappings.afterStatusTracking] - Custom stages to inject after status tracking (receives pipeline, context)
  * @returns {Array} MongoDB aggregation pipeline stages
  */
 export function buildSavePipeline (event, eventEntity, mappings) {
@@ -35,7 +39,11 @@ export function buildSavePipeline (event, eventEntity, mappings) {
     customEventSummary,
     skipEventTracking = false,
     skipStatusTracking = false,
-    updateOnlyWhenNewer = false
+    updateOnlyWhenNewer = false,
+    beforeEventTracking,
+    afterEventTracking,
+    beforeStatusTracking,
+    afterStatusTracking
   } = mappings
 
   const eventSummary = customEventSummary || getEventSummary(eventEntity)
@@ -45,6 +53,16 @@ export function buildSavePipeline (event, eventEntity, mappings) {
   const pipeline = []
 
   const incomingTime = new Date(event.time || eventEntity.received)
+
+  // Context object passed to hook functions
+  const context = {
+    event,
+    eventEntity,
+    eventSummary,
+    status,
+    incomingTime,
+    dataFields
+  }
 
   // Conditionally wrap data fields if updateOnlyWhenNewer is enabled
   const fieldsToUpdate = updateOnlyWhenNewer
@@ -68,6 +86,11 @@ export function buildSavePipeline (event, eventEntity, mappings) {
     }
   })
 
+  // Hook: Before event tracking
+  if (beforeEventTracking) {
+    beforeEventTracking(pipeline, context)
+  }
+
   // Stage 2: Handle events array - append new event if not already present (optional)
   if (!skipEventTracking) {
     pipeline.push({
@@ -83,6 +106,16 @@ export function buildSavePipeline (event, eventEntity, mappings) {
         }
       }
     })
+  }
+
+  // Hook: After event tracking
+  if (afterEventTracking) {
+    afterEventTracking(pipeline, context)
+  }
+
+  // Hook: Before status tracking
+  if (beforeStatusTracking) {
+    beforeStatusTracking(pipeline, context)
   }
 
   // Stage 3: Update lastEventTime and conditionally update status if event is newer (optional)
@@ -105,6 +138,11 @@ export function buildSavePipeline (event, eventEntity, mappings) {
           : {})
       }
     })
+  }
+
+  // Hook: After status tracking
+  if (afterStatusTracking) {
+    afterStatusTracking(pipeline, context)
   }
 
   // Stage 4: Clean up temporary fields

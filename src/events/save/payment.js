@@ -1,4 +1,5 @@
 import { getMongoDb } from '../../common/helpers/mongodb.js'
+import { convertToPence } from '../../common/helpers/currency.js'
 import { eventTypePrefixes } from '../types.js'
 import { config } from '../../config/config.js'
 import { saveCloudEvent } from './cloud-events.js'
@@ -22,6 +23,29 @@ async function upsertPayment (event, eventEntity) {
 
   const { correlationId } = event.data
 
+  const dataFields = sanitizeDataFields(event)
+
+  const topLevelFields = extractTopLevelFields(dataFields)
+  const paymentRequestFields = extractPaymentRequestFields(dataFields)
+
+  const pipeline = buildSavePipeline(event, eventEntity, {
+    eventTypePrefix: PAYMENT_EVENT_PREFIX,
+    dataFields: topLevelFields,
+    updateOnlyWhenNewer: true,
+    unsetFields: ['_incomingInvoiceNumber', '_incomingPaymentRequest'],
+    beforeEventTracking: (pipe, context) => {
+      addPaymentRequestStage(pipe, context, dataFields, paymentRequestFields)
+    }
+  })
+
+  await paymentCollection.updateOne(
+    { _id: correlationId },
+    pipeline,
+    { upsert: true, maxTimeMS }
+  )
+}
+
+function sanitizeDataFields (event) {
   const dataFields = { ...event.data }
 
   // Payment Hub events all have values in pence with the exception of payment.extracted
@@ -35,32 +59,123 @@ async function upsertPayment (event, eventEntity) {
     if (Array.isArray(dataFields.invoiceLines)) {
       dataFields.invoiceLines = dataFields.invoiceLines.map(line => ({
         ...line,
-        value: line.value !== undefined ? convertToPence(line.value) : line.value
+        value: line.value === undefined ? line.value : convertToPence(line.value)
       }))
     }
   }
 
-  const pipeline = buildSavePipeline(event, eventEntity, {
-    eventTypePrefix: PAYMENT_EVENT_PREFIX,
-    dataFields,
-    updateOnlyWhenNewer: true
-  })
-
-  await paymentCollection.updateOne(
-    { _id: correlationId },
-    pipeline,
-    { upsert: true, maxTimeMS }
-  )
+  return dataFields
 }
 
-function convertToPence (valueInPounds) {
-  try {
-    const currencyArray = valueInPounds.toString().split('.').filter(x => x.length > 0)
-    const pounds = currencyArray[0]
-    const pence = (currencyArray[1] ?? '00').padEnd(2, '0')
-    const value = Number(pounds + pence)
-    return Number.isInteger(value) ? value : undefined
-  } catch {
-    return undefined
+function addPaymentRequestStage (pipeline, context, dataFields, paymentRequestFields) {
+  // Stage: Handle paymentRequests array - update existing or add new
+  pipeline.push({
+    $set: {
+      _incomingInvoiceNumber: dataFields.invoiceNumber,
+      _incomingPaymentRequest: paymentRequestFields,
+      paymentRequests: buildPaymentRequestsArray(dataFields, paymentRequestFields, context)
+    }
+  })
+}
+
+function buildPaymentRequestsArray (dataFields, paymentRequestFields, context) {
+  return {
+    $cond: {
+      // Check if paymentRequests array exists
+      if: { $ne: [{ $type: '$paymentRequests' }, 'array'] },
+      // If not, create array with new payment request including time
+      then: [{ $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] }],
+      // If it exists, check if invoiceNumber already exists in array
+      else: {
+        $let: {
+          vars: {
+            existingIndex: {
+              $indexOfArray: [
+                { $map: { input: '$paymentRequests', as: 'pr', in: '$$pr.invoiceNumber' } },
+                dataFields.invoiceNumber
+              ]
+            }
+          },
+          in: {
+            $cond: {
+              // If invoice number exists in array
+              if: { $gte: ['$$existingIndex', 0] },
+              // Update the existing item only if incoming event is newer
+              then: updatePaymentRequestArray(paymentRequestFields, context),
+              // If invoice number doesn't exist, append to array with time
+              else: {
+                $concatArrays: [
+                  '$paymentRequests',
+                  [{ $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] }]
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
   }
+}
+
+function updatePaymentRequestArray (paymentRequestFields, context) {
+  return {
+    $map: {
+      input: { $range: [0, { $size: '$paymentRequests' }] },
+      as: 'idx',
+      in: {
+        $cond: {
+          if: { $eq: ['$$idx', '$$existingIndex'] },
+          // Check if incoming event is newer than existing payment request
+          then: {
+            $cond: {
+              if: {
+                $gt: [
+                  context.incomingTime,
+                  { $ifNull: [{ $arrayElemAt: ['$paymentRequests.time', '$$idx'] }, new Date(0)] }
+                ]
+              },
+              then: { $mergeObjects: [paymentRequestFields, { time: context.incomingTime }] },
+              else: { $arrayElemAt: ['$paymentRequests', '$$idx'] }
+            }
+          },
+          else: { $arrayElemAt: ['$paymentRequests', '$$idx'] }
+        }
+      }
+    }
+  }
+}
+
+const TOP_LEVEL_FIELD_NAMES = [
+  'frn',
+  'sbi',
+  'correlationId',
+  'schemeId',
+  'agreementNumber',
+  'contractNumber',
+  'batch',
+  'paymentRequestNumber',
+  'marketingYear',
+  'sourceSystem'
+]
+
+function extractTopLevelFields (dataFields) {
+  const extracted = {}
+  for (const field of TOP_LEVEL_FIELD_NAMES) {
+    if (dataFields[field] !== undefined) {
+      extracted[field] = dataFields[field]
+    }
+  }
+
+  return extracted
+}
+
+function extractPaymentRequestFields (dataFields) {
+  const extracted = {}
+  for (const [key, value] of Object.entries(dataFields)) {
+    if (!TOP_LEVEL_FIELD_NAMES.includes(key)) {
+      extracted[key] = value
+    }
+  }
+
+  return extracted
 }

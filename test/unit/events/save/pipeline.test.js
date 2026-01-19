@@ -553,4 +553,318 @@ describe('buildSavePipeline', () => {
     expect(pipeline[0].$set).toHaveProperty('created')
     expect(Object.keys(pipeline[0].$set)).toHaveLength(3)
   })
+
+  describe('hook functions', () => {
+    test('should call beforeEventTracking hook with pipeline and context', () => {
+      const beforeEventTracking = vi.fn()
+      const mappings = {
+        dataFields: { testField: 'test-value' },
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(beforeEventTracking).toHaveBeenCalledTimes(1)
+      const [pipeline, context] = beforeEventTracking.mock.calls[0]
+
+      // Verify pipeline is an array that can be modified
+      expect(Array.isArray(pipeline)).toBe(true)
+
+      // Verify context has expected properties
+      expect(context.event).toBe(mockEvent)
+      expect(context.eventEntity).toBe(mockEventEntity)
+      expect(context.eventSummary).toBe(mockEventSummary)
+      expect(context.status).toBe('created')
+      expect(context.incomingTime).toBeInstanceOf(Date)
+      expect(context.dataFields).toEqual({ testField: 'test-value' })
+    })
+
+    test('should inject stages from beforeEventTracking before event array stage', () => {
+      const customStage = { $set: { customField: 'customValue' } }
+      const beforeEventTracking = (pipeline) => {
+        pipeline.push(customStage)
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should have: stage1, customStage, events, _prevLastEventTime, status, cleanup
+      expect(pipeline).toHaveLength(6)
+      expect(pipeline[1]).toEqual(customStage)
+      expect(pipeline[2].$set).toHaveProperty('events')
+    })
+
+    test('should call afterEventTracking hook after event array stage', () => {
+      const afterEventTracking = vi.fn()
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        afterEventTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(afterEventTracking).toHaveBeenCalledTimes(1)
+      const [pipeline, context] = afterEventTracking.mock.calls[0]
+
+      expect(Array.isArray(pipeline)).toBe(true)
+      expect(context.event).toBe(mockEvent)
+    })
+
+    test('should inject stages from afterEventTracking after event array stage', () => {
+      const customStage = { $set: { afterEventsField: 'value' } }
+      const afterEventTracking = (pipeline) => {
+        pipeline.push(customStage)
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        afterEventTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should have: stage1, events, customStage, _prevLastEventTime, status, cleanup
+      expect(pipeline).toHaveLength(6)
+      expect(pipeline[1].$set).toHaveProperty('events')
+      expect(pipeline[2]).toEqual(customStage)
+      expect(pipeline[3].$set).toHaveProperty('_prevLastEventTime')
+    })
+
+    test('should call beforeStatusTracking hook before status tracking stages', () => {
+      const beforeStatusTracking = vi.fn()
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeStatusTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(beforeStatusTracking).toHaveBeenCalledTimes(1)
+      const [pipeline, context] = beforeStatusTracking.mock.calls[0]
+
+      expect(Array.isArray(pipeline)).toBe(true)
+      expect(context.status).toBe('created')
+    })
+
+    test('should inject stages from beforeStatusTracking before status stages', () => {
+      const customStage = { $set: { beforeStatusField: 'value' } }
+      const beforeStatusTracking = (pipeline) => {
+        pipeline.push(customStage)
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeStatusTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should have: stage1, events, customStage, _prevLastEventTime, status, cleanup
+      expect(pipeline).toHaveLength(6)
+      expect(pipeline[1].$set).toHaveProperty('events')
+      expect(pipeline[2]).toEqual(customStage)
+      expect(pipeline[3].$set).toHaveProperty('_prevLastEventTime')
+    })
+
+    test('should call afterStatusTracking hook after status tracking stages', () => {
+      const afterStatusTracking = vi.fn()
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        afterStatusTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(afterStatusTracking).toHaveBeenCalledTimes(1)
+      const [pipeline, context] = afterStatusTracking.mock.calls[0]
+
+      expect(Array.isArray(pipeline)).toBe(true)
+      expect(context.incomingTime).toBeInstanceOf(Date)
+    })
+
+    test('should inject stages from afterStatusTracking before cleanup stage', () => {
+      const customStage = { $set: { afterStatusField: 'value' } }
+      const afterStatusTracking = (pipeline) => {
+        pipeline.push(customStage)
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        afterStatusTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should have: stage1, events, _prevLastEventTime, status, customStage, cleanup
+      expect(pipeline).toHaveLength(6)
+      expect(pipeline[3].$set).toHaveProperty('lastEventTime')
+      expect(pipeline[4]).toEqual(customStage)
+      expect(pipeline[5]).toHaveProperty('$unset')
+    })
+
+    test('should call all hooks in correct order', () => {
+      const callOrder = []
+      const beforeEventTracking = vi.fn(() => callOrder.push('beforeEventTracking'))
+      const afterEventTracking = vi.fn(() => callOrder.push('afterEventTracking'))
+      const beforeStatusTracking = vi.fn(() => callOrder.push('beforeStatusTracking'))
+      const afterStatusTracking = vi.fn(() => callOrder.push('afterStatusTracking'))
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking,
+        afterEventTracking,
+        beforeStatusTracking,
+        afterStatusTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(callOrder).toEqual([
+        'beforeEventTracking',
+        'afterEventTracking',
+        'beforeStatusTracking',
+        'afterStatusTracking'
+      ])
+    })
+
+    test('should not call hooks when skipEventTracking is true but beforeEventTracking is provided', () => {
+      const beforeEventTracking = vi.fn()
+      const afterEventTracking = vi.fn()
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        skipEventTracking: true,
+        beforeEventTracking,
+        afterEventTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Hooks should still be called even if event tracking is skipped
+      expect(beforeEventTracking).toHaveBeenCalledTimes(1)
+      expect(afterEventTracking).toHaveBeenCalledTimes(1)
+    })
+
+    test('should not call hooks when skipStatusTracking is true but beforeStatusTracking is provided', () => {
+      const beforeStatusTracking = vi.fn()
+      const afterStatusTracking = vi.fn()
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        skipStatusTracking: true,
+        beforeStatusTracking,
+        afterStatusTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Hooks should still be called even if status tracking is skipped
+      expect(beforeStatusTracking).toHaveBeenCalledTimes(1)
+      expect(afterStatusTracking).toHaveBeenCalledTimes(1)
+    })
+
+    test('should allow hooks to modify pipeline by pushing multiple stages', () => {
+      const beforeEventTracking = (pipeline) => {
+        pipeline.push({ $set: { field1: 'value1' } })
+        pipeline.push({ $set: { field2: 'value2' } })
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should have: stage1, customStage1, customStage2, events, _prevLastEventTime, status, cleanup
+      expect(pipeline).toHaveLength(7)
+      expect(pipeline[1].$set).toEqual({ field1: 'value1' })
+      expect(pipeline[2].$set).toEqual({ field2: 'value2' })
+      expect(pipeline[3].$set).toHaveProperty('events')
+    })
+
+    test('should provide context with correct incomingTime from event.time', () => {
+      const beforeEventTracking = vi.fn()
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      const [, context] = beforeEventTracking.mock.calls[0]
+      expect(context.incomingTime).toEqual(new Date('2024-01-15T10:00:00.000Z'))
+    })
+
+    test('should provide context with received time when event.time is missing', () => {
+      const eventWithoutTime = { ...mockEvent }
+      delete eventWithoutTime.time
+
+      const beforeEventTracking = vi.fn()
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      buildSavePipeline(eventWithoutTime, mockEventEntity, mappings)
+
+      const [, context] = beforeEventTracking.mock.calls[0]
+      expect(context.incomingTime).toEqual(mockEventEntity.received)
+    })
+
+    test('should work without any hooks provided', () => {
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.'
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      // Should work as before without hooks
+      expect(pipeline).toHaveLength(5)
+      expect(pipeline[0]).toHaveProperty('$set')
+      expect(pipeline[1].$set).toHaveProperty('events')
+    })
+
+    test('should allow hooks to access and use context data', () => {
+      const beforeEventTracking = (pipeline, context) => {
+        // Use context to create conditional logic
+        pipeline.push({
+          $set: {
+            processedAt: context.incomingTime,
+            eventType: context.event.type
+          }
+        })
+      }
+
+      const mappings = {
+        dataFields: {},
+        eventTypePrefix: 'uk.gov.fcp.sfd.test.',
+        beforeEventTracking
+      }
+
+      const pipeline = buildSavePipeline(mockEvent, mockEventEntity, mappings)
+
+      expect(pipeline[1].$set.processedAt).toEqual(new Date('2024-01-15T10:00:00.000Z'))
+      expect(pipeline[1].$set.eventType).toBe('uk.gov.fcp.sfd.test.created')
+    })
+  })
 })

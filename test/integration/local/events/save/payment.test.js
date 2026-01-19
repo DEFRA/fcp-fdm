@@ -54,7 +54,8 @@ describe('save', () => {
     expect(savedPayment.frn).toBe(event.data.frn)
     expect(savedPayment.sbi).toBe(event.data.sbi)
     expect(savedPayment.schemeId).toBe(event.data.schemeId)
-    expect(savedPayment.invoiceNumber).toBe(event.data.invoiceNumber)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].invoiceNumber).toBe(event.data.invoiceNumber)
     expect(savedPayment.events).toHaveLength(1)
     expect(savedPayment.events[0]._id).toBe(`${event.source}:${event.id}`)
   })
@@ -76,7 +77,7 @@ describe('save', () => {
     // Save first event
     await save(event)
 
-    // Create a second event with the same correlationId
+    // Create a second event with the same correlationId but same invoiceNumber
     const secondEvent = {
       ...event,
       id: `${event.id}-second`,
@@ -95,7 +96,8 @@ describe('save', () => {
     expect(updatedPayment.frn).toBe(event.data.frn)
     expect(updatedPayment.sbi).toBe(event.data.sbi)
     expect(updatedPayment.schemeId).toBe(event.data.schemeId)
-    expect(updatedPayment.invoiceNumber).toBe(event.data.invoiceNumber)
+    expect(updatedPayment.paymentRequests).toHaveLength(1)
+    expect(updatedPayment.paymentRequests[0].invoiceNumber).toBe(event.data.invoiceNumber)
     expect(updatedPayment.events).toHaveLength(2)
     expect(updatedPayment.events[1]._id).toBe(`${secondEvent.source}:${secondEvent.id}`)
     expect(updatedPayment.status).toBe(expectedStatus)
@@ -124,7 +126,8 @@ describe('save', () => {
     expect(updatedPayment.frn).toBe(event.data.frn)
     expect(updatedPayment.sbi).toBe(event.data.sbi)
     expect(updatedPayment.schemeId).toBe(event.data.schemeId)
-    expect(updatedPayment.invoiceNumber).toBe(event.data.invoiceNumber)
+    expect(updatedPayment.paymentRequests).toHaveLength(1)
+    expect(updatedPayment.paymentRequests[0].invoiceNumber).toBe(event.data.invoiceNumber)
     expect(updatedPayment.events).toHaveLength(2)
     expect(updatedPayment.events[1]._id).toBe(`${secondEvent.source}:${secondEvent.id}`)
     expect(updatedPayment.status).toBe(expectedStatus)
@@ -161,7 +164,8 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.trader).toBe(event.data.trader)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].trader).toBe(event.data.trader)
     expect(savedPayment.frn).toBeUndefined()
     expect(savedPayment.sbi).toBeUndefined()
   })
@@ -182,7 +186,8 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.vendor).toBe(event.data.vendor)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].vendor).toBe(event.data.vendor)
     expect(savedPayment.frn).toBeUndefined()
     expect(savedPayment.sbi).toBeUndefined()
   })
@@ -208,8 +213,9 @@ describe('save', () => {
     expect(savedPayment).toBeDefined()
     expect(savedPayment.frn).toBe(event.data.frn)
     expect(savedPayment.sbi).toBe(event.data.sbi)
-    expect(savedPayment.trader).toBe(event.data.trader)
-    expect(savedPayment.vendor).toBe(event.data.vendor)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].trader).toBe(event.data.trader)
+    expect(savedPayment.paymentRequests[0].vendor).toBe(event.data.vendor)
   })
 
   test('should update payment properties with newer event', async () => {
@@ -231,7 +237,7 @@ describe('save', () => {
 
     await save(initialEvent)
 
-    // Create a newer event with different property values
+    // Create a newer event with different property values and different invoice number
     const newerEvent = {
       id: '850e8400-e29b-41d4-a716-446655440101',
       source: 'ffc-pay-processing',
@@ -252,13 +258,16 @@ describe('save', () => {
 
     const updatedPayment = await collections.payments.findOne({ _id: initialEvent.data.correlationId })
 
-    // Newer event should update all properties
+    // Newer event should update top-level properties
     expect(updatedPayment.frn).toBe(2222222222)
     expect(updatedPayment.sbi).toBe(222222222)
     expect(updatedPayment.schemeId).toBe(2)
-    expect(updatedPayment.invoiceNumber).toBe('INV-2025-101')
     expect(updatedPayment.status).toBe('submitted')
     expect(updatedPayment.events).toHaveLength(2)
+    // Both invoices should exist in paymentRequests array
+    expect(updatedPayment.paymentRequests).toHaveLength(2)
+    expect(updatedPayment.paymentRequests[0].invoiceNumber).toBe('INV-2025-100')
+    expect(updatedPayment.paymentRequests[1].invoiceNumber).toBe('INV-2025-101')
   })
 
   test('should not update payment properties with older event', async () => {
@@ -286,7 +295,7 @@ describe('save', () => {
     expect(payment.frn).toBe(3333333333)
     expect(payment.lastEventTime).toEqual(new Date('2023-10-17T15:00:00.000Z'))
 
-    // Create an older event with different property values
+    // Create an older event with different property values and different invoice number
     const olderEvent = {
       id: '850e8400-e29b-41d4-a716-446655440201',
       source: 'ffc-pay-processing',
@@ -309,13 +318,16 @@ describe('save', () => {
 
     // lastEventTime should still be the newer event's time
     expect(payment.lastEventTime).toEqual(new Date('2023-10-17T15:00:00.000Z'))
-    // Older event should NOT update properties - original values should remain
+    // Older event should NOT update top-level properties - original values should remain
     expect(payment.frn).toBe(3333333333)
     expect(payment.sbi).toBe(333333333)
     expect(payment.schemeId).toBe(3)
-    expect(payment.invoiceNumber).toBe('INV-2025-200')
     expect(payment.status).toBe('submitted')
     expect(payment.events).toHaveLength(2)
+    // Both invoices should exist in paymentRequests array since they have different invoice numbers
+    expect(payment.paymentRequests).toHaveLength(2)
+    expect(payment.paymentRequests[0].invoiceNumber).toBe('INV-2025-200')
+    expect(payment.paymentRequests[1].invoiceNumber).toBe('INV-2025-201')
   })
 
   test('should convert value to pence for payment.extracted event', async () => {
@@ -326,7 +338,8 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.value).toBe(12550)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].value).toBe(12550)
   })
 
   test('should convert invoice line values to pence for payment.extracted event', async () => {
@@ -337,12 +350,13 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.invoiceLines).toBeDefined()
-    expect(savedPayment.invoiceLines).toHaveLength(2)
-    expect(savedPayment.invoiceLines[0].value).toBe(7525)
-    expect(savedPayment.invoiceLines[0].description).toBe('Line 1')
-    expect(savedPayment.invoiceLines[1].value).toBe(5025)
-    expect(savedPayment.invoiceLines[1].description).toBe('Line 2')
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].invoiceLines).toBeDefined()
+    expect(savedPayment.paymentRequests[0].invoiceLines).toHaveLength(2)
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].value).toBe(7525)
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].description).toBe('Line 1')
+    expect(savedPayment.paymentRequests[0].invoiceLines[1].value).toBe(5025)
+    expect(savedPayment.paymentRequests[0].invoiceLines[1].description).toBe('Line 2')
   })
 
   test('should not convert values for non-extracted payment events', async () => {
@@ -366,8 +380,9 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.value).toBe(125.50)
-    expect(savedPayment.invoiceLines[0].value).toBe(75.25)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].value).toBe(125.50)
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].value).toBe(75.25)
   })
 
   test('should handle payment.extracted event with value but no invoice lines', async () => {
@@ -388,8 +403,9 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.value).toBe(10000) // 100.00 in pounds = 10000 pence
-    expect(savedPayment.invoiceLines).toBeUndefined()
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].value).toBe(10000) // 100.00 in pounds = 10000 pence
+    expect(savedPayment.paymentRequests[0].invoiceLines).toBeUndefined()
   })
 
   test('should handle payment.extracted event with invoice lines but no main value', async () => {
@@ -415,7 +431,179 @@ describe('save', () => {
     const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
 
     expect(savedPayment).toBeDefined()
-    expect(savedPayment.value).toBeUndefined()
-    expect(savedPayment.invoiceLines[0].value).toBe(2550)
+    expect(savedPayment.paymentRequests).toHaveLength(1)
+    expect(savedPayment.paymentRequests[0].value).toBeUndefined()
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].value).toBe(2550)
+  })
+
+  test('should update existing payment request when same invoiceNumber comes with newer event', async () => {
+    const initialEvent = {
+      id: '850e8400-e29b-41d4-a716-446655440300',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.processed',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T14:00:00.000Z',
+      data: {
+        correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-300',
+        value: 100
+      }
+    }
+
+    await save(initialEvent)
+
+    // Create a newer event with same invoice number but updated value
+    const newerEvent = {
+      id: '850e8400-e29b-41d4-a716-446655440301',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.submitted',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T15:00:00.000Z',
+      data: {
+        correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-300',
+        value: 200
+      }
+    }
+
+    await save(newerEvent)
+
+    const updatedPayment = await collections.payments.findOne({ _id: initialEvent.data.correlationId })
+
+    expect(updatedPayment).toBeDefined()
+    // Should still have only 1 payment request since invoice numbers are the same
+    expect(updatedPayment.paymentRequests).toHaveLength(1)
+    expect(updatedPayment.paymentRequests[0].invoiceNumber).toBe('INV-2025-300')
+    // Value should be updated to the newer value
+    expect(updatedPayment.paymentRequests[0].value).toBe(200)
+    expect(updatedPayment.status).toBe('submitted')
+  })
+
+  test('should not update existing payment request when same invoiceNumber comes with older event', async () => {
+    const initialEvent = {
+      id: '850e8400-e29b-41d4-a716-446655440400',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.submitted',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T15:00:00.000Z',
+      data: {
+        correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-400',
+        value: 200
+      }
+    }
+
+    await save(initialEvent)
+
+    // Create an older event with same invoice number but different value
+    const olderEvent = {
+      id: '850e8400-e29b-41d4-a716-446655440401',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.processed',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T14:00:00.000Z',
+      data: {
+        correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-400',
+        value: 100
+      }
+    }
+
+    await save(olderEvent)
+
+    const payment = await collections.payments.findOne({ _id: initialEvent.data.correlationId })
+
+    expect(payment).toBeDefined()
+    // Should still have only 1 payment request
+    expect(payment.paymentRequests).toHaveLength(1)
+    expect(payment.paymentRequests[0].invoiceNumber).toBe('INV-2025-400')
+    // Value should NOT be updated - should remain as the newer value
+    expect(payment.paymentRequests[0].value).toBe(200)
+  })
+
+  test('should handle multiple payment requests with different invoice numbers', async () => {
+    const event1 = {
+      id: '850e8400-e29b-41d4-a716-446655440500',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.processed',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T14:00:00.000Z',
+      data: {
+        correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-500',
+        value: 100
+      }
+    }
+
+    await save(event1)
+
+    const event2 = {
+      id: '850e8400-e29b-41d4-a716-446655440501',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.processed',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T14:05:00.000Z',
+      data: {
+        correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-501',
+        value: 200
+      }
+    }
+
+    await save(event2)
+
+    const event3 = {
+      id: '850e8400-e29b-41d4-a716-446655440502',
+      source: 'ffc-pay-processing',
+      specversion: '1.0',
+      type: 'uk.gov.defra.ffc.pay.payment.processed',
+      datacontenttype: 'application/json',
+      time: '2023-10-17T14:10:00.000Z',
+      data: {
+        correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-502',
+        value: 300
+      }
+    }
+
+    await save(event3)
+
+    const payment = await collections.payments.findOne({ _id: event1.data.correlationId })
+
+    expect(payment).toBeDefined()
+    expect(payment.paymentRequests).toHaveLength(3)
+    expect(payment.paymentRequests[0].invoiceNumber).toBe('INV-2025-500')
+    expect(payment.paymentRequests[0].value).toBe(100)
+    expect(payment.paymentRequests[1].invoiceNumber).toBe('INV-2025-501')
+    expect(payment.paymentRequests[1].value).toBe(200)
+    expect(payment.paymentRequests[2].invoiceNumber).toBe('INV-2025-502')
+    expect(payment.paymentRequests[2].value).toBe(300)
   })
 })
