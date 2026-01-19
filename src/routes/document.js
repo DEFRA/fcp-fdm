@@ -1,6 +1,6 @@
 import { constants as httpConstants } from 'node:http2'
 import Joi from 'joi'
-import { getDocuments, getDocumentByFileId } from '../projections/documents.js'
+import { getDocuments, getDocumentByFileId } from '../projections/document.js'
 import { getPageLinks } from '../common/helpers/pagination.js'
 
 const { HTTP_STATUS_NOT_FOUND } = httpConstants

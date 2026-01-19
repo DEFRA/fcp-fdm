@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../src/config/config.js'
-import { getMessages, getMessageByCorrelationId } from '../../../../src/projections/messages.js'
+import { getMessages, getMessageByCorrelationId } from '../../../../src/projections/message.js'
 import { clearAllCollections } from '../../../helpers/mongo.js'
 
 const CORRELATION_ID_1 = '00000000-0000-0000-0000-000000000001'

@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../src/config/config.js'
-import { getDocuments, getDocumentByFileId } from '../../../../src/projections/documents.js'
+import { getDocuments, getDocumentByFileId } from '../../../../src/projections/document.js'
 import { clearAllCollections } from '../../../helpers/mongo.js'
 
 const FILE_ID_1 = '00000000-0000-0000-0000-000000000001'

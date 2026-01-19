@@ -11,7 +11,7 @@ vi.mock('../../../../src/events/polling.js', () => ({
 const mockGetDocuments = vi.fn()
 const mockGetDocumentByFileId = vi.fn()
 
-vi.mock('../../../../src/projections/documents.js', () => ({
+vi.mock('../../../../src/projections/document.js', () => ({
   getDocuments: mockGetDocuments,
   getDocumentByFileId: mockGetDocumentByFileId
 }))
