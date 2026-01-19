@@ -205,6 +205,46 @@ The event processing follows this logical flow through the codebase:
 > **📋 Detailed Event Schemas**  
 > Complete event schemas, examples, and validation rules are available in the AsyncAPI specification: [`docs/asyncapi.yml`](./docs/asyncapi.yml)
 
+### Message Events
+
+The service processes message events from the SFD Comms service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.notification.received` | Initial message request | Requires `correlationId`, `recipient`, full personalisation data |
+| `uk.gov.fcp.sfd.notification.failure.validation` | Validation failed | Requires `correlationId`, `recipient`, error details |
+| `uk.gov.fcp.sfd.notification.sending` | Message being sent | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.delivered` | Message delivered | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.failure.provider` | Provider failure | Requires `correlationId`, `recipient`, status details |
+| `uk.gov.fcp.sfd.notification.failure.internal` | Internal failure | Requires `correlationId`, `recipient`, error details |
+| `uk.gov.fcp.sfd.notification.retry` | Retry request | Requires `correlationId`, `recipient`, full personalisation data |
+| `uk.gov.fcp.sfd.notification.retry.expired` | Retry expired | Requires `correlationId`, `recipient` |
+
+### Document Events
+
+The service processes document events from the SFD Object Processor service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.document.uploaded` | Document uploaded | Requires `correlationId`, `crn`, `sbi`, `file` (with `fileId`, `fileName`, `contentType`, `url`) |
+
+### CRM Events
+
+The service processes CRM case events from the Single Front Door CRM service:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.fcp.sfd.crm.case.created` | CRM case created | Requires `correlationId`, `crn`, `sbi`, `caseId`, `caseType` |
+| `uk.gov.fcp.sfd.crm.case.updated` | CRM case updated | Requires `correlationId`, `crn`, `sbi`, `caseId`, `caseType` |
+
+### Payment Events
+
+The service processes payment events from the Payment Hub:
+
+| Event Type | Description | Schema |
+|------------|-------------|---------|
+| `uk.gov.defra.ffc.pay.payment.*` | Payment instruction created | Requires
+
 ## Retry Logic and Dead Letter Queue
 
 ### SQS Configuration

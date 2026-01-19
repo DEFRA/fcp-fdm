@@ -1,7 +1,7 @@
 import { describe, beforeEach, beforeAll, afterAll, test, expect } from 'vitest'
 import { createMongoDbConnection, closeMongoDbConnection, getMongoDb } from '../../../../../src/common/helpers/mongodb.js'
 import { config } from '../../../../../src/config/config.js'
-import { paymentProcessed, paymentSubmitted } from '../../../../mocks/events.js'
+import { paymentProcessed, paymentSubmitted, paymentExtracted } from '../../../../mocks/events.js'
 import { save } from '../../../../../src/events/save/payment.js'
 import { clearAllCollections } from '../../../../helpers/mongo.js'
 import { eventTypePrefixes } from '../../../../../src/events/types.js'
@@ -316,5 +316,106 @@ describe('save', () => {
     expect(payment.invoiceNumber).toBe('INV-2025-200')
     expect(payment.status).toBe('submitted')
     expect(payment.events).toHaveLength(2)
+  })
+
+  test('should convert value to pence for payment.extracted event', async () => {
+    const event = paymentExtracted
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.value).toBe(12550)
+  })
+
+  test('should convert invoice line values to pence for payment.extracted event', async () => {
+    const event = paymentExtracted
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.invoiceLines).toBeDefined()
+    expect(savedPayment.invoiceLines).toHaveLength(2)
+    expect(savedPayment.invoiceLines[0].value).toBe(7525)
+    expect(savedPayment.invoiceLines[0].description).toBe('Line 1')
+    expect(savedPayment.invoiceLines[1].value).toBe(5025)
+    expect(savedPayment.invoiceLines[1].description).toBe('Line 2')
+  })
+
+  test('should not convert values for non-extracted payment events', async () => {
+    const event = {
+      ...paymentProcessed,
+      data: {
+        ...paymentProcessed.data,
+        correlationId: '99389915-7275-457a-b8ca-8bf206b2e67c',
+        value: 125.50,
+        invoiceLines: [
+          {
+            description: 'Line 1',
+            value: 75.25
+          }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.value).toBe(125.50)
+    expect(savedPayment.invoiceLines[0].value).toBe(75.25)
+  })
+
+  test('should handle payment.extracted event with value but no invoice lines', async () => {
+    const event = {
+      ...paymentExtracted,
+      data: {
+        correlationId: '88389915-7275-457a-b8ca-8bf206b2e67c',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-006',
+        value: 100.00
+      }
+    }
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.value).toBe(10000) // 100.00 in pounds = 10000 pence
+    expect(savedPayment.invoiceLines).toBeUndefined()
+  })
+
+  test('should handle payment.extracted event with invoice lines but no main value', async () => {
+    const event = {
+      ...paymentExtracted,
+      data: {
+        correlationId: '77389915-7275-457a-b8ca-8bf206b2e67c',
+        frn: 1234567890,
+        sbi: 123456789,
+        schemeId: 1,
+        invoiceNumber: 'INV-2025-007',
+        invoiceLines: [
+          {
+            description: 'Line 1',
+            value: 25.50
+          }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const savedPayment = await collections.payments.findOne({ _id: event.data.correlationId })
+
+    expect(savedPayment).toBeDefined()
+    expect(savedPayment.value).toBeUndefined()
+    expect(savedPayment.invoiceLines[0].value).toBe(2550)
   })
 })

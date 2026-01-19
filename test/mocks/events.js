@@ -271,3 +271,30 @@ export const paymentSubmitted = {
     invoiceNumber: 'INV-2025-001'
   }
 }
+
+export const paymentExtracted = {
+  id: '850e8400-e29b-41d4-a716-446655440003',
+  source: 'ffc-pay-batch-processor',
+  specversion: '1.0',
+  type: 'uk.gov.defra.ffc.pay.payment.extracted',
+  datacontenttype: 'application/json',
+  time: '2023-10-17T14:45:01.000Z',
+  data: {
+    correlationId: '19389915-7275-457a-b8ca-8bf206b2e67c',
+    frn: 1234567890,
+    sbi: 123456789,
+    schemeId: 1,
+    invoiceNumber: 'INV-2025-005',
+    value: 125.50,
+    invoiceLines: [
+      {
+        description: 'Line 1',
+        value: 75.25
+      },
+      {
+        description: 'Line 2',
+        value: 50.25
+      }
+    ]
+  }
+}
