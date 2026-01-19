@@ -64,17 +64,7 @@ export function buildSavePipeline (event, eventEntity, mappings) {
     dataFields
   }
 
-  // Conditionally wrap data fields if updateOnlyWhenNewer is enabled
-  const fieldsToUpdate = updateOnlyWhenNewer
-    ? Object.fromEntries(
-      Object.entries(dataFields).map(([key, value]) => [
-        key,
-        {
-          $cond: [{ $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] }, value, `$${key}`]
-        }
-      ])
-    )
-    : dataFields
+  const fieldsToUpdate = wrapDataFields(dataFields, updateOnlyWhenNewer, incomingTime)
 
   // Stage 1: Set incoming data, timestamps, and context-specific fields
   pipeline.push({
@@ -93,19 +83,7 @@ export function buildSavePipeline (event, eventEntity, mappings) {
 
   // Stage 2: Handle events array - append new event if not already present (optional)
   if (!skipEventTracking) {
-    pipeline.push({
-      $set: {
-        events: {
-          $cond: {
-            if: {
-              $in: [eventEntity._id, { $ifNull: [{ $map: { input: '$events', as: 'e', in: '$$e._id' } }, []] }]
-            },
-            then: '$events',
-            else: { $concatArrays: [{ $ifNull: ['$events', []] }, [eventSummary]] }
-          }
-        }
-      }
-    })
+    addEventTrackingStage(pipeline, eventEntity, eventSummary)
   }
 
   // Hook: After event tracking
@@ -120,24 +98,7 @@ export function buildSavePipeline (event, eventEntity, mappings) {
 
   // Stage 3: Update lastEventTime and conditionally update status if event is newer (optional)
   if (!skipStatusTracking) {
-    // Stage 3a: Capture previous lastEventTime before updating it
-    pipeline.push({
-      $set: {
-        _prevLastEventTime: { $ifNull: ['$lastEventTime', new Date(0)] }
-      }
-    },
-    {
-      $set: {
-        lastEventTime: { $max: ['$lastEventTime', '$_incomingTime'] },
-        ...(status
-          ? {
-              status: {
-                $cond: [{ $gt: ['$_incomingTime', '$_prevLastEventTime'] }, status, '$status']
-              }
-            }
-          : {})
-      }
-    })
+    addStatusTrackingStages(pipeline, status)
   }
 
   // Hook: After status tracking
@@ -151,4 +112,63 @@ export function buildSavePipeline (event, eventEntity, mappings) {
   })
 
   return pipeline
+}
+
+/**
+ * Wraps data fields conditionally based on updateOnlyWhenNewer setting
+ */
+function wrapDataFields (dataFields, updateOnlyWhenNewer, incomingTime) {
+  if (!updateOnlyWhenNewer) {
+    return dataFields
+  }
+  return Object.fromEntries(
+    Object.entries(dataFields).map(([key, value]) => [
+      key,
+      {
+        $cond: [{ $gt: [incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] }, value, `$${key}`]
+      }
+    ])
+  )
+}
+
+/**
+ * Adds event tracking stage to pipeline
+ */
+function addEventTrackingStage (pipeline, eventEntity, eventSummary) {
+  pipeline.push({
+    $set: {
+      events: {
+        $cond: {
+          if: {
+            $in: [eventEntity._id, { $ifNull: [{ $map: { input: '$events', as: 'e', in: '$$e._id' } }, []] }]
+          },
+          then: '$events',
+          else: { $concatArrays: [{ $ifNull: ['$events', []] }, [eventSummary]] }
+        }
+      }
+    }
+  })
+}
+
+/**
+ * Adds status tracking stages to pipeline
+ */
+function addStatusTrackingStages (pipeline, status) {
+  pipeline.push({
+    $set: {
+      _prevLastEventTime: { $ifNull: ['$lastEventTime', new Date(0)] }
+    }
+  },
+  {
+    $set: {
+      lastEventTime: { $max: ['$lastEventTime', '$_incomingTime'] },
+      ...(status
+        ? {
+            status: {
+              $cond: [{ $gt: ['$_incomingTime', '$_prevLastEventTime'] }, status, '$status']
+            }
+          }
+        : {})
+    }
+  })
 }
