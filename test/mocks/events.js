@@ -242,7 +242,7 @@ export const crmCaseUpdated = {
 
 export const paymentExtracted = {
   id: '850e8400-e29b-41d4-a716-446655440001',
-  source: 'ffc-pay-service',
+  source: 'ffc-pay-batch-processor',
   specversion: '1.0',
   type: 'uk.gov.defra.ffc.pay.payment.extracted',
   datacontenttype: 'text/json',
@@ -277,7 +277,7 @@ export const paymentExtracted = {
 
 export const paymentEnriched = {
   id: '850e8400-e29b-41d4-a716-446655440002',
-  source: 'ffc-pay-service',
+  source: 'ffc-pay-enrichment',
   specversion: '1.0',
   type: 'uk.gov.defra.ffc.pay.payment.enriched',
   datacontenttype: 'text/json',
@@ -312,7 +312,7 @@ export const paymentEnriched = {
 
 export const paymentProcessed = {
   id: '850e8400-e29b-41d4-a716-446655440003',
-  source: 'ffc-pay-service',
+  source: 'ffc-pay-processing',
   specversion: '1.0',
   type: 'uk.gov.defra.ffc.pay.payment.processed',
   datacontenttype: 'text/json',
@@ -347,7 +347,7 @@ export const paymentProcessed = {
 
 export const paymentSubmitted = {
   id: '850e8400-e29b-41d4-a716-446655440004',
-  source: 'ffc-pay-service',
+  source: 'ffc-pay-submission',
   specversion: '1.0',
   type: 'uk.gov.defra.ffc.pay.payment.submitted',
   datacontenttype: 'text/json',
@@ -382,7 +382,7 @@ export const paymentSubmitted = {
 
 export const paymentAcknowledged = {
   id: '850e8400-e29b-41d4-a716-446655440005',
-  source: 'ffc-pay-service',
+  source: 'ffc-pay-responses',
   specversion: '1.0',
   type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
   datacontenttype: 'text/json',
