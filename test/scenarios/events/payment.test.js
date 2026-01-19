@@ -29,6 +29,32 @@ describe('payment event scenarios', () => {
     await closeMongoDbConnection()
   })
 
+  test('should process a payment extracted scenario', async () => {
+    await processScenarioEvents(getScenario('single.paymentExtracted'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(1)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    expect(savedPayments[0].events.length).toBe(1)
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+  })
+
+  test('should process a payment enriched scenario', async () => {
+    await processScenarioEvents(getScenario('single.paymentEnriched'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(1)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    expect(savedPayments[0].events.length).toBe(1)
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+  })
+
   test('should process a payment processed scenario', async () => {
     await processScenarioEvents(getScenario('single.paymentProcessed'))
 
@@ -38,17 +64,55 @@ describe('payment event scenarios', () => {
     const savedPayments = await collections.payments.find({}).toArray()
     expect(savedPayments).toHaveLength(1)
     expect(savedPayments[0].events.length).toBe(1)
-    expect(savedPayments[0].invoiceNumber).toBe('INV-2025-001')
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
   })
 
-  test('should process multiple payment events for same correlation', async () => {
-    await processScenarioEvents(getScenario('streams.paymentProcessedAndSubmitted'))
+  test('should process a payment submitted scenario', async () => {
+    await processScenarioEvents(getScenario('single.paymentSubmitted'))
 
     const savedEvents = await collections.events.find({}).toArray()
-    expect(savedEvents.length).toBe(2)
+    expect(savedEvents.length).toBe(1)
 
     const savedPayments = await collections.payments.find({}).toArray()
     expect(savedPayments).toHaveLength(1)
-    expect(savedPayments[0].events.length).toBe(2)
+    expect(savedPayments[0].events.length).toBe(1)
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+  })
+
+  test('should process a payment acknowledged scenario', async () => {
+    await processScenarioEvents(getScenario('single.paymentAcknowledged'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(1)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    expect(savedPayments[0].events.length).toBe(1)
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+  })
+
+  test('should process full payment transaction with all events', async () => {
+    await processScenarioEvents(getScenario('streams.paymentFullTransaction'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(5)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    expect(savedPayments[0].events.length).toBe(5)
+    expect(savedPayments[0].frn).toBe(1234567890)
+    expect(savedPayments[0].sbi).toBe(123456789)
+    expect(savedPayments[0].schemeId).toBe(1)
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+    expect(savedPayments[0].paymentRequests[0].value).toBe(80000)
+    expect(savedPayments[0].paymentRequests[0].invoiceLines).toHaveLength(2)
+    expect(savedPayments[0].paymentRequests[0].invoiceLines[0].description).toBe('G00 - Gross value of payment')
+    expect(savedPayments[0].paymentRequests[0].invoiceLines[0].value).toBe(100000)
+    expect(savedPayments[0].paymentRequests[0].invoiceLines[1].description).toBe('P24 - Penalty')
+    expect(savedPayments[0].paymentRequests[0].invoiceLines[1].value).toBe(-20000)
   })
 })

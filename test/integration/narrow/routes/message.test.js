@@ -11,7 +11,7 @@ vi.mock('../../../../src/events/polling.js', () => ({
 const mockGetMessages = vi.fn()
 const mockGetMessageByCorrelationId = vi.fn()
 
-vi.mock('../../../../src/projections/messages.js', () => ({
+vi.mock('../../../../src/projections/message.js', () => ({
   getMessages: mockGetMessages,
   getMessageByCorrelationId: mockGetMessageByCorrelationId
 }))
