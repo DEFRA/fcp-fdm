@@ -39,7 +39,7 @@ describe('payment event scenarios', () => {
     expect(savedPayments).toHaveLength(1)
     expect(savedPayments[0].events.length).toBe(1)
     expect(savedPayments[0].paymentRequests).toHaveLength(1)
-    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('INV-2025-001')
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
   })
 
   test('should process multiple payment events for same correlation', async () => {

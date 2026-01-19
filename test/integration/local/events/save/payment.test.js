@@ -339,7 +339,7 @@ describe('save', () => {
 
     expect(savedPayment).toBeDefined()
     expect(savedPayment.paymentRequests).toHaveLength(1)
-    expect(savedPayment.paymentRequests[0].value).toBe(12550)
+    expect(savedPayment.paymentRequests[0].value).toBe(8000000)
   })
 
   test('should convert invoice line values to pence for payment.extracted event', async () => {
@@ -353,10 +353,10 @@ describe('save', () => {
     expect(savedPayment.paymentRequests).toHaveLength(1)
     expect(savedPayment.paymentRequests[0].invoiceLines).toBeDefined()
     expect(savedPayment.paymentRequests[0].invoiceLines).toHaveLength(2)
-    expect(savedPayment.paymentRequests[0].invoiceLines[0].value).toBe(7525)
-    expect(savedPayment.paymentRequests[0].invoiceLines[0].description).toBe('Line 1')
-    expect(savedPayment.paymentRequests[0].invoiceLines[1].value).toBe(5025)
-    expect(savedPayment.paymentRequests[0].invoiceLines[1].description).toBe('Line 2')
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].value).toBe(10000000)
+    expect(savedPayment.paymentRequests[0].invoiceLines[0].description).toBe('G00 - Gross value of payment')
+    expect(savedPayment.paymentRequests[0].invoiceLines[1].value).toBe(-2000000)
+    expect(savedPayment.paymentRequests[0].invoiceLines[1].description).toBe('P24 - Penalty')
   })
 
   test('should not convert values for non-extracted payment events', async () => {
