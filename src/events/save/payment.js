@@ -35,7 +35,7 @@ async function upsertPayment (event, eventEntity) {
     if (Array.isArray(dataFields.invoiceLines)) {
       dataFields.invoiceLines = dataFields.invoiceLines.map(line => ({
         ...line,
-        value: line.value === undefined ? line.value : convertToPence(line.value)
+        value: line.value !== undefined ? convertToPence(line.value) : line.value
       }))
     }
   }
