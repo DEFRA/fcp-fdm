@@ -20,8 +20,11 @@ export const singleEvents = {
   crmCaseUpdated: [events.crmCaseUpdated],
 
   // Payment events
+  paymentExtracted: [events.paymentExtracted],
+  paymentEnriched: [events.paymentEnriched],
   paymentProcessed: [events.paymentProcessed],
-  paymentSubmitted: [events.paymentSubmitted]
+  paymentSubmitted: [events.paymentSubmitted],
+  paymentAcknowledged: [events.paymentAcknowledged]
 }
 
 export const completeStreams = {
@@ -98,11 +101,14 @@ export const completeStreams = {
   ],
 
   /**
-   * Payment processed and submitted
+   * Payment full transaction: extracted → enriched → processed → submitted → acknowledged
    */
-  paymentProcessedAndSubmitted: [
+  paymentFullTransaction: [
+    events.paymentExtracted,
+    events.paymentEnriched,
     events.paymentProcessed,
-    events.paymentSubmitted
+    events.paymentSubmitted,
+    events.paymentAcknowledged
   ]
 }
 
