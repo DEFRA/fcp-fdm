@@ -1,5 +1,11 @@
 import { vi, describe, beforeEach, test, expect } from 'vitest'
 
+const mockLoggerInfo = vi.fn()
+
+vi.mock('../../../src/common/helpers/logging/logger.js', () => ({
+  createLogger: () => ({ info: (...args) => mockLoggerInfo(...args) })
+}))
+
 const mockParseEvent = vi.fn()
 
 vi.mock('../../../src/events/parse.js', () => ({
@@ -27,6 +33,7 @@ vi.mock('../../../src/events/save.js', () => ({
 const { processEvent } = await import('../../../src/events/process.js')
 
 const testEvent = {
+  id: '12345',
   type: 'uk.gov.defra.fcp.event'
 }
 
@@ -61,6 +68,14 @@ describe('processEvent', () => {
   test('should save the event payload specific to the event type', async () => {
     await processEvent(testRawEvent)
     expect(mockSaveEvent).toHaveBeenCalledWith(testEvent, 'test-event-type')
+  })
+
+  test('should log successful processing of the event', async () => {
+    await processEvent(testRawEvent)
+    expect(mockLoggerInfo).toHaveBeenCalledWith(
+      { id: testEvent.id, type: testEvent.type },
+      'Event processed successfully'
+    )
   })
 
   test('should abandon processing if parsing fails', async () => {
