@@ -73,7 +73,7 @@ describe('processEvent', () => {
   test('should log successful processing of the event', async () => {
     await processEvent(testRawEvent)
     expect(mockLoggerInfo).toHaveBeenCalledWith(
-      { id: testEvent.id, type: testEvent.type },
+      { event: { reference: testEvent.id, type: testEvent.type } },
       'Event processed successfully'
     )
   })

@@ -11,5 +11,5 @@ export async function processEvent (rawEvent) {
   const eventType = getEventType(event.type)
   await validateEvent(event, eventType)
   await saveEvent(event, eventType)
-  logger.info({ id: event.id, type: event.type }, 'Event processed successfully')
+  logger.info({ event: { reference: event.id, type: event.type } }, 'Event processed successfully')
 }
