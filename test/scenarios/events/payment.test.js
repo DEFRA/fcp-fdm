@@ -39,7 +39,7 @@ describe('payment event scenarios', () => {
     expect(savedPayments).toHaveLength(1)
     expect(savedPayments[0].events.length).toBe(1)
     expect(savedPayments[0].paymentRequests).toHaveLength(1)
-    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('SFI0001234V001')
   })
 
   test('should process a payment enriched scenario', async () => {
@@ -114,5 +114,21 @@ describe('payment event scenarios', () => {
     expect(savedPayments[0].paymentRequests[0].invoiceLines[0].value).toBe(100000)
     expect(savedPayments[0].paymentRequests[0].invoiceLines[1].description).toBe('P24 - Penalty')
     expect(savedPayments[0].paymentRequests[0].invoiceLines[1].value).toBe(-20000)
+  })
+
+  test('should replace paymentRequests array when previous status was extracted and incoming event is newer', async () => {
+    await processScenarioEvents(getScenario('streams.paymentExtractedThenEnriched'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(2)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    expect(savedPayments[0].events.length).toBe(2)
+    // The raw invoice number from the extracted event should have been replaced,
+    // not appended to, leaving only the enriched event's invoice number
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+    expect(savedPayments[0].paymentRequests[0].value).toBe(80000)
   })
 })

@@ -85,29 +85,44 @@ function buildPaymentRequestsArray (dataFields, paymentRequestFields, context) {
       if: { $ne: [{ $type: '$paymentRequests' }, 'array'] },
       // If not, create array with new payment request including lastUpdated timestamp
       then: [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }],
-      // If it exists, check if invoiceNumber already exists in array
+      // If it exists...
       else: {
-        $let: {
-          vars: {
-            existingIndex: {
-              $indexOfArray: [
-                { $map: { input: '$paymentRequests', as: 'pr', in: '$$pr.invoiceNumber' } },
-                dataFields.invoiceNumber
-              ]
-            }
+        $cond: {
+          // If the previous status was 'extracted' and the incoming event is newer,
+          // replace the entire paymentRequests array — invoice numbers from extracted
+          // events use raw batch file formats and cannot be matched against later events
+          if: {
+            $and: [
+              { $eq: ['$status', 'extracted'] },
+              { $gt: [context.incomingTime, { $ifNull: ['$lastEventTime', new Date(0)] }] }
+            ]
           },
-          in: {
-            $cond: {
-              // If invoice number exists in array
-              if: { $gte: ['$$existingIndex', 0] },
-              // Update the existing item only if incoming event is newer
-              then: updatePaymentRequestArray(paymentRequestFields, context),
-              // If invoice number doesn't exist, append to array with lastUpdated timestamp
-              else: {
-                $concatArrays: [
-                  '$paymentRequests',
-                  [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }]
-                ]
+          then: [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }],
+          // Otherwise, check if invoiceNumber already exists in array
+          else: {
+            $let: {
+              vars: {
+                existingIndex: {
+                  $indexOfArray: [
+                    { $map: { input: '$paymentRequests', as: 'pr', in: '$$pr.invoiceNumber' } },
+                    dataFields.invoiceNumber
+                  ]
+                }
+              },
+              in: {
+                $cond: {
+                  // If invoice number exists in array
+                  if: { $gte: ['$$existingIndex', 0] },
+                  // Update the existing item only if incoming event is newer
+                  then: updatePaymentRequestArray(paymentRequestFields, context),
+                  // If invoice number doesn't exist, append to array with lastUpdated timestamp
+                  else: {
+                    $concatArrays: [
+                      '$paymentRequests',
+                      [{ $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] }]
+                    ]
+                  }
+                }
               }
             }
           }

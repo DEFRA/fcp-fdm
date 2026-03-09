@@ -109,6 +109,15 @@ export const completeStreams = {
     events.paymentProcessed,
     events.paymentSubmitted,
     events.paymentAcknowledged
+  ],
+
+  /**
+   * Payment extracted with raw invoice number followed by enriched:
+   * tests that the paymentRequests array is replaced rather than appended to.
+   */
+  paymentExtractedThenEnriched: [
+    events.paymentExtracted,
+    events.paymentEnriched
   ]
 }
 

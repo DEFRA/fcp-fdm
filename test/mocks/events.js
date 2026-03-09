@@ -255,7 +255,10 @@ export const paymentExtracted = {
   source: 'ffc-pay-batch-processor',
   type: 'uk.gov.defra.ffc.pay.payment.extracted',
   time: '2023-10-17T14:45:01.000Z',
-  data: paymentData
+  data: {
+    ...paymentData,
+    invoiceNumber: 'SFI0001234V001'
+  }
 }
 
 export const paymentEnriched = {
