@@ -25,10 +25,10 @@ The Farming Data Model (FDM) service is an event-driven Node.js application that
 
 ```bash
 # Run tests (coverage)
-npm test                # TZ=UTC vitest run --coverage
+npm docker:test                # TZ=UTC vitest run --coverage
 
 # Watch mode
-npm run test:watch      # TZ=UTC vitest
+npm run docker:test:watch      # TZ=UTC vitest
 
 # Lint
 npm run lint
