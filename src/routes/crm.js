@@ -7,7 +7,7 @@ const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 const api = [{
   method: 'GET',
-  path: '/api/v1/crm',
+  path: '/crm',
   options: {
     description: 'Get all CRM cases',
     notes: 'CRM cases can be filtered by SBI or CRN',
@@ -38,7 +38,7 @@ const api = [{
   }
 }, {
   method: 'GET',
-  path: '/api/v1/crm/{caseId}',
+  path: '/crm/{caseId}',
   options: {
     description: 'Get CRM case by caseId',
     notes: 'Returns a CRM case for a given caseId, optionally including event history',

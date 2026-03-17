@@ -7,7 +7,7 @@ const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 const api = [{
   method: 'GET',
-  path: '/api/v1/documents',
+  path: '/documents',
   options: {
     description: 'Get all documents',
     notes: 'Documents can be filtered by SBI or CRN',
@@ -38,7 +38,7 @@ const api = [{
   }
 }, {
   method: 'GET',
-  path: '/api/v1/documents/{fileId}',
+  path: '/documents/{fileId}',
   options: {
     description: 'Get document by fileId',
     notes: 'Returns a document for a given fileId, optionally including event history',
