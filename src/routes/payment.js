@@ -7,7 +7,7 @@ const { HTTP_STATUS_NOT_FOUND } = httpConstants
 
 const api = [{
   method: 'GET',
-  path: '/api/v1/payments',
+  path: '/payments',
   options: {
     description: 'Get all payments',
     notes: 'Payments can be filtered by FRN, SBI, schemeId, scheme, vendor, or trader',
@@ -42,7 +42,7 @@ const api = [{
   }
 }, {
   method: 'GET',
-  path: '/api/v1/payments/{correlationId}',
+  path: '/payments/{correlationId}',
   options: {
     description: 'Get payment by correlationId',
     notes: 'Returns a payment for a given correlationId, optionally including event history',
