@@ -21,7 +21,7 @@ FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These ev
   - [Message Events](#message-events)
 - [Retry Logic And Dead Letter Queue](#retry-logic-and-dead-letter-queue)
   - [Sqs Configuration](#sqs-configuration)
-  - [Localstack Setup](#localstack-setup)
+  - [Floci Setup](#floci-setup)
   - [Mongodb Event Storage](#mongodb-event-storage)
 - [Adding New Event Types](#adding-new-event-types)
   - [1. Update Event Type Mapping](#1-update-event-type-mapping)
@@ -48,7 +48,7 @@ FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These ev
 - [Using FDM In Your Docker Compose](#using-fdm-in-your-docker-compose)
   - [Dependencies](#dependencies)
   - [Minimum Setup](#minimum-setup)
-  - [Localstack Initialization Script](#localstack-initialization-script)
+  - [Floci Initialization Script](#floci-initialization-script)
   - [Important Notes](#important-notes)
   - [Accessing The Service](#accessing-the-service)
 - [Requirements](#requirements)
@@ -172,7 +172,7 @@ The event processing follows this logical flow through the codebase:
    - Error handling with logging and retry mechanism
 
 2. **Consumer Layer** (`src/events/consumer.js`)
-   - SQS client configuration with LocalStack support
+   - SQS client configuration with Floci support
    - Batch message processing (up to 10 messages per poll)
    - Individual message processing with error isolation
    - Automatic message deletion on successful processing
@@ -216,9 +216,9 @@ The service implements robust retry logic through AWS SQS configuration:
 - **Dead Letter Queue**: `fcp_fdm_events-deadletter`
 - **Redrive Policy**: Automatic after 3 failed processing attempts
 
-### LocalStack Setup
+### Floci Setup
 
-LocalStack configuration mirrors production settings:
+Floci configuration mirrors production settings:
 
 ```bash
 # Creates main queue with DLQ redrive policy
@@ -418,7 +418,7 @@ The FDM service can be configured using the following environment variables:
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
 | `AWS_REGION` | AWS region for services | `eu-west-2` | No |
-| `AWS_ENDPOINT_URL` | AWS endpoint URL (for LocalStack) | `null` | No |
+| `AWS_ENDPOINT_URL` | AWS endpoint URL (for local AWS emulation) | `null` | No |
 | `AWS_ACCESS_KEY_ID` | AWS access key ID | `null` | No |
 | `AWS_SECRET_ACCESS_KEY` | AWS secret access key | `null` | No |
 | `AWS_SQS_QUEUE_URL` | SQS queue URL for event consumption | `null` | Yes |
@@ -461,15 +461,15 @@ The FDM service can be configured using the following environment variables:
 
 ## Using FDM in Your Docker Compose
 
-To integrate the FCP-FDM service into your own project's Docker Compose setup, you need to include the service along with its required dependencies: MongoDB and LocalStack.
+To integrate the FCP-FDM service into your own project's Docker Compose setup, you need to include the service along with its required dependencies: MongoDB and Floci.
 
 ### Dependencies
 
 The FCP-FDM service requires:
 
 1. **MongoDB with replica set** - Required for MongoDB sessions to work properly
-2. **LocalStack** - Provides SQS and SNS services for local development
-3. **LocalStack initialization script** - Sets up the required SQS queues and SNS topics
+2. **Floci** - Provides SQS and SNS services for local development
+3. **Floci initialization script** - Sets up the required SQS queues and SNS topics
 
 ### Minimum Setup
 
@@ -484,15 +484,15 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
-      localstack:
-        condition: service_healthy
+      floci-init:
+        condition: service_completed_successfully
     environment:
       MONGO_URI: mongodb://mongodb:27017
       AWS_REGION: eu-west-2
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
-      AWS_SQS_QUEUE_URL: http://localstack:4566/000000000000/fcp_fdm_events
-      AWS_ENDPOINT_URL: http://localstack:4566
+      AWS_SQS_QUEUE_URL: http://floci:4566/000000000000/fcp_fdm_events
+      AWS_ENDPOINT_URL: http://floci:4566
     ports:
       - '3000:3000'
     networks:
@@ -512,23 +512,34 @@ services:
     networks:
       - fcp-network
 
-  localstack:
-    image: localstack/localstack
+  floci:
+    image: hectorvent/floci:latest
     environment:
-      LS_LOG: warn
-      SERVICES: sqs,sns
+      FLOCI_HOSTNAME: floci
+      FLOCI_DEFAULT_REGION: eu-west-2
       AWS_ACCESS_KEY_ID: test
       AWS_SECRET_ACCESS_KEY: test
-    healthcheck:
-      test: ['CMD', 'curl', 'localhost:4566']
-      interval: 5s
-      start_period: 5s
-      retries: 3
     ports:
       - '4566:4566'
     volumes:
-      - ./path/to/fcp-fdm/localstack/localstack.sh:/etc/localstack/init/ready.d/localstack.sh
-      - localstack-data:/var/lib/localstack
+      - floci-data:/app/data
+    networks:
+      - fcp-network
+
+  floci-init:
+    image: amazon/aws-cli
+    entrypoint: /bin/sh
+    command: /setup/init.sh
+    depends_on:
+      floci:
+        condition: service_started
+    environment:
+      AWS_ENDPOINT_URL: http://floci:4566
+      AWS_REGION: eu-west-2
+      AWS_ACCESS_KEY_ID: test
+      AWS_SECRET_ACCESS_KEY: test
+    volumes:
+      - ./path/to/fcp-fdm/floci/init.sh:/setup/init.sh
     networks:
       - fcp-network
 
@@ -538,20 +549,20 @@ networks:
 
 volumes:
   mongodb-data:
-  localstack-data:
+  floci-data:
 ```
 
-### LocalStack Initialization Script
+### Floci Initialization Script
 
-Copy or reference the LocalStack setup script from the FCP-FDM repository at [`localstack/localstack.sh`](localstack/localstack.sh). This script creates the required SQS queues, dead letter queues, SNS topics, and subscriptions needed for the service to function properly.
+Copy or reference the Floci setup script from the FCP-FDM repository at [`floci/init.sh`](floci/init.sh). This script creates the required SQS queues, dead letter queues, SNS topics, and subscriptions needed for the service to function properly.
 
 ### Important Notes
 
-1. **Startup Order**: The `depends_on` conditions ensure MongoDB and LocalStack are healthy before FCP-FDM starts
+1. **Startup Order**: The `depends_on` conditions ensure MongoDB and Floci are initialised before FCP-FDM starts
 2. **MongoDB Replica Set**: The `--replSet rs0` command flag is essential for MongoDB sessions to work
-5. **LocalStack Script**: Use the provided [`localstack/localstack.sh`](localstack/localstack.sh) script from the FCP-FDM repository - it sets up all required SQS queues and SNS topics
+3. **Floci Script**: Use the provided [`floci/init.sh`](floci/init.sh) script from the FCP-FDM repository - it sets up all required SQS queues and SNS topics
 4. **Network**: All services must be on the same Docker network to communicate
-5. **Health Checks**: MongoDB and LocalStack include health checks to ensure proper startup sequencing
+5. **Health Checks**: MongoDB includes a health check to ensure proper startup sequencing
 
 ### Accessing the Service
 
