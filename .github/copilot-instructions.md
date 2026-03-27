@@ -35,7 +35,7 @@ npm run lint
 npm run lint:fix
 
 # Local dev (requires Docker)
-npm run docker:dev      # Spins up MongoDB, LocalStack, event-publisher-stub
+npm run docker:dev      # Spins up MongoDB, Floci, event-publisher-stub
 
 # Send test events locally
 node ./scripts/send-events.js                          # List scenarios
