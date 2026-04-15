@@ -25,6 +25,7 @@ import { getEventSummary, getStatusFromTypeSuffix } from './cloud-events.js'
  * @param {boolean} [mappings.skipEventTracking=false] - Skip event array tracking (stage 2)
  * @param {boolean} [mappings.skipStatusTracking=false] - Skip lastEventTime/status tracking (stage 3)
  * @param {boolean} [mappings.updateOnlyWhenNewer=false] - Only update data fields if event is newer
+ * @param {Array} [mappings.prependStages] - Pipeline stages to prepend before all builder stages (run first, against existing document state)
  * @param {Function} [mappings.beforeEventTracking] - Custom stages to inject before event tracking (receives pipeline, context)
  * @param {Function} [mappings.afterEventTracking] - Custom stages to inject after event tracking (receives pipeline, context)
  * @param {Function} [mappings.beforeStatusTracking] - Custom stages to inject before status tracking (receives pipeline, context)
@@ -40,6 +41,7 @@ export function buildSavePipeline (event, eventEntity, mappings) {
     skipEventTracking = false,
     skipStatusTracking = false,
     updateOnlyWhenNewer = false,
+    prependStages,
     beforeEventTracking,
     afterEventTracking,
     beforeStatusTracking,
@@ -65,6 +67,11 @@ export function buildSavePipeline (event, eventEntity, mappings) {
   }
 
   const fieldsToUpdate = wrapDataFields(dataFields, updateOnlyWhenNewer, incomingTime)
+
+  // Stage 0: Prepend stages (run before all builder stages, against existing document state)
+  if (prependStages?.length) {
+    pipeline.push(...prependStages)
+  }
 
   // Stage 1: Set incoming data, timestamps, and context-specific fields
   pipeline.push({
@@ -151,7 +158,10 @@ function addEventTrackingStage (pipeline, eventEntity, eventSummary) {
 }
 
 /**
- * Adds status tracking stages to pipeline
+ * Adds status tracking stages to pipeline.
+ * Note: `_prevLastEventTime` is an internal contract field also referenced by external
+ * `afterStatusTracking` hooks (e.g. payment.js) for post-tracking adjustments.
+ * Do not rename without updating all callers.
  */
 function addStatusTrackingStages (pipeline, status) {
   pipeline.push({

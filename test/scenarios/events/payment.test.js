@@ -116,6 +116,27 @@ describe('payment event scenarios', () => {
     expect(savedPayments[0].paymentRequests[0].invoiceLines[1].value).toBe(-20000)
   })
 
+  test('should not regress payment status when a duplicate enriched event is received', async () => {
+    await processScenarioEvents(getScenario('streams.paymentDuplicateEnriched'))
+
+    const savedEvents = await collections.events.find({}).toArray()
+    expect(savedEvents.length).toBe(6)
+
+    const savedPayments = await collections.payments.find({}).toArray()
+    expect(savedPayments).toHaveLength(1)
+    // Duplicate enriched is in the audit trail
+    expect(savedPayments[0].events.length).toBe(6)
+    // Status must not have regressed back to 'enriched'
+    expect(savedPayments[0].status).toBe('acknowledged')
+    // lastEventTime must reflect the acknowledged event, not the duplicate
+    expect(savedPayments[0].lastEventTime).toEqual(new Date('2023-10-17T14:49:01.000Z'))
+    // paymentRequests array must remain unchanged — no duplicate entry added
+    expect(savedPayments[0].paymentRequests).toHaveLength(1)
+    expect(savedPayments[0].paymentRequests[0].invoiceNumber).toBe('S000000010000001V001')
+    // lastUpdated on the paymentRequest must not have advanced to the duplicate's time
+    expect(savedPayments[0].paymentRequests[0].lastUpdated).not.toEqual(new Date('2023-10-17T14:50:01.000Z'))
+  })
+
   test('should replace paymentRequests array when previous status was extracted and incoming event is newer', async () => {
     await processScenarioEvents(getScenario('streams.paymentExtractedThenEnriched'))
 

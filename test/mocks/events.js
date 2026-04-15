@@ -296,3 +296,12 @@ export const paymentAcknowledged = {
   time: '2023-10-17T14:49:01.000Z',
   data: paymentData
 }
+
+export const paymentEnrichedDuplicate = {
+  ...cloudEventBase,
+  id: '850e8400-e29b-41d4-a716-446655440006',
+  source: 'ffc-pay-enrichment',
+  type: 'uk.gov.defra.ffc.pay.payment.enriched',
+  time: '2023-10-17T14:50:01.000Z',
+  data: paymentData
+}
