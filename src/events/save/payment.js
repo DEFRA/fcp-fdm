@@ -88,7 +88,6 @@ function buildEnrichedOptions (invoiceNumber) {
       pipe.push({
         $set: {
           lastUpdated: { $cond: ['$_isDuplicateEnriched', '$_originalLastUpdated', '$lastUpdated'] },
-          // _prevLastEventTime is set by pipeline.js status tracking — see addStatusTrackingStages
           lastEventTime: { $cond: ['$_isDuplicateEnriched', '$_prevLastEventTime', '$lastEventTime'] },
           status: { $cond: ['$_isDuplicateEnriched', '$_originalStatus', '$status'] }
         }
@@ -233,7 +232,8 @@ const SCHEME_NAMES = {
   17: 'FPTT'
 }
 
-// SchemeIds whose payment request value arrives inverted and must be negated before saving
+// Some schemes now submit a header value with an inverted value
+// These values will be inverted before saving aggregation object
 const INVERTED_VALUE_SCHEME_IDS = new Set([
   17
 ])
