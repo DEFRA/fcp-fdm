@@ -29,6 +29,7 @@ async function upsertPayment (event, eventEntity) {
   const paymentRequestFields = extractPaymentRequestFields(dataFields)
 
   const isEnrichedType = event.type === `${PAYMENT_EVENT_PREFIX}enriched`
+  const enrichedOptions = isEnrichedType ? buildEnrichedOptions(dataFields.invoiceNumber) : {}
 
   const pipeline = buildSavePipeline(event, eventEntity, {
     eventTypePrefix: PAYMENT_EVENT_PREFIX,
@@ -37,29 +38,14 @@ async function upsertPayment (event, eventEntity) {
     unsetFields: [
       '_incomingInvoiceNumber',
       '_incomingPaymentRequest',
-      ...(isEnrichedType ? ['_isDuplicateEnriched', '_originalLastUpdated', '_originalStatus'] : [])
+      ...(enrichedOptions.additionalUnsetFields ?? [])
     ],
     beforeEventTracking: (pipe, context) => {
       addPaymentRequestStage(pipe, context, dataFields, paymentRequestFields, isEnrichedType)
     },
-    ...(isEnrichedType
-      ? {
-          afterStatusTracking: (pipe) => {
-            pipe.push({
-              $set: {
-                lastUpdated: { $cond: ['$_isDuplicateEnriched', '$_originalLastUpdated', '$lastUpdated'] },
-                lastEventTime: { $cond: ['$_isDuplicateEnriched', '$_prevLastEventTime', '$lastEventTime'] },
-                status: { $cond: ['$_isDuplicateEnriched', '$_originalStatus', '$status'] }
-              }
-            })
-          }
-        }
-      : {})
+    prependStages: enrichedOptions.prependStages,
+    afterStatusTracking: enrichedOptions.afterStatusTracking
   })
-
-  if (isEnrichedType) {
-    pipeline.unshift(buildDuplicateDetectionStage(dataFields.invoiceNumber))
-  }
 
   await paymentCollection.updateOne(
     { _id: correlationId },
@@ -88,6 +74,23 @@ function sanitizeDataFields (event) {
   }
 
   return dataFields
+}
+
+function buildEnrichedOptions (invoiceNumber) {
+  return {
+    prependStages: [buildDuplicateDetectionStage(invoiceNumber)],
+    additionalUnsetFields: ['_isDuplicateEnriched', '_originalLastUpdated', '_originalStatus'],
+    afterStatusTracking (pipe) {
+      pipe.push({
+        $set: {
+          lastUpdated: { $cond: ['$_isDuplicateEnriched', '$_originalLastUpdated', '$lastUpdated'] },
+          // _prevLastEventTime is set by pipeline.js status tracking — see addStatusTrackingStages
+          lastEventTime: { $cond: ['$_isDuplicateEnriched', '$_prevLastEventTime', '$lastEventTime'] },
+          status: { $cond: ['$_isDuplicateEnriched', '$_originalStatus', '$status'] }
+        }
+      })
+    }
+  }
 }
 
 function buildDuplicateDetectionStage (invoiceNumber) {
