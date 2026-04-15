@@ -28,15 +28,38 @@ async function upsertPayment (event, eventEntity) {
   const topLevelFields = extractTopLevelFields(dataFields)
   const paymentRequestFields = extractPaymentRequestFields(dataFields)
 
+  const isEnrichedType = event.type === `${PAYMENT_EVENT_PREFIX}enriched`
+
   const pipeline = buildSavePipeline(event, eventEntity, {
     eventTypePrefix: PAYMENT_EVENT_PREFIX,
     dataFields: topLevelFields,
     updateOnlyWhenNewer: true,
-    unsetFields: ['_incomingInvoiceNumber', '_incomingPaymentRequest'],
+    unsetFields: [
+      '_incomingInvoiceNumber',
+      '_incomingPaymentRequest',
+      ...(isEnrichedType ? ['_isDuplicateEnriched', '_originalLastUpdated', '_originalStatus'] : [])
+    ],
     beforeEventTracking: (pipe, context) => {
-      addPaymentRequestStage(pipe, context, dataFields, paymentRequestFields)
-    }
+      addPaymentRequestStage(pipe, context, dataFields, paymentRequestFields, isEnrichedType)
+    },
+    ...(isEnrichedType
+      ? {
+          afterStatusTracking: (pipe) => {
+            pipe.push({
+              $set: {
+                lastUpdated: { $cond: ['$_isDuplicateEnriched', '$_originalLastUpdated', '$lastUpdated'] },
+                lastEventTime: { $cond: ['$_isDuplicateEnriched', '$_prevLastEventTime', '$lastEventTime'] },
+                status: { $cond: ['$_isDuplicateEnriched', '$_originalStatus', '$status'] }
+              }
+            })
+          }
+        }
+      : {})
   })
+
+  if (isEnrichedType) {
+    pipeline.unshift(buildDuplicateDetectionStage(dataFields.invoiceNumber))
+  }
 
   await paymentCollection.updateOne(
     { _id: correlationId },
@@ -67,13 +90,36 @@ function sanitizeDataFields (event) {
   return dataFields
 }
 
-function addPaymentRequestStage (pipeline, context, dataFields, paymentRequestFields) {
+function buildDuplicateDetectionStage (invoiceNumber) {
+  return {
+    $set: {
+      _isDuplicateEnriched: {
+        $gt: [
+          {
+            $indexOfArray: [
+              { $ifNull: [{ $map: { input: '$paymentRequests', as: 'pr', in: '$$pr.invoiceNumber' } }, []] },
+              invoiceNumber
+            ]
+          },
+          -1
+        ]
+      },
+      _originalLastUpdated: '$lastUpdated',
+      _originalStatus: '$status'
+    }
+  }
+}
+
+function addPaymentRequestStage (pipeline, context, dataFields, paymentRequestFields, guardForDuplicate = false) {
   // Stage: Handle paymentRequests array - update existing or add new
+  const paymentRequestsValue = buildPaymentRequestsArray(dataFields, paymentRequestFields, context)
   pipeline.push({
     $set: {
       _incomingInvoiceNumber: dataFields.invoiceNumber,
       _incomingPaymentRequest: paymentRequestFields,
-      paymentRequests: buildPaymentRequestsArray(dataFields, paymentRequestFields, context)
+      paymentRequests: guardForDuplicate
+        ? { $cond: ['$_isDuplicateEnriched', '$paymentRequests', paymentRequestsValue] }
+        : paymentRequestsValue
     }
   })
 }

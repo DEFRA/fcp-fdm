@@ -118,6 +118,19 @@ export const completeStreams = {
   paymentExtractedThenEnriched: [
     events.paymentExtracted,
     events.paymentEnriched
+  ],
+
+  /**
+   * Full payment transaction followed by a duplicate enriched event:
+   * tests that a duplicate enriched does not regress status, lastEventTime, or paymentRequests.
+   */
+  paymentDuplicateEnriched: [
+    events.paymentExtracted,
+    events.paymentEnriched,
+    events.paymentProcessed,
+    events.paymentSubmitted,
+    events.paymentAcknowledged,
+    events.paymentEnrichedDuplicate
   ]
 }
 
