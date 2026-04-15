@@ -176,7 +176,8 @@ const SCHEME_NAMES = {
   13: 'Delinked',
   14: 'Expanded SFI Offer',
   15: 'COHT Revenue',
-  16: 'COHT Capital'
+  16: 'COHT Capital',
+  17: 'Farm Payments Technical Test'
 }
 
 const TOP_LEVEL_FIELD_NAMES = [
