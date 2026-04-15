@@ -235,6 +235,119 @@ describe('payment save - extracted event (pence conversion)', () => {
   })
 })
 
+describe('payment save - inverted value schemes', () => {
+  beforeEach(() => {
+    vi.resetAllMocks()
+    mockSaveCloudEvent.mockResolvedValue(mockEventEntity)
+    mockUpdateOne.mockResolvedValue({})
+    mockGetEventSummary.mockReturnValue({ _id: 'ffc-pay-enrichment:test', type: 'acknowledged' })
+    mockGetStatusFromTypeSuffix.mockReturnValue('acknowledged')
+  })
+
+  // FPTT values typically arrive as negative — inversion produces positive stored value
+  test('should negate negative top-level value for inverted FPTT', async () => {
+    const event = {
+      type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
+      time: '2023-10-17T14:46:01.000Z',
+      data: {
+        correlationId: 'corr-id-1',
+        frn: 1234567890,
+        schemeId: 17,
+        invoiceNumber: 'FPTT0001234V001',
+        value: -80000
+      }
+    }
+
+    await save(event)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    expect(pipeline[1].$set._incomingPaymentRequest.value).toBe(80000)
+  })
+
+  test('should negate positive top-level value for inverted FPTT', async () => {
+    const event = {
+      type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
+      time: '2023-10-17T14:46:01.000Z',
+      data: {
+        correlationId: 'corr-id-1',
+        frn: 1234567890,
+        schemeId: 17,
+        invoiceNumber: 'FPTT0001234V001',
+        value: 80000
+      }
+    }
+
+    await save(event)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    expect(pipeline[1].$set._incomingPaymentRequest.value).toBe(-80000)
+  })
+
+  test('should not negate invoiceLines values for inverted FPTT', async () => {
+    const event = {
+      type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
+      time: '2023-10-17T14:46:01.000Z',
+      data: {
+        correlationId: 'corr-id-1',
+        frn: 1234567890,
+        schemeId: 17,
+        invoiceNumber: 'FPTT0001234V001',
+        value: -80000,
+        invoiceLines: [
+          { description: 'G00', value: -100000 },
+          { description: 'P24', value: 20000 }
+        ]
+      }
+    }
+
+    await save(event)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    const lines = pipeline[1].$set._incomingPaymentRequest.invoiceLines
+    expect(lines[0].value).toBe(-100000)
+    expect(lines[1].value).toBe(20000)
+  })
+
+  test('should not negate top-level value for non-inverted schemeId', async () => {
+    const event = {
+      type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
+      time: '2023-10-17T14:46:01.000Z',
+      data: {
+        correlationId: 'corr-id-1',
+        frn: 1234567890,
+        schemeId: 1,
+        invoiceNumber: 'S000000010000001V001',
+        value: 80000
+      }
+    }
+
+    await save(event)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    expect(pipeline[1].$set._incomingPaymentRequest.value).toBe(80000)
+  })
+
+  test('should apply pence conversion then negate for inverted FPTT with extracted event', async () => {
+    mockGetStatusFromTypeSuffix.mockReturnValue('extracted')
+    const event = {
+      type: 'uk.gov.defra.ffc.pay.payment.extracted',
+      time: '2023-10-17T14:45:01.000Z',
+      data: {
+        correlationId: 'corr-id-1',
+        frn: 1234567890,
+        schemeId: 17,
+        invoiceNumber: 'FPTT0001234V001',
+        value: -800 // -800 pounds → -80000 pence → 80000 after inversion
+      }
+    }
+
+    await save(event)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    expect(pipeline[1].$set._incomingPaymentRequest.value).toBe(80000)
+  })
+})
+
 describe('payment save - event not saved', () => {
   beforeEach(() => {
     vi.resetAllMocks()

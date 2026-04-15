@@ -73,6 +73,10 @@ function sanitizeDataFields (event) {
     }
   }
 
+  if (INVERTED_VALUE_SCHEME_IDS.has(dataFields.schemeId) && dataFields.value !== undefined) {
+    dataFields.value = -dataFields.value
+  }
+
   return dataFields
 }
 
@@ -226,8 +230,13 @@ const SCHEME_NAMES = {
   14: 'Expanded SFI Offer',
   15: 'COHT Revenue',
   16: 'COHT Capital',
-  17: 'Farm Payments Technical Test'
+  17: 'FPTT'
 }
+
+// SchemeIds whose payment request value arrives inverted and must be negated before saving
+const INVERTED_VALUE_SCHEME_IDS = new Set([
+  17
+])
 
 const TOP_LEVEL_FIELD_NAMES = [
   'frn',
