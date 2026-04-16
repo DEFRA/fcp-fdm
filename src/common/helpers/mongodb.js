@@ -84,18 +84,32 @@ async function createIndexes (db) {
   await db.collection(PAYMENT_COLLECTION_NAME).createIndex({ schemeId: 1, created: -1, _id: -1 }, { name: 'payments_by_schemeId_created', sparse: true })
 }
 
-async function configureGlobalTtlIndexes (db) {
+export async function configureGlobalTtlIndexes (db) {
   const globalTtl = config.get('data.globalTtl')
 
   if (globalTtl) {
-    await db.collection(EVENT_COLLECTION_NAME).createIndex({ received: 1 }, { name: 'events_ttl', expireAfterSeconds: globalTtl })
-    await db.collection(MESSAGE_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'messages_ttl', expireAfterSeconds: globalTtl })
-    await db.collection(DOCUMENT_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'documents_ttl', expireAfterSeconds: globalTtl })
-    await db.collection(CRM_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'crm_ttl', expireAfterSeconds: globalTtl })
-    await db.collection(PAYMENT_COLLECTION_NAME).createIndex({ lastUpdated: 1 }, { name: 'payments_ttl', expireAfterSeconds: globalTtl })
+    await upsertTtlIndex(db.collection(EVENT_COLLECTION_NAME), { received: 1 }, 'events_ttl', globalTtl)
+    await upsertTtlIndex(db.collection(MESSAGE_COLLECTION_NAME), { lastUpdated: 1 }, 'messages_ttl', globalTtl)
+    await upsertTtlIndex(db.collection(DOCUMENT_COLLECTION_NAME), { lastUpdated: 1 }, 'documents_ttl', globalTtl)
+    await upsertTtlIndex(db.collection(CRM_COLLECTION_NAME), { lastUpdated: 1 }, 'crm_ttl', globalTtl)
+    await upsertTtlIndex(db.collection(PAYMENT_COLLECTION_NAME), { lastUpdated: 1 }, 'payments_ttl', globalTtl)
   } else {
     await removeTtlIndexes(db)
   }
+}
+
+async function upsertTtlIndex (collection, indexSpec, indexName, expireAfterSeconds) {
+  const indexes = await collection.indexes()
+  const existing = indexes.find(index => index.name === indexName)
+
+  if (existing) {
+    if (existing.expireAfterSeconds === expireAfterSeconds) {
+      return
+    }
+    await collection.dropIndex(indexName)
+  }
+
+  await collection.createIndex(indexSpec, { name: indexName, expireAfterSeconds })
 }
 
 async function removeTtlIndexes (db) {
