@@ -294,7 +294,7 @@ export const paymentAcknowledged = {
   source: 'ffc-pay-responses',
   type: 'uk.gov.defra.ffc.pay.payment.acknowledged',
   time: '2023-10-17T14:49:01.000Z',
-  data: paymentData
+  data: (({ invoiceLines, ...rest }) => rest)(paymentData)
 }
 
 export const paymentEnrichedDuplicate = {

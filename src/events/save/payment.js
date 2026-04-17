@@ -201,7 +201,9 @@ function updatePaymentRequestArray (paymentRequestFields, context) {
                   { $ifNull: [{ $arrayElemAt: ['$paymentRequests.lastUpdated', '$$idx'] }, new Date(0)] }
                 ]
               },
-              then: { $mergeObjects: [paymentRequestFields, { lastUpdated: context.incomingTime }] },
+              // Merge existing first so fields absent from the incoming event are preserved
+              // For example, Acknowledged and Settled events do not include invoice lines.
+              then: { $mergeObjects: [{ $arrayElemAt: ['$paymentRequests', '$$idx'] }, paymentRequestFields, { lastUpdated: context.incomingTime }] },
               else: { $arrayElemAt: ['$paymentRequests', '$$idx'] }
             }
           },
