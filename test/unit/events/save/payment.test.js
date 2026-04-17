@@ -159,6 +159,20 @@ describe('payment save - non-enriched event', () => {
     expect(unsetStage.$unset).not.toContain('_originalLastUpdated')
     expect(unsetStage.$unset).not.toContain('_originalStatus')
   })
+
+  test('update-existing branch in paymentRequests merges on top of existing entry to preserve invoice lines', async () => {
+    await save(acknowledgedEvent)
+
+    const pipeline = mockUpdateOne.mock.calls[0][1]
+    // pipeline[1] is the beforeEventTracking stage (paymentRequests upsert)
+    const paymentRequestsExpr = pipeline[1].$set.paymentRequests
+    // Drill into the update-existing branch: else → $let → in → $cond (existingIndex≥0) → then → $map → in → $cond (idx==existingIndex) → then → $cond (newer) → then
+    const mapIn = paymentRequestsExpr.$cond.else.$cond.else.$let.in.$cond.then.$map.in
+    const newerThen = mapIn.$cond.then.$cond.then
+    expect(newerThen.$mergeObjects[0]).toEqual({ $arrayElemAt: ['$paymentRequests', '$$idx'] })
+    expect(newerThen.$mergeObjects[1]).toEqual(expect.objectContaining({ invoiceNumber: acknowledgedEvent.data.invoiceNumber }))
+    expect(newerThen.$mergeObjects[2]).toHaveProperty('lastUpdated')
+  })
 })
 
 describe('payment save - extracted event (pence conversion)', () => {
