@@ -4,6 +4,10 @@ on:
   pull_request_review:
     types: [submitted]
 
+permissions:
+  pull-requests: write
+  contents: read
+
 jobs:
   comment-on-approval:
     if: github.event.review.state == 'approved'
