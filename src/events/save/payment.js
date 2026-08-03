@@ -231,13 +231,15 @@ const SCHEME_NAMES = {
   14: 'Expanded SFI Offer',
   15: 'COHT Revenue',
   16: 'COHT Capital',
-  17: 'FPTT'
+  17: 'FPTT',
+  18: 'Woodland Management Plan'
 }
 
 // Some schemes now submit a header value with an inverted value
 // These values will be inverted before saving aggregation object
 const INVERTED_VALUE_SCHEME_IDS = new Set([
-  17
+  17,
+  18
 ])
 
 const TOP_LEVEL_FIELD_NAMES = [
