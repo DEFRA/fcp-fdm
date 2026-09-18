@@ -232,7 +232,8 @@ const SCHEME_NAMES = {
   15: 'COHT Revenue',
   16: 'COHT Capital',
   17: 'FPTT',
-  18: 'Woodland Management Plan'
+  18: 'Woodland Management Plan',
+  19: 'SFI26'
 }
 
 // Some schemes now submit a header value with an inverted value
