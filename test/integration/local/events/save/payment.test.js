@@ -623,7 +623,10 @@ describe('save', () => {
     [13, 'Delinked'],
     [14, 'Expanded SFI Offer'],
     [15, 'COHT Revenue'],
-    [16, 'COHT Capital']
+    [16, 'COHT Capital'],
+    [17, 'FPTT'],
+    [18, 'Woodland Management Plan'],
+    [19, 'SFI26']
   ])('should save scheme name "%s" as "%s" based on schemeId', async (schemeId, expectedSchemeName) => {
     const event = {
       ...paymentProcessed,
