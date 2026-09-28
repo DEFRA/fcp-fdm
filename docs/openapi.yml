@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: FCP Farming Data Model (FDM)
+  title: FCP Farming Operation Data Store (FODS)
   version: 1.2.0
   description: |
-    The Farming Data Model (FDM) REST API provides access to aggregated farming data collected from various FCP services.
+    The Farming Operation Data Store (FODS) REST API provides access to aggregated farming data collected from various FCP services.
   license:
     name: Open Government Licence v3.0
     url: https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3
@@ -32,7 +32,7 @@ paths:
         - Health
       summary: Service health check
       description: |
-        Returns the health status of the FDM service. This endpoint can be used
+        Returns the health status of the FODS service. This endpoint can be used
         for monitoring, load balancer health checks, and service discovery.
       operationId: getHealth
       security: []

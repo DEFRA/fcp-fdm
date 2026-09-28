@@ -1,10 +1,10 @@
-asyncapi: 3.0.0
+asyncapi: "3.0.0"
 info:
-  title: FCP Farming Data Model (FDM)
+  title: FCP Farming Operation Data Store (FODS)
   version: 1.3.0
   description: |
-    The FDM service consumes events from FCP services via AWS SQS to build
-    a farming data model to support data exchange via the Data Access Layer (DAL).
+    The FODS service consumes events from FCP services via AWS SQS to build
+    a farming operation data store to support data exchange via the Data Access Layer (DAL).
     
     Events from various sources are consumed from the `fcp_fdm_events` SQS queue.
   license:
