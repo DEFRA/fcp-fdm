@@ -6,11 +6,14 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=DEFRA_fcp-fdm&metric=coverage)](https://sonarcloud.io/summary/new_code?id=DEFRA_fcp-fdm)
 [![Dependabot](https://img.shields.io/badge/dependabot-enabled-025E8C?logo=dependabot)](https://github.com/DEFRA/fcp-fdm/blob/main/.github/dependabot.yml)
 
-# Farming Data Model (FDM)
+# Farming Operation Data Store (FODS)
 
-The Farming Data Model (FDM) service is a common component to support data exchange between Farming and Countryside Programme (FCP) services.
+> **Note:** This service was previously named the Farming Data Model (FDM).
+> Technical identifiers such as the repository name, Docker image, SQS queues, MongoDB database and CDP service URLs still use `fcp-fdm` and will not change.
 
-FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These events are persisted and precompiled into a data model which can be queried via REST API endpoints.
+The Farming Operation Data Store (FODS) service is a common component to support data exchange between Farming and Countryside Programme (FCP) services.
+
+FODS subscribes to events across the FCP ecosystem via an AWS SQS queue. These events are persisted and precompiled into a data model which can be queried via REST API endpoints.
 
 ## Contents
 
@@ -46,7 +49,7 @@ FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These ev
   - [Logging](#logging)
   - [Security And Performance](#security-and-performance)
   - [Authentication](#authentication-1)
-- [Using FDM In Your Docker Compose](#using-fdm-in-your-docker-compose)
+- [Using FODS In Your Docker Compose](#using-fods-in-your-docker-compose)
   - [Dependencies](#dependencies)
   - [Minimum Setup](#minimum-setup)
   - [Floci Initialization Script](#floci-initialization-script)
@@ -64,7 +67,7 @@ FDM subscribes to events across the FCP ecosystem via an AWS SQS queue. These ev
 
 ## Architecture Overview
 
-The FDM service follows an event-driven architecture pattern with the following key components:
+The FODS service follows an event-driven architecture pattern with the following key components:
 
 ```mermaid
 graph TB
@@ -81,7 +84,7 @@ graph TB
         DLQ[Dead Letter Queue: fcp_fdm_events-deadletter]
     end
     
-    subgraph "FDM Service"
+    subgraph "FODS Service"
         POLLER[Event Poller]
         CONSUMER[SQS Consumer]
         PROCESSOR[Event Processor]
@@ -121,7 +124,7 @@ graph TB
 
 ## Event Processing Pipeline
 
-The FDM service implements a robust event processing pipeline that handles CloudEvents from various sources:
+The FODS service implements a robust event processing pipeline that handles CloudEvents from various sources:
 
 > **📋 Event API Specification**  
 > Complete AsyncAPI specification available at: [`docs/asyncapi.yml`](./docs/asyncapi.yml)  
@@ -312,11 +315,11 @@ Interactive API documentation can be found at [http://localhost:3000/documentati
 
 ### Authentication
 
-To authenticate with FDM for a specific environment, the following pre-requisite setup steps are required:
+To authenticate with FODS for a specific environment, the following pre-requisite setup steps are required:
 
 #### Setup Requirements
 
-1. **Create a client App Registration** in the same tenant as the FDM in the target tenant
+1. **Create a client App Registration** in the same tenant as the FODS in the target tenant
 
 2. **Configure security groups manifest** - ensure that security groups manifest value `"groupMembershipClaims": "SecurityGroup"` is set
 
@@ -326,7 +329,7 @@ To authenticate with FDM for a specific environment, the following pre-requisite
 
 5. **Add the client App Registration** to the client Security Group
 
-6. **Notify the FDM team** to add the Security Group ID to the FDM service
+6. **Notify the FDS team** to add the Security Group ID to the FODS service
 
 #### Authentication Flow
 
@@ -334,15 +337,15 @@ Once setup is complete, perform the following steps to successfully authenticate
 
 1. **Authenticate with Entra** using your App Registration to retrieve an authentication token
 
-2. **Make an API request** to FDM passing the `Bearer <token>` header
+2. **Make an API request** to FODS passing the `Bearer <token>` header
 
-3. **FDM validates** the token and confirms if your service is authorised to access the data
+3. **FODS validates** the token and confirms if your service is authorised to access the data
 
 ```mermaid
 sequenceDiagram
     participant Client
     participant Entra
-    participant FDM 
+    participant FODS 
     participant JWKS as JWKS Endpoint
     
     Note over Client,JWKS: Pre-requisite: App Registration & Security Group Setup
@@ -350,20 +353,20 @@ sequenceDiagram
     Client->>Entra: 1. Authenticate with App Registration
     Entra->>Client: 2. Return JWT Token (with security groups)
     
-    Client->>FDM: 3. API Request with Bearer token
+    Client->>FODS: 3. API Request with Bearer token
     
     rect rgb(240, 248, 255)
-        Note over FDM,JWKS: Token Validation Process
-        FDM->>JWKS: 4. Fetch public keys for signature verification
-        JWKS->>FDM: 5. Return signing keys
-        FDM->>FDM: 6. Verify token signature & claims
-        FDM->>FDM: 7. Check security groups against allowed list
+        Note over FODS,JWKS: Token Validation Process
+        FODS->>JWKS: 4. Fetch public keys for signature verification
+        JWKS->>FODS: 5. Return signing keys
+        FODS->>FODS: 6. Verify token signature & claims
+        FODS->>FODS: 7. Check security groups against allowed list
     end
     
     alt Valid Token & Authorized Groups
-        FDM->>Client: 8a. API Response (200 OK)
+        FODS->>Client: 8a. API Response (200 OK)
     else Invalid Token or Unauthorized
-        FDM->>Client: 8b. Unauthorized (401)
+        FODS->>Client: 8b. Unauthorized (401)
     end
 ```
 
@@ -400,7 +403,7 @@ npm run docker:test:watch
 
 ## Environment Variables
 
-The FDM service can be configured using the following environment variables:
+The FODS service can be configured using the following environment variables:
 
 > Note: Default valid values are already applied for local development and testing through Docker Compose.
 
@@ -460,13 +463,13 @@ The FDM service can be configured using the following environment variables:
 | `AUTH_TENANT_ID` | Microsoft Entra ID tenant ID | `null` | If Auth Enabled |
 | `AUTH_ALLOWED_GROUP_IDS` | Comma-separated allowed security group IDs | `null` | If Auth Enabled |
 
-## Using FDM in Your Docker Compose
+## Using FODS in Your Docker Compose
 
-To integrate the FCP-FDM service into your own project's Docker Compose setup, you need to include the service along with its required dependencies: MongoDB and Floci.
+To integrate the FODS service into your own project's Docker Compose setup, you need to include the service along with its required dependencies: MongoDB and Floci.
 
 ### Dependencies
 
-The FCP-FDM service requires:
+The FODS service requires:
 
 1. **MongoDB with replica set** - Required for MongoDB sessions to work properly
 2. **Floci** - Provides SQS and SNS services for local development
@@ -555,19 +558,19 @@ volumes:
 
 ### Floci Initialization Script
 
-Copy or reference the Floci setup script from the FCP-FDM repository at [`floci/init.sh`](floci/init.sh). This script creates the required SQS queues, dead letter queues, SNS topics, and subscriptions needed for the service to function properly.
+Copy or reference the Floci setup script from the `fcp-fdm` repository at [`floci/init.sh`](floci/init.sh). This script creates the required SQS queues, dead letter queues, SNS topics, and subscriptions needed for the service to function properly.
 
 ### Important Notes
 
-1. **Startup Order**: The `depends_on` conditions ensure MongoDB and Floci are initialised before FCP-FDM starts
+1. **Startup Order**: The `depends_on` conditions ensure MongoDB and Floci are initialised before FODS starts
 2. **MongoDB Replica Set**: The `--replSet rs0` command flag is essential for MongoDB sessions to work
-3. **Floci Script**: Use the provided [`floci/init.sh`](floci/init.sh) script from the FCP-FDM repository - it sets up all required SQS queues and SNS topics
+3. **Floci Script**: Use the provided [`floci/init.sh`](floci/init.sh) script from the `fcp-fdm` repository - it sets up all required SQS queues and SNS topics
 4. **Network**: All services must be on the same Docker network to communicate
 5. **Health Checks**: MongoDB includes a health check to ensure proper startup sequencing
 
 ### Accessing the Service
 
-Once running, the FCP-FDM service will be available at:
+Once running, the FODS service will be available at:
 - **API**: `http://localhost:3000`
 - **Health Check**: `http://localhost:3000/health`
 

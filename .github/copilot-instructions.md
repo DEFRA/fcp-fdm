@@ -1,8 +1,8 @@
-# FCP FDM Workspace Instructions
+# FCP FODS Workspace Instructions
 
 ## Architecture
 
-The Farming Data Model (FDM) service is an event-driven Node.js application that:
+The Farming Operation Data Store (FODS) service (formerly Farming Data Model (FDM)) is an event-driven Node.js application that:
 1. Polls an AWS SQS queue for CloudEvents, processes and validates them, and upserts aggregated data into MongoDB.
 2. Exposes a REST API (Hapi) to query the aggregated data.
 

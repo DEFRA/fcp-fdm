@@ -1,7 +1,7 @@
 {
   "name": "fcp-fdm",
   "version": "0.0.0",
-  "description": "fcp-fdm",
+  "description": "Farming Operation Data Store (FODS)",
   "main": "src/index.js",
   "type": "module",
   "scripts": {
