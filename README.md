@@ -42,6 +42,7 @@ FODS subscribes to events across the FCP ecosystem via an AWS SQS queue. These e
 - [Test Structure](#test-structure)
   - [Test Categories](#test-categories)
   - [Running Tests](#running-tests)
+  - [Outbound Proxy Tests](#outbound-proxy-tests)
 - [Environment Variables](#environment-variables)
   - [Core Service](#core-service)
   - [Aws](#aws)
@@ -391,6 +392,11 @@ The test suite is organized into distinct categories.
    - Verify message aggregation and correlation
    - Validate business scenarios from start to finish
 
+4. **Proxy Tests**: Outbound proxy behaviour
+   - Start the service behind a Squid proxy on a network with no other route out
+   - Pass only if the service starts and becomes healthy, which requires the Entra JWKS lookup to go through the proxy
+   - Run via `npm run docker:test:proxy`
+
 ### Running Tests
 
 ```bash
@@ -399,7 +405,24 @@ npm run docker:test
 
 # Run tests in watch mode for development
 npm run docker:test:watch
+
+# Run outbound proxy tests (requires internet access to login.microsoftonline.com)
+npm run docker:test:proxy
 ```
+
+### Outbound Proxy Tests
+
+In CDP all outbound traffic must go through a Squid proxy. The service uses Node.js native proxy support 
+(`NODE_USE_ENV_PROXY`), which only applies to the global HTTP agents. `@hapi/jwt` fetches the Entra JWKS keys using 
+`@hapi/wreck`, which creates its own agents, so `setupProxy()` points Wreck at the global agents.
+
+`compose.proxy.yml` extends the test setup with a Squid proxy (configured by `test/proxy/squid.conf`). The service,
+MongoDB and Floci sit on an internal network with no route out, so any request that bypasses the proxy fails rather 
+than silently succeeding.
+
+The service fetches the JWKS keys on startup (`@hapi/jwt` cache warmup) and exits if startup fails. 
+`npm run docker:test:proxy` starts the service and waits for its `/health` healthcheck, so it passes only if the JWKS 
+lookup succeeded through the proxy. On failure the service logs are printed, and the stack is torn down either way.
 
 ## Environment Variables
 
@@ -618,6 +641,12 @@ Tests can also be run in watch mode to support Test Driven Development (TDD):
 
 ```bash
 npm run docker:test:watch
+```
+
+To run the [outbound proxy tests](#outbound-proxy-tests):
+
+```bash
+npm run docker:test:proxy
 ```
 
 ## Licence
