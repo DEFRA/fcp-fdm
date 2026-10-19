@@ -450,7 +450,9 @@ The FODS service can be configured using the following environment variables:
 
 | Variable | Description | Default | Required |
 |----------|-------------|---------|----------|
-| `HTTP_PROXY` | HTTP proxy URL | `null` | No |
+| `NODE_USE_ENV_PROXY` | Enable Node.js native proxy support for `HTTP_PROXY`/`HTTPS_PROXY`/`NO_PROXY`, must be `1` (set via cdp-app-config) | unset | Yes, in CDP environments |
+| `HTTPS_PROXY` | Outbound proxy URL for HTTPS requests (set via cdp-app-config) | unset | Yes, in CDP environments |
+| `NO_PROXY` | Hosts that bypass the outbound proxy, e.g. SQS (set via cdp-app-config) | unset | Yes, in CDP environments |
 | `ENABLE_SECURE_CONTEXT` | Enable secure context | `true` (prod), `false` (dev) | No |
 | `ENABLE_METRICS` | Enable metrics reporting | `true` (prod), `false` (dev) | No |
 | `TRACING_HEADER` | CDP tracing header name | `x-cdp-request-id` | No |
