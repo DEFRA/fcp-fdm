@@ -12,8 +12,8 @@ const eventPayload = {
   datacontenttype: 'text/json',
   data: {
     correlationId: '123e4567-e89b-12d3-a456-426614174000',
-    frn: 1234567890,
-    sbi: 123456789,
+    frn: 9234567890,
+    sbi: 823456789,
     schemeId: 1,
     invoiceNumber: 'INV-2025-001'
   }
@@ -207,7 +207,7 @@ describe('payment event schema', () => {
 
   test('should not validate an event with data missing correlationId', () => {
     event.data = {
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -217,7 +217,7 @@ describe('payment event schema', () => {
   test('should not validate an event with data missing schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       invoiceNumber: 'INV-2025-001'
     }
     expect(schema.validate(event).error).toBeDefined()
@@ -226,7 +226,7 @@ describe('payment event schema', () => {
   test('should not validate an event with data missing invoiceNumber', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1
     }
     expect(schema.validate(event).error).toBeDefined()
@@ -235,7 +235,7 @@ describe('payment event schema', () => {
   test('should not validate an event with empty correlationId', () => {
     event.data = {
       correlationId: '',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -245,7 +245,7 @@ describe('payment event schema', () => {
   test('should not validate an event with null correlationId', () => {
     event.data = {
       correlationId: null,
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -255,7 +255,7 @@ describe('payment event schema', () => {
   test('should not validate an event with undefined correlationId', () => {
     event.data = {
       correlationId: undefined,
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -265,7 +265,7 @@ describe('payment event schema', () => {
   test('should not validate an event with non-string correlationId', () => {
     event.data = {
       correlationId: 12345,
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -275,7 +275,7 @@ describe('payment event schema', () => {
   test('should not validate an event with non-guid correlationId', () => {
     event.data = {
       correlationId: 'not-a-guid',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -285,7 +285,7 @@ describe('payment event schema', () => {
   test('should not validate an event with empty invoiceNumber', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: ''
     }
@@ -295,7 +295,7 @@ describe('payment event schema', () => {
   test('should not validate an event with null invoiceNumber', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: null
     }
@@ -305,7 +305,7 @@ describe('payment event schema', () => {
   test('should not validate an event with undefined invoiceNumber', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: undefined
     }
@@ -315,7 +315,7 @@ describe('payment event schema', () => {
   test('should not validate an event with non-string invoiceNumber', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 12345
     }
@@ -325,7 +325,7 @@ describe('payment event schema', () => {
   test('should not validate an event with null schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: null,
       invoiceNumber: 'INV-2025-001'
     }
@@ -335,7 +335,7 @@ describe('payment event schema', () => {
   test('should not validate an event with undefined schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: undefined,
       invoiceNumber: 'INV-2025-001'
     }
@@ -345,7 +345,7 @@ describe('payment event schema', () => {
   test('should not validate an event with non-integer schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 'not-a-number',
       invoiceNumber: 'INV-2025-001'
     }
@@ -355,7 +355,7 @@ describe('payment event schema', () => {
   test('should not validate an event with negative schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: -1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -365,7 +365,7 @@ describe('payment event schema', () => {
   test('should not validate an event with zero schemeId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 0,
       invoiceNumber: 'INV-2025-001'
     }
@@ -375,7 +375,7 @@ describe('payment event schema', () => {
   test('should validate an event with only frn as customer identifier', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
+      frn: 9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -385,7 +385,7 @@ describe('payment event schema', () => {
   test('should validate an event with only sbi as customer identifier', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      sbi: 123456789,
+      sbi: 823456789,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -450,8 +450,8 @@ describe('payment event schema', () => {
   test('should validate an event with frn and sbi', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
-      sbi: 123456789,
+      frn: 9234567890,
+      sbi: 823456789,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -461,8 +461,8 @@ describe('payment event schema', () => {
   test('should validate an event with all customer identifiers', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: 1234567890,
-      sbi: 123456789,
+      frn: 9234567890,
+      sbi: 823456789,
       trader: 'TRADER123',
       vendor: 'VENDOR456',
       schemeId: 1,
@@ -474,7 +474,7 @@ describe('payment event schema', () => {
   test('should not validate an event with negative frn', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      frn: -1234567890,
+      frn: -9234567890,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }
@@ -484,7 +484,7 @@ describe('payment event schema', () => {
   test('should not validate an event with negative sbi', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      sbi: -123456789,
+      sbi: -823456789,
       schemeId: 1,
       invoiceNumber: 'INV-2025-001'
     }

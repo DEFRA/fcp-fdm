@@ -6,8 +6,8 @@ import { clearAllCollections } from '../../../helpers/mongo.js'
 
 const testDocuments = [{
   _id: 'doc-001',
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   status: 'active',
   created: new Date('2024-01-01T10:00:00Z'),
   lastUpdated: new Date('2024-01-01T10:05:00Z'),
@@ -23,8 +23,8 @@ const testDocuments = [{
   }]
 }, {
   _id: 'doc-002',
-  crn: 1234567890,
-  sbi: 987654322,
+  crn: 9234567890,
+  sbi: 887654322,
   status: 'pending',
   created: new Date('2024-01-01T11:00:00Z'),
   lastUpdated: new Date('2024-01-01T11:05:00Z'),
@@ -40,8 +40,8 @@ const testDocuments = [{
   }]
 }, {
   _id: 'doc-003',
-  crn: 1234567891,
-  sbi: 987654321,
+  crn: 9234567891,
+  sbi: 887654321,
   status: 'completed',
   created: new Date('2024-01-01T12:00:00Z'),
   lastUpdated: new Date('2024-01-01T12:05:00Z'),
@@ -57,8 +57,8 @@ const testDocuments = [{
   }]
 }, {
   _id: 'doc-004',
-  crn: 1234567891,
-  sbi: 987654323,
+  crn: 9234567891,
+  sbi: 887654323,
   status: 'archived',
   created: new Date('2024-01-01T13:00:00Z'),
   lastUpdated: new Date('2024-01-01T13:05:00Z'),
@@ -157,23 +157,23 @@ describe('BaseRepository', () => {
     })
 
     test('should build query with crn filter', () => {
-      const query = repository.buildQuery({ crn: 1234567890 })
-      expect(query).toEqual({ crn: 1234567890 })
+      const query = repository.buildQuery({ crn: 9234567890 })
+      expect(query).toEqual({ crn: 9234567890 })
     })
 
     test('should build query with sbi filter', () => {
-      const query = repository.buildQuery({ sbi: 987654321 })
-      expect(query).toEqual({ sbi: 987654321 })
+      const query = repository.buildQuery({ sbi: 887654321 })
+      expect(query).toEqual({ sbi: 887654321 })
     })
 
     test('should build query with both crn and sbi filters', () => {
-      const query = repository.buildQuery({ crn: 1234567890, sbi: 987654321 })
-      expect(query).toEqual({ crn: 1234567890, sbi: 987654321 })
+      const query = repository.buildQuery({ crn: 9234567890, sbi: 887654321 })
+      expect(query).toEqual({ crn: 9234567890, sbi: 887654321 })
     })
 
     test('should exclude undefined filters to avoid unnecessary query constraints', () => {
-      const query = repository.buildQuery({ crn: undefined, sbi: 987654321 })
-      expect(query).toEqual({ sbi: 987654321 })
+      const query = repository.buildQuery({ crn: undefined, sbi: 887654321 })
+      expect(query).toEqual({ sbi: 887654321 })
     })
 
     test('should treat 0 as valid filter value', () => {
@@ -182,8 +182,8 @@ describe('BaseRepository', () => {
     })
 
     test('should ignore extra filter properties', () => {
-      const query = repository.buildQuery({ crn: 1234567890, extraProp: 'ignored' })
-      expect(query).toEqual({ crn: 1234567890 })
+      const query = repository.buildQuery({ crn: 9234567890, extraProp: 'ignored' })
+      expect(query).toEqual({ crn: 9234567890 })
     })
   })
 
@@ -338,7 +338,7 @@ describe('BaseRepository', () => {
     })
 
     test('should handle filter with multiple conditions', async () => {
-      const doc = await repository.findOne({ crn: 1234567890, sbi: 987654321 })
+      const doc = await repository.findOne({ crn: 9234567890, sbi: 887654321 })
       expect(doc).toEqual(createBaseDocument(testDocuments[0]))
     })
   })
@@ -351,22 +351,22 @@ describe('BaseRepository', () => {
     })
 
     test('should filter documents by crn', async () => {
-      const docs = await repository.findMany({ crn: 1234567890 })
-      const expected = testDocuments.filter(doc => doc.crn === 1234567890)
+      const docs = await repository.findMany({ crn: 9234567890 })
+      const expected = testDocuments.filter(doc => doc.crn === 9234567890)
       expect(docs).toEqual(expect.arrayContaining(expected.map(createBaseDocument)))
       expect(docs).toHaveLength(2)
     })
 
     test('should filter documents by sbi', async () => {
-      const docs = await repository.findMany({ sbi: 987654321 })
-      const expected = testDocuments.filter(doc => doc.sbi === 987654321)
+      const docs = await repository.findMany({ sbi: 887654321 })
+      const expected = testDocuments.filter(doc => doc.sbi === 887654321)
       expect(docs).toEqual(expect.arrayContaining(expected.map(createBaseDocument)))
       expect(docs).toHaveLength(2)
     })
 
     test('should filter documents by crn and sbi', async () => {
-      const docs = await repository.findMany({ crn: 1234567890, sbi: 987654321 })
-      const expected = testDocuments.filter(doc => doc.crn === 1234567890 && doc.sbi === 987654321)
+      const docs = await repository.findMany({ crn: 9234567890, sbi: 887654321 })
+      const expected = testDocuments.filter(doc => doc.crn === 9234567890 && doc.sbi === 887654321)
       expect(docs).toEqual(expected.map(createBaseDocument))
       expect(docs).toHaveLength(1)
     })
@@ -426,14 +426,14 @@ describe('BaseRepository', () => {
     })
 
     test('should combine filtering with pagination', async () => {
-      const docs = await repository.findMany({ crn: 1234567890, page: 1, pageSize: 1 })
+      const docs = await repository.findMany({ crn: 9234567890, page: 1, pageSize: 1 })
       expect(docs).toHaveLength(1)
-      expect(docs[0].crn).toBe(1234567890)
+      expect(docs[0].crn).toBe(9234567890)
     })
 
     test('should combine filtering with events inclusion', async () => {
-      const docs = await repository.findMany({ crn: 1234567890 }, { includeEvents: true })
-      const expected = testDocuments.filter(doc => doc.crn === 1234567890)
+      const docs = await repository.findMany({ crn: 9234567890 }, { includeEvents: true })
+      const expected = testDocuments.filter(doc => doc.crn === 9234567890)
       expect(docs).toEqual(expect.arrayContaining(expected.map(createDocumentWithEvents)))
       expect(docs).toHaveLength(2)
     })

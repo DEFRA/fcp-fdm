@@ -50,11 +50,11 @@ describe('GET /api/v1/payments', () => {
   test('should filter payments by FRN if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/payments?frn=1234567890'
+      url: '/api/v1/payments?frn=9234567890'
     }
     const response = await server.inject(options)
 
-    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 1234567890, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 9234567890, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
   })
@@ -62,11 +62,11 @@ describe('GET /api/v1/payments', () => {
   test('should filter payments by SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/payments?sbi=123456789'
+      url: '/api/v1/payments?sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetPayments).toHaveBeenCalledWith({ sbi: 123456789, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetPayments).toHaveBeenCalledWith({ sbi: 823456789, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
   })
@@ -122,11 +122,11 @@ describe('GET /api/v1/payments', () => {
   test('should filter payments by FRN and SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/payments?frn=1234567890&sbi=123456789'
+      url: '/api/v1/payments?frn=9234567890&sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 1234567890, sbi: 123456789, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 9234567890, sbi: 823456789, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
   })
@@ -134,11 +134,11 @@ describe('GET /api/v1/payments', () => {
   test('should filter payments by multiple criteria', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/payments?frn=1234567890&schemeId=1&vendor=VENDOR-A'
+      url: '/api/v1/payments?frn=9234567890&schemeId=1&vendor=VENDOR-A'
     }
     const response = await server.inject(options)
 
-    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 1234567890, schemeId: 1, vendor: 'VENDOR-A', includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetPayments).toHaveBeenCalledWith({ frn: 9234567890, schemeId: 1, vendor: 'VENDOR-A', includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { payments: ['payment1', 'payment2'] } }))
   })

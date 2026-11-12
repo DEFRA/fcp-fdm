@@ -11,8 +11,8 @@ const CORRELATION_ID_4 = '00000000-0000-0000-0000-000000000004'
 
 const testPayments = [{
   _id: CORRELATION_ID_1,
-  frn: 1234567890,
-  sbi: 987654321,
+  frn: 9234567890,
+  sbi: 887654321,
   schemeId: 1,
   scheme: 'SFI',
   vendor: 'VENDOR-A',
@@ -32,8 +32,8 @@ const testPayments = [{
   }]
 }, {
   _id: CORRELATION_ID_2,
-  frn: 1234567890, // Same FRN as payment 1
-  sbi: 987654322,  // Different SBI
+  frn: 9234567890, // Same FRN as payment 1
+  sbi: 887654322,  // Different SBI
   schemeId: 1,     // Same scheme
   scheme: 'SFI',   // Same scheme name
   vendor: 'VENDOR-B',
@@ -57,8 +57,8 @@ const testPayments = [{
   }]
 }, {
   _id: CORRELATION_ID_3,
-  frn: 1234567891, // Different FRN
-  sbi: 987654321,  // Same SBI as payment 1
+  frn: 9234567891, // Different FRN
+  sbi: 887654321,  // Same SBI as payment 1
   schemeId: 2,     // Different scheme
   scheme: 'CS',    // Different scheme name
   vendor: 'VENDOR-A', // Same vendor as payment 1
@@ -78,8 +78,8 @@ const testPayments = [{
   }]
 }, {
   _id: CORRELATION_ID_4,
-  frn: 1234567891, // Same FRN as payment 3
-  sbi: 987654323,  // Different SBI from all others
+  frn: 9234567891, // Same FRN as payment 3
+  sbi: 887654323,  // Different SBI from all others
   schemeId: 2,     // Same scheme as payment 3
   scheme: 'CS',    // Same scheme name as payment 3
   vendor: 'VENDOR-B', // Same vendor as payment 2
@@ -148,7 +148,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by FRN if requested - multiple results', async () => {
-    const frn = 1234567890
+    const frn = 9234567890
     const expectedPayments = testPayments.filter(payment => payment.frn === frn)
     const { payments } = await getPayments({ frn })
     expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
@@ -156,7 +156,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by FRN if requested - single result', async () => {
-    const frn = 1234567891
+    const frn = 9234567891
     const expectedPayments = testPayments.filter(payment => payment.frn === frn)
     const { payments } = await getPayments({ frn })
     expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
@@ -164,7 +164,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by SBI if requested - multiple results', async () => {
-    const sbi = 987654321
+    const sbi = 887654321
     const expectedPayments = testPayments.filter(payment => payment.sbi === sbi)
     const { payments } = await getPayments({ sbi })
     expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createBasePayment)))
@@ -172,7 +172,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by SBI if requested - single result', async () => {
-    const sbi = 987654322
+    const sbi = 887654322
     const expectedPayments = testPayments.filter(payment => payment.sbi === sbi)
     const { payments } = await getPayments({ sbi })
     expect(payments).toEqual(expectedPayments.map(createBasePayment))
@@ -244,8 +244,8 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by FRN and SBI if requested - single match', async () => {
-    const frn = 1234567890
-    const sbi = 987654321
+    const frn = 9234567890
+    const sbi = 887654321
     const expectedPayments = testPayments.filter(payment => payment.frn === frn && payment.sbi === sbi)
     const { payments } = await getPayments({ frn, sbi })
     expect(payments).toEqual(expectedPayments.map(createBasePayment))
@@ -253,7 +253,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by FRN and SBI if requested - no matches', async () => {
-    const { payments } = await getPayments({ frn: 1234567890, sbi: 987654323 })
+    const { payments } = await getPayments({ frn: 9234567890, sbi: 887654323 })
     expect(payments).toEqual([]) // No payment has this combination
     expect(payments).toHaveLength(0)
   })
@@ -268,7 +268,7 @@ describe('getPayments', () => {
   })
 
   test('should filter payments by multiple criteria', async () => {
-    const frn = 1234567890
+    const frn = 9234567890
     const schemeId = 1
     const trader = 'TRADER-X'
     const expectedPayments = testPayments.filter(payment =>
@@ -286,7 +286,7 @@ describe('getPayments', () => {
   })
 
   test('should combine filtering with events inclusion', async () => {
-    const frn = 1234567890
+    const frn = 9234567890
     const expectedPayments = testPayments.filter(payment => payment.frn === frn)
     const { payments } = await getPayments({ frn, includeEvents: true })
     expect(payments).toEqual(expect.arrayContaining(expectedPayments.map(createPaymentWithEvents)))
@@ -363,8 +363,8 @@ describe('getPaymentByCorrelationId', () => {
     const payment = await getPaymentByCorrelationId(CORRELATION_ID_3)
     expect(payment).toMatchObject({
       correlationId: CORRELATION_ID_3,
-      frn: 1234567891,
-      sbi: 987654321,
+      frn: 9234567891,
+      sbi: 887654321,
       schemeId: 2,
       vendor: 'VENDOR-A',
       trader: 'TRADER-Y',

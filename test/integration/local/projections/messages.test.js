@@ -11,8 +11,8 @@ const CORRELATION_ID_4 = '00000000-0000-0000-0000-000000000004'
 
 const testMessages = [{
   _id: CORRELATION_ID_1,
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   recipient: 'user1@example.com',
   subject: 'Test Message 1',
   body: 'This is the body of test message 1.',
@@ -25,8 +25,8 @@ const testMessages = [{
   }]
 }, {
   _id: CORRELATION_ID_2,
-  crn: 1234567890, // Same CRN as message 1
-  sbi: 987654322,  // Different SBI
+  crn: 9234567890, // Same CRN as message 1
+  sbi: 887654322,  // Different SBI
   recipient: 'user2@example.com',
   subject: 'Test Message 2',
   body: 'This is the body of test message 2.',
@@ -39,8 +39,8 @@ const testMessages = [{
   }]
 }, {
   _id: CORRELATION_ID_3,
-  crn: 1234567891, // Different CRN
-  sbi: 987654321,  // Same SBI as message 1
+  crn: 9234567891, // Different CRN
+  sbi: 887654321,  // Same SBI as message 1
   recipient: 'user3@example.com',
   subject: 'Test Message 3',
   body: 'This is the body of test message 3.',
@@ -53,8 +53,8 @@ const testMessages = [{
   }]
 }, {
   _id: CORRELATION_ID_4,
-  crn: 1234567891, // Same CRN as message 3
-  sbi: 987654323,  // Different SBI from all others
+  crn: 9234567891, // Same CRN as message 3
+  sbi: 887654323,  // Different SBI from all others
   recipient: 'user4@example.com',
   subject: 'Test Message 4',
   body: 'This is the body of test message 4.',
@@ -119,7 +119,7 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by CRN if requested - multiple results', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
     const { messages } = await getMessages({ crn })
     expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
@@ -127,7 +127,7 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by CRN if requested - single result', async () => {
-    const crn = 1234567891
+    const crn = 9234567891
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
     const { messages } = await getMessages({ crn })
     expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
@@ -135,7 +135,7 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by SBI if requested - multiple results', async () => {
-    const sbi = 987654321
+    const sbi = 887654321
     const expectedMessages = testMessages.filter(msg => msg.sbi === sbi)
     const { messages } = await getMessages({ sbi })
     expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createBaseMessage)))
@@ -143,7 +143,7 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by SBI if requested - single result', async () => {
-    const sbi = 987654322
+    const sbi = 887654322
     const expectedMessages = testMessages.filter(msg => msg.sbi === sbi)
     const { messages } = await getMessages({ sbi })
     expect(messages).toEqual(expectedMessages.map(createBaseMessage))
@@ -151,8 +151,8 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by CRN and SBI if requested - single match', async () => {
-    const crn = 1234567890
-    const sbi = 987654321
+    const crn = 9234567890
+    const sbi = 887654321
     const expectedMessages = testMessages.filter(msg => msg.crn === crn && msg.sbi === sbi)
     const { messages } = await getMessages({ crn, sbi })
     expect(messages).toEqual(expectedMessages.map(createBaseMessage))
@@ -160,7 +160,7 @@ describe('getMessages', () => {
   })
 
   test('should filter messages by CRN and SBI if requested - no matches', async () => {
-    const { messages } = await getMessages({ crn: 1234567890, sbi: 987654323 })
+    const { messages } = await getMessages({ crn: 9234567890, sbi: 887654323 })
     expect(messages).toEqual([]) // No message has this combination
     expect(messages).toHaveLength(0)
   })
@@ -184,7 +184,7 @@ describe('getMessages', () => {
   })
 
   test('should combine filtering with content inclusion', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedMessages = testMessages.filter(msg => msg.crn === crn)
     const { messages } = await getMessages({ crn, includeContent: true })
     expect(messages).toEqual(expect.arrayContaining(expectedMessages.map(createMessageWithContent)))

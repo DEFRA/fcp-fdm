@@ -21,8 +21,8 @@ const crmBase = {
 // Common notification data
 const notificationRequestData = {
   correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
-  crn: 1234567890,
-  sbi: 123456789,
+  crn: 9234567890,
+  sbi: 823456789,
   sourceSystem: 'ffc-ahwr',
   notifyTemplateId: 'f33517ff-2a88-4f6e-b855-c550268ce08a',
   commsType: 'email',
@@ -39,9 +39,9 @@ const notificationRequestData = {
 
 // Common payment data
 const paymentData = {
-  frn: 1234567890,
+  frn: 9234567890,
   correlationId: 'c0a80163-7b0b-4a9e-9c0e-1c9a9a9a9a9a',
-  sbi: 123456789,
+  sbi: 823456789,
   schemeId: 1,
   invoiceNumber: 'S000000010000001V001',
   contractNumber: '01234567',
@@ -178,8 +178,8 @@ export const documentUpload = {
   time: '2023-10-17T14:48:01.000Z',
   data: {
     correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
-    crn: 1234567890,
-    sbi: 123456789,
+    crn: 9234567890,
+    sbi: 823456789,
     file: {
       fileId: 'file-123',
       fileName: 'document.pdf',
@@ -196,8 +196,8 @@ export const documentDeleted = {
   time: '2023-10-17T14:50:01.000Z',
   data: {
     correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
-    crn: 1234567890,
-    sbi: 123456789,
+    crn: 9234567890,
+    sbi: 823456789,
     file: {
       fileId: 'file-123',
       fileName: 'document.pdf',
@@ -214,8 +214,8 @@ export const crmCaseCreated = {
   time: '2023-10-17T14:48:01.000Z',
   data: {
     correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
-    crn: 1234567890,
-    sbi: 123456789,
+    crn: 9234567890,
+    sbi: 823456789,
     caseId: 'case-123',
     caseType: 'DOCUMENT_UPLOAD',
     onlineSubmissionActivities: [
@@ -235,8 +235,8 @@ export const crmCaseUpdated = {
   time: '2023-10-17T14:50:01.000Z',
   data: {
     correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
-    crn: 1234567890,
-    sbi: 123456789,
+    crn: 9234567890,
+    sbi: 823456789,
     caseId: 'case-123',
     caseType: 'DOCUMENT_UPLOAD',
     onlineSubmissionActivities: [

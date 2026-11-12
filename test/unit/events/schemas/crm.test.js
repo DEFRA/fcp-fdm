@@ -12,8 +12,8 @@ const eventPayload = {
   datacontenttype: 'text/json',
   data: {
     correlationId: '123e4567-e89b-12d3-a456-426614174000',
-    crn: 1234567890,
-    sbi: 123456789,
+    crn: 9234567890,
+    sbi: 823456789,
     caseId: 'case-123',
     caseType: 'inquiry'
   }
@@ -207,8 +207,8 @@ describe('crm event schema', () => {
 
   test('should not validate an event with data missing correlationId', () => {
     event.data = {
-      crn: 1234567890,
-      sbi: 123456789,
+      crn: 9234567890,
+      sbi: 823456789,
       caseId: 'case-123',
       caseType: 'inquiry'
     }
@@ -218,7 +218,7 @@ describe('crm event schema', () => {
   test('should not validate an event with data missing crn', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      sbi: 123456789,
+      sbi: 823456789,
       caseId: 'case-123',
       caseType: 'inquiry'
     }
@@ -228,7 +228,7 @@ describe('crm event schema', () => {
   test('should not validate an event with data missing sbi', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      crn: 1234567890,
+      crn: 9234567890,
       caseId: 'case-123',
       caseType: 'inquiry'
     }
@@ -238,8 +238,8 @@ describe('crm event schema', () => {
   test('should not validate an event with data missing caseId', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      crn: 1234567890,
-      sbi: 123456789,
+      crn: 9234567890,
+      sbi: 823456789,
       caseType: 'inquiry'
     }
     expect(schema.validate(event).error).toBeDefined()
@@ -248,8 +248,8 @@ describe('crm event schema', () => {
   test('should not validate an event with data missing caseType', () => {
     event.data = {
       correlationId: '123e4567-e89b-12d3-a456-426614174000',
-      crn: 1234567890,
-      sbi: 123456789,
+      crn: 9234567890,
+      sbi: 823456789,
       caseId: 'case-123'
     }
     expect(schema.validate(event).error).toBeDefined()

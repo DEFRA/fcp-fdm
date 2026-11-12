@@ -144,8 +144,8 @@ components:
             data:
               correlationId: "f47ac10b-58cc-4372-a567-0e02b2c3d479"
               recipient: "farmer@example.com"
-              crn: 1234567890
-              sbi: 123456789
+              crn: 9234567890
+              sbi: 823456789
               content:
                 subject: "Your application update"
                 body: "Your application has been received"
@@ -181,8 +181,8 @@ components:
             datacontenttype: "application/json"
             data:
               correlationId: "89389915-7275-457a-b8ca-8bf206b2e67b"
-              crn: 1234567890
-              sbi: 123456789
+              crn: 9234567890
+              sbi: 823456789
               file:
                 fileId: "file-123"
                 fileName: "document.pdf"
@@ -219,8 +219,8 @@ components:
             datacontenttype: "application/json"
             data:
               correlationId: "99389915-7275-457a-b8ca-8bf206b2e67b"
-              crn: 1234567890
-              sbi: 123456789
+              crn: 9234567890
+              sbi: 823456789
               caseId: "case-123"
               caseType: "DOCUMENT_UPLOAD"
               onlineSubmissionActivities:
@@ -239,8 +239,8 @@ components:
             datacontenttype: "application/json"
             data:
               correlationId: "99389915-7275-457a-b8ca-8bf206b2e67b"
-              crn: 1234567890
-              sbi: 123456789
+              crn: 9234567890
+              sbi: 823456789
               caseId: "case-123"
               caseType: "DOCUMENT_UPLOAD"
               onlineSubmissionActivities:
@@ -280,7 +280,7 @@ components:
             subject: "Payment request enriched"
             datacontenttype: "text/json"
             data:
-              frn: 1234567890
+              frn: 9234567890
               schemeId: 1
               correlationId: "123e4567-e89b-12d3-a456-426655440000"
               invoiceNumber: "S1234567S1234567V001"
@@ -352,13 +352,13 @@ components:
         crn:
           type: integer
           description: Customer Reference Number
-          minimum: 1050000000
+          minimum: 1050000000 # sfd-id-check: allow
           maximum: 9999999999
         sbi:
           type: integer
           description: Single Business Identifier
-          minimum: 105000000
-          maximum: 999999999
+          minimum: 105000000 # sfd-id-check: allow
+          maximum: 999999999 # sfd-id-check: allow
         content:
           type: object
           description: Message content details
@@ -431,13 +431,13 @@ components:
         crn:
           type: integer
           description: Customer Reference Number
-          minimum: 1050000000
+          minimum: 1050000000 # sfd-id-check: allow
           maximum: 9999999999
         sbi:
           type: integer
           description: Single Business Identifier
-          minimum: 105000000
-          maximum: 999999999
+          minimum: 105000000 # sfd-id-check: allow
+          maximum: 999999999 # sfd-id-check: allow
         file:
           type: object
           description: File details
@@ -527,13 +527,13 @@ components:
         crn:
           type: integer
           description: Customer Reference Number
-          minimum: 1050000000
+          minimum: 1050000000 # sfd-id-check: allow
           maximum: 9999999999
         sbi:
           type: integer
           description: Single Business Identifier
-          minimum: 105000000
-          maximum: 999999999
+          minimum: 105000000 # sfd-id-check: allow
+          maximum: 999999999 # sfd-id-check: allow
         caseId:
           type: string
           description: Unique CRM case identifier
@@ -628,7 +628,7 @@ components:
           type: integer
           format: int64
           description: Firm Reference Number
-          example: 1234567890
+          example: 9234567890
         schemeId:
           type: integer
           format: int32

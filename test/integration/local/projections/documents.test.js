@@ -15,8 +15,8 @@ const CASE_ID_2 = '00000000-0000-0000-0000-000000000102'
 const testDocuments = [{
   _id: '507f1f77bcf86cd799439011',
   fileId: FILE_ID_1,
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   status: 'received',
   created: new Date('2024-01-01T10:00:00Z'),
   lastUpdated: new Date('2024-01-01T10:05:00Z'),
@@ -27,8 +27,8 @@ const testDocuments = [{
 }, {
   _id: '507f1f77bcf86cd799439012',
   fileId: FILE_ID_2,
-  crn: 1234567890, // Same CRN as document 1
-  sbi: 987654322,  // Different SBI
+  crn: 9234567890, // Same CRN as document 1
+  sbi: 887654322,  // Different SBI
   status: 'processing',
   created: new Date('2024-01-01T11:00:00Z'),
   lastUpdated: new Date('2024-01-01T11:05:00Z'),
@@ -39,8 +39,8 @@ const testDocuments = [{
 }, {
   _id: '507f1f77bcf86cd799439013',
   fileId: FILE_ID_3,
-  crn: 1234567891, // Different CRN
-  sbi: 987654321,  // Same SBI as document 1
+  crn: 9234567891, // Different CRN
+  sbi: 887654321,  // Same SBI as document 1
   status: 'validated',
   created: new Date('2024-01-01T12:00:00Z'),
   lastUpdated: new Date('2024-01-01T12:05:00Z'),
@@ -51,8 +51,8 @@ const testDocuments = [{
 }, {
   _id: '507f1f77bcf86cd799439014',
   fileId: FILE_ID_4,
-  crn: 1234567891, // Same CRN as document 3
-  sbi: 987654323,  // Different SBI from all others
+  crn: 9234567891, // Same CRN as document 3
+  sbi: 887654323,  // Different SBI from all others
   status: 'rejected',
   created: new Date('2024-01-01T13:00:00Z'),
   lastUpdated: new Date('2024-01-01T13:05:00Z'),
@@ -66,8 +66,8 @@ const testCrmCases = [{
   _id: '507f1f77bcf86cd799439021',
   caseId: CASE_ID_1,
   fileIds: [FILE_ID_1],
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   status: 'open',
   created: new Date('2024-01-01T10:10:00Z'),
   lastUpdated: new Date('2024-01-01T10:15:00Z'),
@@ -79,8 +79,8 @@ const testCrmCases = [{
   _id: '507f1f77bcf86cd799439022',
   caseId: CASE_ID_2,
   fileIds: [FILE_ID_1], // Changed from fileId to fileIds array (multiple cases for same document)
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   status: 'in-progress',
   created: new Date('2024-01-01T10:20:00Z'),
   lastUpdated: new Date('2024-01-01T10:25:00Z'),
@@ -131,7 +131,7 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by CRN if requested - multiple results', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedDocuments = testDocuments.filter(doc => doc.crn === crn)
     const { documents } = await getDocuments({ crn })
     expect(documents).toEqual(expect.arrayContaining(expectedDocuments.map(createBaseDocument)))
@@ -139,7 +139,7 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by CRN if requested - single result', async () => {
-    const crn = 1234567891
+    const crn = 9234567891
     const expectedDocuments = testDocuments.filter(doc => doc.crn === crn)
     const { documents } = await getDocuments({ crn })
     expect(documents).toEqual(expect.arrayContaining(expectedDocuments.map(createBaseDocument)))
@@ -147,7 +147,7 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by SBI if requested - multiple results', async () => {
-    const sbi = 987654321
+    const sbi = 887654321
     const expectedDocuments = testDocuments.filter(doc => doc.sbi === sbi)
     const { documents } = await getDocuments({ sbi })
     expect(documents).toEqual(expect.arrayContaining(expectedDocuments.map(createBaseDocument)))
@@ -155,7 +155,7 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by SBI if requested - single result', async () => {
-    const sbi = 987654322
+    const sbi = 887654322
     const expectedDocuments = testDocuments.filter(doc => doc.sbi === sbi)
     const { documents } = await getDocuments({ sbi })
     expect(documents).toEqual(expectedDocuments.map(createBaseDocument))
@@ -163,8 +163,8 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by CRN and SBI if requested - single match', async () => {
-    const crn = 1234567890
-    const sbi = 987654321
+    const crn = 9234567890
+    const sbi = 887654321
     const expectedDocuments = testDocuments.filter(doc => doc.crn === crn && doc.sbi === sbi)
     const { documents } = await getDocuments({ crn, sbi })
     expect(documents).toEqual(expectedDocuments.map(createBaseDocument))
@@ -172,7 +172,7 @@ describe('getDocuments', () => {
   })
 
   test('should filter documents by CRN and SBI if requested - no matches', async () => {
-    const { documents } = await getDocuments({ crn: 1234567890, sbi: 987654323 })
+    const { documents } = await getDocuments({ crn: 9234567890, sbi: 887654323 })
     expect(documents).toEqual([]) // No document has this combination
     expect(documents).toHaveLength(0)
   })
@@ -184,7 +184,7 @@ describe('getDocuments', () => {
   })
 
   test('should combine filtering with events inclusion', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedDocuments = testDocuments.filter(doc => doc.crn === crn)
     const { documents } = await getDocuments({ crn, includeEvents: true })
     expect(documents).toEqual(expect.arrayContaining(expectedDocuments.map(createDocumentWithEvents)))
@@ -318,8 +318,8 @@ describe('getDocumentByFileId', () => {
       _id: '507f1f77bcf86cd799439023',
       caseId: '00000000-0000-0000-0000-000000000103',
       fileIds: [FILE_ID_2, FILE_ID_3], // Multiple fileIds
-      crn: 1234567890,
-      sbi: 987654322,
+      crn: 9234567890,
+      sbi: 887654322,
       status: 'processing',
       created: new Date('2024-01-01T10:30:00Z'),
       lastUpdated: new Date('2024-01-01T10:35:00Z'),
