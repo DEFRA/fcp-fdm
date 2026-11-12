@@ -181,8 +181,8 @@ describe('save', () => {
       ...messageEvents.messageDelivered,
       data: {
         ...messageEvents.messageDelivered.data,
-        crn: 1234567890,
-        sbi: 987654321,
+        crn: 9234567890,
+        sbi: 887654321,
       }
     }
 

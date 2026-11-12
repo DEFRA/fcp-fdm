@@ -12,8 +12,8 @@ const CASE_ID_4 = '00000000-0000-0000-0000-000000000004'
 const testCrmCases = [{
   _id: '507f1f77bcf86cd799439011',
   caseId: CASE_ID_1,
-  crn: 1234567890,
-  sbi: 987654321,
+  crn: 9234567890,
+  sbi: 887654321,
   status: 'open',
   created: new Date('2024-01-01T10:00:00Z'),
   lastUpdated: new Date('2024-01-01T10:05:00Z'),
@@ -24,8 +24,8 @@ const testCrmCases = [{
 }, {
   _id: '507f1f77bcf86cd799439012',
   caseId: CASE_ID_2,
-  crn: 1234567890, // Same CRN as case 1
-  sbi: 987654322,  // Different SBI
+  crn: 9234567890, // Same CRN as case 1
+  sbi: 887654322,  // Different SBI
   status: 'in-progress',
   created: new Date('2024-01-01T11:00:00Z'),
   lastUpdated: new Date('2024-01-01T11:05:00Z'),
@@ -36,8 +36,8 @@ const testCrmCases = [{
 }, {
   _id: '507f1f77bcf86cd799439013',
   caseId: CASE_ID_3,
-  crn: 1234567891, // Different CRN
-  sbi: 987654321,  // Same SBI as case 1
+  crn: 9234567891, // Different CRN
+  sbi: 887654321,  // Same SBI as case 1
   status: 'resolved',
   created: new Date('2024-01-01T12:00:00Z'),
   lastUpdated: new Date('2024-01-01T12:05:00Z'),
@@ -48,8 +48,8 @@ const testCrmCases = [{
 }, {
   _id: '507f1f77bcf86cd799439014',
   caseId: CASE_ID_4,
-  crn: 1234567891, // Same CRN as case 3
-  sbi: 987654323,  // Different SBI from all others
+  crn: 9234567891, // Same CRN as case 3
+  sbi: 887654323,  // Different SBI from all others
   status: 'closed',
   created: new Date('2024-01-01T13:00:00Z'),
   lastUpdated: new Date('2024-01-01T13:05:00Z'),
@@ -99,7 +99,7 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by CRN if requested - multiple results', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedCases = testCrmCases.filter(crmCase => crmCase.crn === crn)
     const { crmCases } = await getCrmCases({ crn })
     expect(crmCases).toEqual(expect.arrayContaining(expectedCases.map(createBaseCrmCase)))
@@ -107,7 +107,7 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by CRN if requested - single result', async () => {
-    const crn = 1234567891
+    const crn = 9234567891
     const expectedCases = testCrmCases.filter(crmCase => crmCase.crn === crn)
     const { crmCases } = await getCrmCases({ crn })
     expect(crmCases).toEqual(expect.arrayContaining(expectedCases.map(createBaseCrmCase)))
@@ -115,7 +115,7 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by SBI if requested - multiple results', async () => {
-    const sbi = 987654321
+    const sbi = 887654321
     const expectedCases = testCrmCases.filter(crmCase => crmCase.sbi === sbi)
     const { crmCases } = await getCrmCases({ sbi })
     expect(crmCases).toEqual(expect.arrayContaining(expectedCases.map(createBaseCrmCase)))
@@ -123,7 +123,7 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by SBI if requested - single result', async () => {
-    const sbi = 987654322
+    const sbi = 887654322
     const expectedCases = testCrmCases.filter(crmCase => crmCase.sbi === sbi)
     const { crmCases } = await getCrmCases({ sbi })
     expect(crmCases).toEqual(expectedCases.map(createBaseCrmCase))
@@ -131,8 +131,8 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by CRN and SBI if requested - single match', async () => {
-    const crn = 1234567890
-    const sbi = 987654321
+    const crn = 9234567890
+    const sbi = 887654321
     const expectedCases = testCrmCases.filter(crmCase => crmCase.crn === crn && crmCase.sbi === sbi)
     const { crmCases } = await getCrmCases({ crn, sbi })
     expect(crmCases).toEqual(expectedCases.map(createBaseCrmCase))
@@ -140,7 +140,7 @@ describe('getCrmCases', () => {
   })
 
   test('should filter CRM cases by CRN and SBI if requested - no matches', async () => {
-    const { crmCases } = await getCrmCases({ crn: 1234567890, sbi: 987654323 })
+    const { crmCases } = await getCrmCases({ crn: 9234567890, sbi: 887654323 })
     expect(crmCases).toEqual([]) // No case has this combination
     expect(crmCases).toHaveLength(0)
   })
@@ -152,7 +152,7 @@ describe('getCrmCases', () => {
   })
 
   test('should combine filtering with events inclusion', async () => {
-    const crn = 1234567890
+    const crn = 9234567890
     const expectedCases = testCrmCases.filter(crmCase => crmCase.crn === crn)
     const { crmCases } = await getCrmCases({ crn, includeEvents: true })
     expect(crmCases).toEqual(expect.arrayContaining(expectedCases.map(createCrmCaseWithEvents)))

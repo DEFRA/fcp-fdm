@@ -50,11 +50,11 @@ describe('GET /api/v1/messages', () => {
   test('should filter messages by CRN if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/messages?crn=1234567890'
+      url: '/api/v1/messages?crn=9234567890'
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 9234567890, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
@@ -62,11 +62,11 @@ describe('GET /api/v1/messages', () => {
   test('should filter messages by SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/messages?sbi=123456789'
+      url: '/api/v1/messages?sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ sbi: 123456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetMessages).toHaveBeenCalledWith({ sbi: 823456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })
@@ -74,11 +74,11 @@ describe('GET /api/v1/messages', () => {
   test('should filter messages by CRN and SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/messages?crn=1234567890&sbi=123456789'
+      url: '/api/v1/messages?crn=9234567890&sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 1234567890, sbi: 123456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetMessages).toHaveBeenCalledWith({ crn: 9234567890, sbi: 823456789, includeContent: false, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { messages: ['message1', 'message2'] } }))
   })

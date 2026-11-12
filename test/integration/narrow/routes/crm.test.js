@@ -50,11 +50,11 @@ describe('GET /api/v1/crm', () => {
   test('should filter CRM cases by CRN if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/crm?crn=1234567890'
+      url: '/api/v1/crm?crn=9234567890'
     }
     const response = await server.inject(options)
 
-    expect(mockGetCrmCases).toHaveBeenCalledWith({ crn: 1234567890, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetCrmCases).toHaveBeenCalledWith({ crn: 9234567890, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { crmCases: ['crmCase1', 'crmCase2'] } }))
   })
@@ -62,11 +62,11 @@ describe('GET /api/v1/crm', () => {
   test('should filter CRM cases by SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/crm?sbi=123456789'
+      url: '/api/v1/crm?sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetCrmCases).toHaveBeenCalledWith({ sbi: 123456789, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetCrmCases).toHaveBeenCalledWith({ sbi: 823456789, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { crmCases: ['crmCase1', 'crmCase2'] } }))
   })
@@ -74,11 +74,11 @@ describe('GET /api/v1/crm', () => {
   test('should filter CRM cases by CRN and SBI if requested', async () => {
     const options = {
       method: 'GET',
-      url: '/api/v1/crm?crn=1234567890&sbi=123456789'
+      url: '/api/v1/crm?crn=9234567890&sbi=823456789'
     }
     const response = await server.inject(options)
 
-    expect(mockGetCrmCases).toHaveBeenCalledWith({ crn: 1234567890, sbi: 123456789, includeEvents: false, page: 1, pageSize: 20 })
+    expect(mockGetCrmCases).toHaveBeenCalledWith({ crn: 9234567890, sbi: 823456789, includeEvents: false, page: 1, pageSize: 20 })
     expect(response.statusCode).toBe(HTTP_STATUS_OK)
     expect(JSON.parse(response.payload)).toEqual(expect.objectContaining({ data: { crmCases: ['crmCase1', 'crmCase2'] } }))
   })

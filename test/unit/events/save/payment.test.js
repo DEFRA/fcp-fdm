@@ -43,7 +43,7 @@ const enrichedEvent = {
   time: '2023-10-17T14:46:01.000Z',
   data: {
     correlationId: 'corr-id-1',
-    frn: 1234567890,
+    frn: 9234567890,
     schemeId: 1,
     invoiceNumber: 'S000000010000001V001',
     value: 80000
@@ -55,7 +55,7 @@ const acknowledgedEvent = {
   time: '2023-10-17T14:49:01.000Z',
   data: {
     correlationId: 'corr-id-1',
-    frn: 1234567890,
+    frn: 9234567890,
     schemeId: 1,
     invoiceNumber: 'S000000010000001V001',
     value: 80000
@@ -190,7 +190,7 @@ describe('payment save - extracted event (pence conversion)', () => {
       time: '2023-10-17T14:45:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 1,
         invoiceNumber: 'SFI0001234V001',
         value: 800 // 800 pounds → should become 80000 pence
@@ -210,7 +210,7 @@ describe('payment save - extracted event (pence conversion)', () => {
       time: '2023-10-17T14:45:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 1,
         invoiceNumber: 'SFI0001234V001',
         value: 800,
@@ -235,7 +235,7 @@ describe('payment save - extracted event (pence conversion)', () => {
       time: '2023-10-17T14:47:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 1,
         invoiceNumber: 'S000000010000001V001',
         value: 80000 // already in pence, must not be converted again
@@ -265,7 +265,7 @@ describe('payment save - inverted value schemes', () => {
       time: '2023-10-17T14:46:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 17,
         invoiceNumber: 'FPTT0001234V001',
         value: -80000
@@ -284,7 +284,7 @@ describe('payment save - inverted value schemes', () => {
       time: '2023-10-17T14:46:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 17,
         invoiceNumber: 'FPTT0001234V001',
         value: 80000
@@ -303,7 +303,7 @@ describe('payment save - inverted value schemes', () => {
       time: '2023-10-17T14:46:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 17,
         invoiceNumber: 'FPTT0001234V001',
         value: -80000,
@@ -328,7 +328,7 @@ describe('payment save - inverted value schemes', () => {
       time: '2023-10-17T14:46:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 1,
         invoiceNumber: 'S000000010000001V001',
         value: 80000
@@ -348,7 +348,7 @@ describe('payment save - inverted value schemes', () => {
       time: '2023-10-17T14:45:01.000Z',
       data: {
         correlationId: 'corr-id-1',
-        frn: 1234567890,
+        frn: 9234567890,
         schemeId: 17,
         invoiceNumber: 'FPTT0001234V001',
         value: -800 // -800 pounds → -80000 pence → 80000 after inversion

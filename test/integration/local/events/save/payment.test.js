@@ -197,8 +197,8 @@ describe('save', () => {
       ...paymentProcessed,
       data: {
         correlationId: '49389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         trader: 'TRADER123',
         vendor: 'VENDOR456',
         schemeId: 1,
@@ -228,8 +228,8 @@ describe('save', () => {
       time: '2023-10-17T14:00:00.000Z',
       data: {
         correlationId: '59389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1111111111,
-        sbi: 111111111,
+        frn: 9111111111,
+        sbi: 811111111,
         schemeId: 1,
         invoiceNumber: 'INV-2025-100'
       }
@@ -247,8 +247,8 @@ describe('save', () => {
       time: '2023-10-17T15:00:00.000Z',
       data: {
         correlationId: '59389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 2222222222,
-        sbi: 222222222,
+        frn: 9222222222,
+        sbi: 822222222,
         schemeId: 2,
         invoiceNumber: 'INV-2025-101'
       }
@@ -259,8 +259,8 @@ describe('save', () => {
     const updatedPayment = await collections.payments.findOne({ _id: initialEvent.data.correlationId })
 
     // Newer event should update top-level properties
-    expect(updatedPayment.frn).toBe(2222222222)
-    expect(updatedPayment.sbi).toBe(222222222)
+    expect(updatedPayment.frn).toBe(9222222222)
+    expect(updatedPayment.sbi).toBe(822222222)
     expect(updatedPayment.schemeId).toBe(2)
     expect(updatedPayment.status).toBe('submitted')
     expect(updatedPayment.events).toHaveLength(2)
@@ -280,8 +280,8 @@ describe('save', () => {
       time: '2023-10-17T15:00:00.000Z',
       data: {
         correlationId: '69389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 3333333333,
-        sbi: 333333333,
+        frn: 9333333333,
+        sbi: 833333333,
         schemeId: 3,
         invoiceNumber: 'INV-2025-200'
       }
@@ -292,7 +292,7 @@ describe('save', () => {
     // Verify first event was saved correctly
     let payment = await collections.payments.findOne({ _id: initialEvent.data.correlationId })
     expect(payment.status).toBe('submitted')
-    expect(payment.frn).toBe(3333333333)
+    expect(payment.frn).toBe(9333333333)
     expect(payment.lastEventTime).toEqual(new Date('2023-10-17T15:00:00.000Z'))
 
     // Create an older event with different property values and different invoice number
@@ -305,8 +305,8 @@ describe('save', () => {
       time: '2023-10-17T14:00:00.000Z',
       data: {
         correlationId: '69389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 4444444444,
-        sbi: 444444444,
+        frn: 9444444444,
+        sbi: 844444444,
         schemeId: 4,
         invoiceNumber: 'INV-2025-201'
       }
@@ -319,8 +319,8 @@ describe('save', () => {
     // lastEventTime should still be the newer event's time
     expect(payment.lastEventTime).toEqual(new Date('2023-10-17T15:00:00.000Z'))
     // Older event should NOT update top-level properties - original values should remain
-    expect(payment.frn).toBe(3333333333)
-    expect(payment.sbi).toBe(333333333)
+    expect(payment.frn).toBe(9333333333)
+    expect(payment.sbi).toBe(833333333)
     expect(payment.schemeId).toBe(3)
     expect(payment.status).toBe('submitted')
     expect(payment.events).toHaveLength(2)
@@ -390,8 +390,8 @@ describe('save', () => {
       ...paymentExtracted,
       data: {
         correlationId: '88389915-7275-457a-b8ca-8bf206b2e67c',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-006',
         value: 100.00
@@ -413,8 +413,8 @@ describe('save', () => {
       ...paymentExtracted,
       data: {
         correlationId: '77389915-7275-457a-b8ca-8bf206b2e67c',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-007',
         invoiceLines: [
@@ -446,8 +446,8 @@ describe('save', () => {
       time: '2023-10-17T14:00:00.000Z',
       data: {
         correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-300',
         value: 100
@@ -466,8 +466,8 @@ describe('save', () => {
       time: '2023-10-17T15:00:00.000Z',
       data: {
         correlationId: '79389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-300',
         value: 200
@@ -497,8 +497,8 @@ describe('save', () => {
       time: '2023-10-17T15:00:00.000Z',
       data: {
         correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-400',
         value: 200
@@ -517,8 +517,8 @@ describe('save', () => {
       time: '2023-10-17T14:00:00.000Z',
       data: {
         correlationId: '89389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-400',
         value: 100
@@ -547,8 +547,8 @@ describe('save', () => {
       time: '2023-10-17T14:00:00.000Z',
       data: {
         correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-500',
         value: 100
@@ -566,8 +566,8 @@ describe('save', () => {
       time: '2023-10-17T14:05:00.000Z',
       data: {
         correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-501',
         value: 200
@@ -585,8 +585,8 @@ describe('save', () => {
       time: '2023-10-17T14:10:00.000Z',
       data: {
         correlationId: '99389915-7275-457a-b8ca-8bf206b2e67b',
-        frn: 1234567890,
-        sbi: 123456789,
+        frn: 9234567890,
+        sbi: 823456789,
         schemeId: 1,
         invoiceNumber: 'INV-2025-502',
         value: 300
