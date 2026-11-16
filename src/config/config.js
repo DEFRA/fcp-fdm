@@ -176,7 +176,8 @@ const config = convict({
     }
   },
   // Outbound traffic must go through the proxy in CDP, so these are only optional locally.
-  // Neither is read by the service: Node.js uses them directly.
+  // These variables are not read by the service, but validated here to fail service startup in a deployed environment
+  // if the variables are not set.
   proxy: {
     httpsProxy: {
       doc: 'Outbound proxy URL, required in CDP environments (set via cdp-app-config)',
