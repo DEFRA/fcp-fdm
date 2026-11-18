@@ -1,19 +1,12 @@
-import { ReceiveMessageCommand, DeleteMessageBatchCommand, SQSClient } from '@aws-sdk/client-sqs'
+import { ReceiveMessageCommand, DeleteMessageBatchCommand } from '@aws-sdk/client-sqs'
 import { config } from '../config/config.js'
 import { processEvent } from './process.js'
+import { sqsClient } from './sqs-client.js'
 import { createLogger } from '../common/helpers/logging/logger.js'
 
-const { sqs, region, endpoint, accessKeyId, secretAccessKey } = config.get('aws')
+const { sqs } = config.get('aws')
 
 const logger = createLogger()
-
-const sqsClient = new SQSClient({
-  region,
-  ...(endpoint && {
-    endpoint,
-    credentials: { accessKeyId, secretAccessKey }
-  })
-})
 
 const receiveParams = {
   QueueUrl: sqs.queueUrl,
