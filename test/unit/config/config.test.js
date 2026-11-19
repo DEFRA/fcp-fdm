@@ -69,6 +69,36 @@ describe('config', () => {
     await expect(async () => await import('../../../src/config/config.js')).rejects.toThrow()
   })
 
+  test('should default mongo server selection and connect timeouts to 10 seconds', async () => {
+    // act
+    const { config } = await import('../../../src/config/config.js')
+
+    // assert
+    expect(config.get('mongo.mongoOptions.serverSelectionTimeoutMS')).toBe(10000)
+    expect(config.get('mongo.mongoOptions.connectTimeoutMS')).toBe(10000)
+  })
+
+  test('should return mongo server selection and connect timeouts from environment variables', async () => {
+    // arrange
+    process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS = '3000'
+    process.env.MONGO_CONNECT_TIMEOUT_MS = '2000'
+
+    // act
+    const { config } = await import('../../../src/config/config.js')
+
+    // assert
+    expect(config.get('mongo.mongoOptions.serverSelectionTimeoutMS')).toBe(3000)
+    expect(config.get('mongo.mongoOptions.connectTimeoutMS')).toBe(2000)
+  })
+
+  test('should throw error if a mongo timeout is not a whole number', async () => {
+    // arrange
+    process.env.MONGO_SERVER_SELECTION_TIMEOUT_MS = 'soon'
+
+    // act / assert
+    await expect(async () => await import('../../../src/config/config.js')).rejects.toThrow()
+  })
+
   test('should return service name with default value', async () => {
     const { config } = await import('../../../src/config/config.js')
     expect(config.get('serviceName')).toBe('fcp-fdm')

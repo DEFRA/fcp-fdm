@@ -26,6 +26,12 @@ vi.mock('../../../../src/common/helpers/logging/logger.js', () => ({
   })
 }))
 
+const mockRunHealthChecks = vi.fn()
+
+vi.mock('../../../../src/common/helpers/health/index.js', () => ({
+  runHealthChecks: mockRunHealthChecks
+}))
+
 vi.mock('../../../../src/events/polling.js', () => ({
   startPolling: vi.fn(),
   stopPolling: vi.fn()
@@ -81,8 +87,13 @@ describe('startServer', () => {
     })
 
     test('Should start up server as expected', async () => {
+      // act
       server = await startServerImport.startServer()
 
+      // assert
+      expect(mockRunHealthChecks).toHaveBeenCalledTimes(1)
+      expect(mockRunHealthChecks.mock.invocationCallOrder[0])
+        .toBeLessThan(createServerSpy.mock.invocationCallOrder[0])
       expect(createServerSpy).toHaveBeenCalled()
       expect(hapiServerSpy).toHaveBeenCalled()
       expect(mockHapiLoggerInfo).toHaveBeenNthCalledWith(
@@ -121,8 +132,10 @@ describe('startServer', () => {
     })
 
     test('Should log failed startup message', async () => {
+      // act
       await startServerImport.startServer()
 
+      // assert
       expect(mockLoggerInfo).toHaveBeenCalledWith('Server failed to start')
       expect(mockLoggerError).toHaveBeenCalledWith(
         new Error('Server failed to start')
@@ -130,8 +143,10 @@ describe('startServer', () => {
     })
 
     test('Should exit the process with a failure code', async () => {
+      // act
       await startServerImport.startServer()
 
+      // assert
       expect(processExitSpy).toHaveBeenCalledWith(1)
     })
   })
